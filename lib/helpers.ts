@@ -71,16 +71,14 @@ export const processRankingData = (
   userRankings: Tier[],
   list: TierList,
   user: string
-): ItemRanking[] => {
-  const userRankingData: ItemRanking[] = [];
+): Pick<ItemRanking, "itemId" | "user" | "value">[] => {
+  const userRankingData: Pick<ItemRanking, "itemId" | "user" | "value">[] = [];
   userRankings.map((tier) =>
     tier.items.forEach((item) =>
       userRankingData.push({
-        id: item,
+        itemId: item,
         user,
         value: tier.value,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
       })
     )
   );
