@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model List {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  createdAt   String
+  updatedAt   String
+  createdBy   String
+  tags        String[]
+  items       Item[]   @relation("ItemToList")
+  tiers       Tier[]   @relation("ListToTier")
+}
+
+model Tier {
+  id    Int    @id @default(autoincrement())
+  title String
+  color String
+  value Int
+  items Int[]
+  lists List[] @relation("ListToTier")
+}
+
+model Item {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String
+  img         String
+  createdAt   String
+  updatedAt   String
+  createdBy   String
+  lists       List[]    @relation("ItemToList")
+  rankings    Ranking[] @relation("ItemToRanking")
+}
+
+model Ranking {
+  id        Int    @id @default(autoincrement())
+  user      String
+  value     Int
+  createdAt String
+  updatedAt String
+  items     Item[] @relation("ItemToRanking")
+}

@@ -5,8 +5,8 @@ import { DndContext } from "@dnd-kit/core";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   handleDropItem,
+  postRankings,
   startRanking,
-  submitRanks,
 } from "@/lib/features/lists/listsSlice";
 import Link from "next/link";
 import Draggable from "@/app/Draggable";
@@ -33,7 +33,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
   };
 
   const handleRankSubmit = () => {
-    dispatch(submitRanks());
+    dispatch(postRankings({ list, rankings, user: "Rhys" }));
   };
 
   return (
@@ -47,15 +47,15 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
         {list ? (
           <>
-            <p className="text-4xl">{list.metadata.title}</p>
+            <p className="text-4xl">{list.title}</p>
 
-            <p>{list.metadata.description}</p>
+            <p>{list.description}</p>
 
             <p>
-              Created: {list.metadata.createdAt}; by: {list.metadata.createdBy}
+              Created: {list.createdAt}; by: {list.createdBy}
             </p>
 
-            <p>Updated: {list.metadata.updatedAt}</p>
+            <p>Updated: {list.updatedAt}</p>
 
             <br />
 
@@ -63,10 +63,10 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
               {rankings.map((d) => (
                 <div className="flex">
                   <div
-                    style={{ backgroundColor: d.metadata.color }}
+                    style={{ backgroundColor: d.color }}
                     className="text-black text-2xl font-bold p-4 min-w-16 min-h-16 flex justify-center items-center"
                   >
-                    {d.metadata.title}
+                    {d.title}
                   </div>
                   <Droppable id={d.id}>
                     {d.items
@@ -75,7 +75,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                       })
                       .map((item) => (
                         <Draggable id={item?.id}>
-                          <img src={item?.metadata.img} className="h-16 w-16" />
+                          <img src={item?.img} className="h-16 w-16" />
                         </Draggable>
                       ))}
                   </Droppable>
@@ -94,7 +94,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
                   return (
                     <Draggable id={item.id}>
-                      <img src={item.metadata.img} className="w-16 h-16" />
+                      <img src={item.img} className="w-16 h-16" />
                     </Draggable>
                   );
                 })}

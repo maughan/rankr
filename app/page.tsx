@@ -1,228 +1,177 @@
-"use client";
+// "use client";
 
-import {
-  createList,
-  clearLists,
-  closeCreateListModal,
-  openCreateListModal,
-  updateListMeta,
-  updateListPayload,
-  openCreateTierModal,
-  updateTierPayload,
-  closeCreateTierModal,
-  createTier,
-  updateTierMeta,
-  openCreateItemModal,
-  closeCreateItemModal,
-  updateItemPayload,
-  updateItemMeta,
-  populateData,
-  handleDropItem,
-} from "@/lib/features/lists/listsSlice";
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
-import { DndContext } from "@dnd-kit/core";
-import { useState } from "react";
-import Droppable from "./Droppable";
-import Draggable from "./Draggable";
+// import {
+//   createList,
+//   clearLists,
+//   closeCreateListModal,
+//   openCreateListModal,
+//   updateListMeta,
+//   updateListPayload,
+//   openCreateTierModal,
+//   updateTierPayload,
+//   closeCreateTierModal,
+//   createTier,
+//   updateTierMeta,
+//   openCreateItemModal,
+//   closeCreateItemModal,
+//   updateItemPayload,
+//   updateItemMeta,
+//   populateData,
+//   handleDropItem,
+// } from "@/lib/features/lists/listsSlice";
+// import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+// import { DndContext } from "@dnd-kit/core";
+// import { useState } from "react";
+// import Droppable from "./Droppable";
+// import Draggable from "./Draggable";
 
-export default function Home() {
-  const [parent, setParent] = useState(null);
-  const [positions, setPositions] = useState({
-    S: [],
-    A: [],
-    B: [],
-    C: [],
-    D: [],
-    E: [],
-    F: [],
-    BASE: [],
-  });
-  const [options, setOptions] = useState([]);
-  const dispatch = useAppDispatch();
-  const lists = useAppSelector((state) => state.lists);
-  const modals = useAppSelector((state) => state.lists.modals);
-  console.log("STATE", positions);
+// export default function Home() {
+//   const [parent, setParent] = useState(null);
+//   const [positions, setPositions] = useState({
+//     S: [],
+//     A: [],
+//     B: [],
+//     C: [],
+//     D: [],
+//     E: [],
+//     F: [],
+//     BASE: [],
+//   });
+//   const [options, setOptions] = useState([]);
+//   const dispatch = useAppDispatch();
+//   const lists = useAppSelector((state) => state.lists);
+//   const modals = useAppSelector((state) => state.lists.modals);
+//   console.log("STATE", positions);
 
-  const handleShowCreateModal = () => {
-    dispatch(openCreateListModal());
-  };
+//   const handleShowCreateModal = () => {
+//     dispatch(openCreateListModal());
+//   };
 
-  const handleCloseCreateModal = () => {
-    dispatch(closeCreateListModal());
-  };
+//   const handleCloseCreateModal = () => {
+//     dispatch(closeCreateListModal());
+//   };
 
-  const handleAddList = () => {
-    dispatch(createList());
-  };
+//   const handleAddList = () => {
+//     dispatch(createList());
+//   };
 
-  const handleClearLists = () => {
-    dispatch(clearLists());
-  };
+//   const handleClearLists = () => {
+//     dispatch(clearLists());
+//   };
 
-  const handleShowTierModal = () => {
-    dispatch(openCreateTierModal());
-  };
+//   const handleShowTierModal = () => {
+//     dispatch(openCreateTierModal());
+//   };
 
-  const handleCloseTierModal = () => {
-    dispatch(closeCreateTierModal());
-  };
+//   const handleCloseTierModal = () => {
+//     dispatch(closeCreateTierModal());
+//   };
 
-  const handleShowItemModal = () => {
-    dispatch(openCreateItemModal());
-  };
+//   const handleShowItemModal = () => {
+//     dispatch(openCreateItemModal());
+//   };
 
-  const handleCloseItemModal = () => {
-    dispatch(closeCreateItemModal());
-  };
+//   const handleCloseItemModal = () => {
+//     dispatch(closeCreateItemModal());
+//   };
 
-  const handleAddTier = () => {
-    dispatch(createTier());
-  };
+//   const handleAddTier = () => {
+//     dispatch(createTier());
+//   };
 
-  const handleAddItem = () => {
-    // dispatch(createItem());
-  };
+//   const popData = () => {
+//     dispatch(populateData());
+//   };
 
-  const popData = () => {
-    dispatch(populateData());
-  };
+//   const handleListOnChange = (key: keyof updateListPayload, value: string) => {
+//     dispatch(
+//       updateListMeta({
+//         [key]: value,
+//       })
+//     );
+//   };
 
-  const handleListOnChange = (key: keyof updateListPayload, value: string) => {
-    dispatch(
-      updateListMeta({
-        [key]: value,
-      })
-    );
-  };
+//   const handleTierOnChange = (key: keyof updateTierPayload, value: string) => {
+//     dispatch(
+//       updateTierMeta({
+//         [key]: value,
+//       })
+//     );
+//   };
 
-  const handleTierOnChange = (key: keyof updateTierPayload, value: string) => {
-    dispatch(
-      updateTierMeta({
-        [key]: value,
-      })
-    );
-  };
+//   return (
+//     <div className="flex flex-col min-h-screen items-center justify-center bg-white font-sans dark:bg-white p-16">
+//       <button onClick={popData}>Load data</button>
 
-  const handleItemOnChange = (key: keyof updateItemPayload, value: string) => {
-    dispatch(
-      updateItemMeta({
-        [key]: value,
-      })
-    );
-  };
+//       {modals.createList ? (
+//         <>
+//           <div className="absolute z-998 bg-black inset-0 opacity-80" />
 
-  return (
-    <div className="flex flex-col min-h-screen items-center justify-center bg-white font-sans dark:bg-white p-16">
-      <button onClick={popData}>Load data</button>
+//           <div className="absolute z-999 place-self-center bg-white w-fit h-fit p-4 rounded-sm text-black">
+//             <p className="text-2xl">Create list</p>
 
-      {modals.createList ? (
-        <>
-          <div className="absolute z-998 bg-black inset-0 opacity-80" />
+//             <p>List name</p>
 
-          <div className="absolute z-999 place-self-center bg-white w-fit h-fit p-4 rounded-sm text-black">
-            <p className="text-2xl">Create list</p>
+//             <input
+//               value={lists.list.title}
+//               onChange={(e) => handleListOnChange("title", e.target.value)}
+//             />
 
-            <p>List name</p>
+//             <p>Description</p>
 
-            <input
-              value={lists.list.title}
-              onChange={(e) => handleListOnChange("title", e.target.value)}
-            />
+//             <input
+//               value={lists.list.description}
+//               onChange={(e) =>
+//                 handleListOnChange("description", e.target.value)
+//               }
+//             />
 
-            <p>Description</p>
+//             <div className="flex justify-between">
+//               <button onClick={handleCloseCreateModal}>Close</button>
 
-            <input
-              value={lists.list.description}
-              onChange={(e) =>
-                handleListOnChange("description", e.target.value)
-              }
-            />
+//               <button onClick={handleAddList}>Save</button>
+//             </div>
+//           </div>
+//         </>
+//       ) : null}
 
-            <div className="flex justify-between">
-              <button onClick={handleCloseCreateModal}>Close</button>
+//       {modals.createTier ? (
+//         <>
+//           <div className="absolute z-998 bg-black inset-0 opacity-80" />
 
-              <button onClick={handleAddList}>Save</button>
-            </div>
-          </div>
-        </>
-      ) : null}
+//           <div className="absolute z-999 place-self-center bg-white w-fit h-fit p-4 rounded-sm text-black">
+//             <p className="text-2xl">Create tier</p>
 
-      {modals.createTier ? (
-        <>
-          <div className="absolute z-998 bg-black inset-0 opacity-80" />
+//             <p>Tier name</p>
 
-          <div className="absolute z-999 place-self-center bg-white w-fit h-fit p-4 rounded-sm text-black">
-            <p className="text-2xl">Create tier</p>
+//             <input
+//               value={lists.tier.title}
+//               onChange={(e) => handleTierOnChange("title", e.target.value)}
+//             />
 
-            <p>Tier name</p>
+//             <p>Description</p>
 
-            <input
-              value={lists.tier.title}
-              onChange={(e) => handleTierOnChange("title", e.target.value)}
-            />
+//             <input
+//               value={lists.tier.color}
+//               onChange={(e) => handleTierOnChange("color", e.target.value)}
+//             />
 
-            <p>Description</p>
+//             <p>Value</p>
 
-            <input
-              value={lists.tier.color}
-              onChange={(e) => handleTierOnChange("color", e.target.value)}
-            />
+//             <input
+//               value={lists.tier.value}
+//               type="number"
+//               onChange={(e) => handleTierOnChange("value", e.target.value)}
+//             />
 
-            <p>Value</p>
+//             <div className="flex justify-between">
+//               <button onClick={handleCloseTierModal}>Close</button>
 
-            <input
-              value={lists.tier.value}
-              type="number"
-              onChange={(e) => handleTierOnChange("value", e.target.value)}
-            />
-
-            <div className="flex justify-between">
-              <button onClick={handleCloseTierModal}>Close</button>
-
-              <button onClick={handleAddTier}>Save</button>
-            </div>
-          </div>
-        </>
-      ) : null}
-
-      {modals.createItem ? (
-        <>
-          <div className="absolute z-998 bg-black inset-0 opacity-80" />
-
-          <div className="absolute z-999 place-self-center bg-white w-fit h-fit p-4 rounded-sm text-black">
-            <p className="text-2xl">Create item</p>
-
-            <p>Item name</p>
-
-            <input
-              value={lists.item.title}
-              onChange={(e) => handleItemOnChange("title", e.target.value)}
-            />
-
-            <p>Description</p>
-
-            <input
-              value={lists.item.description}
-              onChange={(e) =>
-                handleItemOnChange("description", e.target.value)
-              }
-            />
-
-            <p>Value</p>
-
-            <input
-              value={lists.item.img}
-              onChange={(e) => handleItemOnChange("img", e.target.value)}
-            />
-
-            <div className="flex justify-between">
-              <button onClick={handleCloseItemModal}>Close</button>
-
-              <button onClick={handleAddItem}>Save</button>
-            </div>
-          </div>
-        </>
-      ) : null}
-    </div>
-  );
-}
+//               <button onClick={handleAddTier}>Save</button>
+//             </div>
+//           </div>
+//         </>
+//       ) : null}
+//     </div>
+//   );
+// }

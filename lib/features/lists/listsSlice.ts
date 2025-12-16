@@ -1,12 +1,5 @@
+import { Tier, TierItem, TierList } from "@/app/types";
 import {
-  Tier,
-  TierItemMetaData,
-  TierList,
-  TierListMetadata,
-  TierMetaData,
-} from "@/app/types";
-import {
-  createMockLists,
   createNewItem,
   createNewList,
   createNewTier,
@@ -25,10 +18,11 @@ export interface ListState {
     createTier: boolean;
     createItem: boolean;
   };
-  list: TierListMetadata;
-  tier: TierMetaData;
-  item: TierItemMetaData;
+  // list: TierListMetadata;
+  // tier: TierMetaData;
+  editItem: Pick<TierItem, "title" | "img" | "description">;
   rankings: Tier[];
+  status: string;
 }
 
 export type updateListPayload = {
@@ -49,7 +43,7 @@ export type updateItemPayload = {
   img?: string;
 };
 
-const listDefaults: TierListMetadata = {
+const listDefaults: any = {
   title: "",
   description: "",
   createdAt: "",
@@ -58,19 +52,16 @@ const listDefaults: TierListMetadata = {
   tags: [],
 };
 
-const tierDefaults: TierMetaData = {
+const tierDefaults: any = {
   title: "",
   color: "",
   value: 0,
 };
 
-const itemDefaults: TierItemMetaData = {
+const itemDefaults: any = {
   title: "",
   description: "",
   img: "",
-  createdAt: "",
-  updatedAt: "",
-  createdBy: "",
 };
 
 const initialState: ListState = {
@@ -80,55 +71,80 @@ const initialState: ListState = {
     createTier: false,
     createItem: false,
   },
-  list: {
-    ...listDefaults,
-  },
-  tier: {
-    ...tierDefaults,
-  },
-  item: {
-    ...itemDefaults,
-  },
+  editItem: itemDefaults,
   rankings: [],
+  status: "idle",
 };
 
 export const fetchLists = createAsyncThunk("lists/fetchLists", async () => {
-  return [];
+  const res = await fetch("/api/lists");
+
+  return (await res.json()) as TierList[];
 });
+
+export const postItem = createAsyncThunk(
+  "lists/postItem",
+  async ({
+    listId,
+    editItem,
+    user,
+  }: {
+    listId: number;
+    editItem: Pick<TierItem, "img" | "title" | "description">;
+    user: string;
+  }) => {
+    const item = createNewItem(editItem, user);
+    const res = await fetch("/api/items", {
+      method: "POST",
+      body: JSON.stringify({ ...item, listId }),
+    });
+  }
+);
+
+export const postRankings = createAsyncThunk(
+  "lists/postRankings",
+  async ({
+    list,
+    rankings,
+    user,
+  }: {
+    list: any;
+    rankings: any[];
+    user: string;
+  }) => {
+    const userRankings = processRankingData(rankings, list, user);
+
+    const res = await fetch("/api/rankings", {
+      method: "PUT",
+      body: JSON.stringify(userRankings),
+    });
+  }
+);
 
 export const listSlice = createSlice({
   name: "lists",
   initialState,
   reducers: {
-    populateData: (state) => {
-      let listData = createMockLists();
-      state.lists = processResponseData(listData);
-    },
-    createList: (state) => {
-      state.lists = [...state.lists, createNewList(state.list, "Rhys")];
-      state.modals.createList = false;
-    },
-    createTier: (state) => {
-      state.lists[0].tiers = [
-        ...state.lists[0].tiers,
-        createNewTier(state.tier, "Rhys"),
-      ];
-      state.modals.createTier = false;
-    },
-    // createItem: (state) => {
-    //   state.lists[0].tiers[0].items = [
-    //     ...state.lists[0].tiers[0].items,
-    //     createNewItem(state.item, "Rhys"),
-    //   ];
+    // createList: (state) => {
+    //   state.lists = [...state.lists, createNewList(state.list, "Rhys")];
+    //   state.modals.createList = false;
     // },
-    updateListMeta: (state, action: PayloadAction<updateListPayload>) => {
-      state.list = { ...state.list, ...action.payload };
-    },
-    updateTierMeta: (state, action: PayloadAction<updateTierPayload>) => {
-      state.tier = { ...state.tier, ...action.payload };
-    },
+    // createTier: (state) => {
+    //   state.lists[0].tiers = [
+    //     ...state.lists[0].tiers,
+    //     createNewTier(state.tier, "Rhys"),
+    //   ];
+    //   state.modals.createTier = false;
+    // },
+    createItem: (state) => {},
+    // updateListMeta: (state, action: PayloadAction<updateListPayload>) => {
+    //   state.list = { ...state.list, ...action.payload };
+    // },
+    // updateTierMeta: (state, action: PayloadAction<updateTierPayload>) => {
+    //   state.tier = { ...state.tier, ...action.payload };
+    // },
     updateItemMeta: (state, action: PayloadAction<updateItemPayload>) => {
-      state.item = { ...state.item, ...action.payload };
+      state.editItem = { ...state.editItem, ...action.payload };
     },
     addItemToList: (state, action: PayloadAction<any>) => {
       state.lists[action.payload.id].tiers.push(action.payload);
@@ -136,86 +152,95 @@ export const listSlice = createSlice({
     clearLists: (state) => {
       state.lists = [];
     },
-    openCreateListModal: (state) => {
-      state.list = listDefaults;
-      state.modals.createList = true;
-    },
-    closeCreateListModal: (state) => {
-      state.modals.createList = false;
-      state.list = listDefaults;
-    },
-    openCreateTierModal: (state) => {
-      state.tier = tierDefaults;
-      state.modals.createTier = true;
-    },
-    closeCreateTierModal: (state) => {
-      state.modals.createTier = false;
-      state.tier = tierDefaults;
-    },
+    // openCreateListModal: (state) => {
+    //   state.list = listDefaults;
+    //   state.modals.createList = true;
+    // },
+    // closeCreateListModal: (state) => {
+    //   state.modals.createList = false;
+    //   state.list = listDefaults;
+    // },
+    // openCreateTierModal: (state) => {
+    //   state.tier = tierDefaults;
+    //   state.modals.createTier = true;
+    // },
+    // closeCreateTierModal: (state) => {
+    //   state.modals.createTier = false;
+    //   state.tier = tierDefaults;
+    // },
     openCreateItemModal: (state) => {
-      state.item = itemDefaults;
+      state.editItem = itemDefaults;
       state.modals.createItem = true;
     },
     closeCreateItemModal: (state) => {
       state.modals.createItem = false;
-      state.item = itemDefaults;
+      state.editItem = itemDefaults;
     },
     handleDropItem: (state, action) => {
       const { over, active } = action.payload;
       state.rankings = handleDropReorder(over, active, state.rankings);
     },
-    submitRanks: (state) => {
-      state.lists[0] = processRankingData(
-        state.rankings,
-        state.lists[0],
-        "Rhys"
-      );
-    },
     startRanking: (state, action) => {
-      const userRankings = fetchUserRankings(
-        state.lists[parseInt(action.payload.id)],
-        "Rhys"
-      );
+      const list = state.lists[parseInt(action.payload.id)];
+
+      const userRankings = fetchUserRankings(list, "Rhys");
 
       if (!userRankings.length) {
-        state.rankings = state.lists[parseInt(action.payload.id)].tiers.map(
-          (tier) => ({ ...tier, items: [] })
-        );
+        state.rankings = list.tiers.map((tier) => ({ ...tier, items: [] }));
       }
 
-      state.rankings = state.lists[parseInt(action.payload.id)].tiers.map(
-        (tier) => {
-          tier.items = [];
-          const correspondingRanking = userRankings.find(
-            (ranking) => ranking.value === tier.metadata.value
-          );
+      state.rankings = list.tiers.map((tier) => {
+        tier.items = [];
+        const correspondingRanking = userRankings.find(
+          (ranking) => ranking.value === tier.value
+        );
 
-          if (correspondingRanking) tier.items.push(correspondingRanking.id);
+        if (correspondingRanking) tier.items.push(correspondingRanking.id);
 
-          return tier;
-        }
-      );
+        return tier;
+      });
     },
     filterRankingsByUser: (state, action) => {},
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchLists.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchLists.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.lists = processResponseData(action.payload);
+      })
+      .addCase(fetchLists.rejected, (state) => {
+        state.status = "failed";
+      })
+      .addCase(postItem.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(postItem.fulfilled, (state, action) => {
+        state.status = "succeeded";
+      })
+      .addCase(postItem.rejected, (state) => {
+        state.status = "failed";
+      });
   },
 });
 
 export const {
-  createList,
-  createTier,
-  updateListMeta,
-  updateTierMeta,
+  // createList,
+  // createTier,
+  // updateListMeta,
+  // updateTierMeta,
   updateItemMeta,
   clearLists,
-  openCreateListModal,
-  closeCreateListModal,
-  openCreateTierModal,
-  closeCreateTierModal,
+  createItem,
+  // openCreateListModal,
+  // closeCreateListModal,
+  // openCreateTierModal,
+  // closeCreateTierModal,
   openCreateItemModal,
   closeCreateItemModal,
-  populateData,
   handleDropItem,
-  submitRanks,
   startRanking,
 } = listSlice.actions;
 

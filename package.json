@@ -10,13 +10,20 @@
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
+    "@prisma/adapter-pg": "^7.1.0",
+    "@prisma/client": "^7.1.0",
     "@reduxjs/toolkit": "^2.11.2",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
+    "fs": "^0.0.1-security",
     "mobx": "^6.15.0",
+    "net": "^1.0.2",
     "next": "16.0.10",
+    "pg": "^8.16.3",
     "react": "19.2.1",
     "react-dom": "19.2.1",
-    "react-redux": "^9.2.0"
+    "react-redux": "^9.2.0",
+    "tls": "^0.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -25,6 +32,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
+    "prisma": "^7.1.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
