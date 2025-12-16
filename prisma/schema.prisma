@@ -42,6 +42,7 @@ model Item {
 
 model Ranking {
   id        Int    @id @default(autoincrement())
+  itemId    Int
   user      String
   value     Int
   createdAt String

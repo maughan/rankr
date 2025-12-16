@@ -94,7 +94,7 @@ export const postItem = createAsyncThunk(
     user: string;
   }) => {
     const item = createNewItem(editItem, user);
-    const res = await fetch("/api/items", {
+    await fetch("/api/items", {
       method: "POST",
       body: JSON.stringify({ ...item, listId }),
     });
@@ -217,7 +217,7 @@ export const listSlice = createSlice({
       .addCase(postItem.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(postItem.fulfilled, (state, action) => {
+      .addCase(postItem.fulfilled, (state) => {
         state.status = "succeeded";
       })
       .addCase(postItem.rejected, (state) => {
@@ -244,6 +244,7 @@ export const {
   startRanking,
 } = listSlice.actions;
 
-export const selectLists = (state: RootState) => state.lists;
+export const getListById = (state: RootState, id: number) =>
+  state.lists.lists.find((list) => list.id === id);
 
 export default listSlice.reducer;

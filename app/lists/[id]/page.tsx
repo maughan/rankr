@@ -9,6 +9,8 @@ import { selectRankersByListId } from "@/lib/selectors";
 import {
   closeCreateItemModal,
   createItem,
+  fetchLists,
+  getListById,
   openCreateItemModal,
   postItem,
   updateItemMeta,
@@ -18,7 +20,7 @@ import {
 export default function List(props: PageProps<"/lists/[id]">) {
   const { id } = React.use(props.params);
   const dispatch = useAppDispatch();
-  const list = useAppSelector((state) => state.lists.lists[parseInt(id)]);
+  const list = useAppSelector((state) => getListById(state, parseInt(id)));
   const users = useAppSelector(selectRankersByListId(parseInt(id)));
   const modals = useAppSelector((state) => state.lists.modals);
   const editItem = useAppSelector((state) => state.lists.editItem);
@@ -42,7 +44,11 @@ export default function List(props: PageProps<"/lists/[id]">) {
   const handleAddItem = () => {
     if (!editItem.title.length || !editItem.img.length) return;
 
-    dispatch(postItem({ listId: parseInt(id), editItem, user: "Rhys" }));
+    dispatch(postItem({ listId: parseInt(id), editItem, user: "Rhys" }))
+      .unwrap()
+      .then(() => dispatch(closeCreateItemModal()))
+      .then(() => dispatch(fetchLists()))
+      .catch((e) => console.error("e", e));
   };
 
   // const handleFilterByUser = (user: string) => {
@@ -121,7 +127,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
           <br />
 
-          <div className="w-full h-16">
+          <div className="w-full min-h-16 flex flex-wrap">
             {list.items.map((item) => {
               const isRanked = list.tiers.find((tier) =>
                 tier.items.includes(item.id)

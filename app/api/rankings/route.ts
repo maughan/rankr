@@ -6,17 +6,24 @@ export async function PUT(req: Request) {
     const body = await req.json();
     console.log("B", body);
 
-    const items = await prisma.ranking.createManyAndReturn({
-      data: body.map((d: ItemRanking) => ({
-        id: d.id,
-        user: d.user,
-        value: d.value,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      })),
-    });
+    const items = await Promise.all(
+      body.map((d: ItemRanking) =>
+        prisma.ranking.create({
+          data: {
+            id: d.id,
+            user: d.user,
+            value: d.value,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            items: {
+              connect: [{ id: d.id }],
+            },
+          },
+        })
+      )
+    );
 
-    console.log("items", items);
+    return Response.json(items);
   } catch (e) {
     console.error(e);
   }
