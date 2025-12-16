@@ -9,8 +9,6 @@ export async function POST(req: Request) {
         title: body.title,
         description: body.description,
         img: body.img,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
         createdBy: body.createdBy,
         lists: {
           connect: [{ id: body.listId }],

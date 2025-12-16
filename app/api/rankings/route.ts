@@ -7,16 +7,14 @@ export async function PUT(req: Request) {
     console.log("B", body);
 
     const items = await Promise.all(
-      body.map((d: ItemRanking) =>
+      body.map((d: Pick<ItemRanking, "user" | "itemId" | "value">) =>
         prisma.ranking.create({
           data: {
-            id: d.id,
+            itemId: d.itemId,
             user: d.user,
             value: d.value,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
             items: {
-              connect: [{ id: d.id }],
+              connect: [{ id: d.itemId }],
             },
           },
         })

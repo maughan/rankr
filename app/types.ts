@@ -30,7 +30,7 @@ export interface TierItem {
 }
 
 export interface ItemRanking {
-  id: number;
+  itemId: number;
   user: string; // may replace with User partial later
   value: number;
   createdAt: string;

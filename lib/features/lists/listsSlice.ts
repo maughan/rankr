@@ -1,8 +1,6 @@
 import { Tier, TierItem, TierList } from "@/app/types";
 import {
   createNewItem,
-  createNewList,
-  createNewTier,
   fetchUserRankings,
   handleDropReorder,
   processRankingData,
@@ -195,7 +193,7 @@ export const listSlice = createSlice({
           (ranking) => ranking.value === tier.value
         );
 
-        if (correspondingRanking) tier.items.push(correspondingRanking.id);
+        if (correspondingRanking) tier.items.push(correspondingRanking.itemId);
 
         return tier;
       });

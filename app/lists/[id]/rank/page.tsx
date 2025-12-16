@@ -18,8 +18,6 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
   const list = useAppSelector((state) => state.lists.lists[parseInt(id)]);
   const rankings = useAppSelector((state) => state.lists.rankings);
   useEffect(() => {
-    console.log("RANKINGS", rankings);
-
     if (!rankings.length) {
       dispatch(startRanking({ id }));
     }
