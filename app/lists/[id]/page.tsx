@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Link from "next/link";
 import { formatDistance } from "date-fns";
 
@@ -24,6 +24,13 @@ export default function List(props: PageProps<"/lists/[id]">) {
   const users = useAppSelector(selectRankersByListId(parseInt(id)));
   const modals = useAppSelector((state) => state.lists.modals);
   const editItem = useAppSelector((state) => state.lists.editItem);
+  const status = useAppSelector((state) => state.lists.status);
+
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchLists());
+    }
+  }, [dispatch, status]);
 
   const handleShowItemModal = () => {
     dispatch(openCreateItemModal());
@@ -55,6 +62,13 @@ export default function List(props: PageProps<"/lists/[id]">) {
   //   dispatch(filterRankingsByUser({ id, user }));
   // };
 
+  if (["idle", "loading"].includes(status))
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-2xl font-bold">Loading ...</p>
+      </div>
+    );
+
   return (
     <div className="p-16">
       <div className="flex justify-between align-center">
@@ -63,12 +77,16 @@ export default function List(props: PageProps<"/lists/[id]">) {
           className="px-4 py-2 bg-white text-black rounded-sm"
         >{`< Back`}</Link>
 
-        <Link
+        <p className="px-4 py-2 bg-gray-200 text-black rounded-sm cursor-not-allowed">
+          Rank it
+        </p>
+
+        {/* <Link
           href={`/lists/${id}/rank`}
           className="px-4 py-2 bg-orange-200 text-black rounded-sm"
         >
           Rank it
-        </Link>
+        </Link> */}
       </div>
 
       <br />

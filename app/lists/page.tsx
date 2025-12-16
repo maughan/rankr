@@ -20,16 +20,44 @@ export default function Lists() {
 
   return (
     <div className="p-16 flex flex-col gap-4">
-      {lists.lists.map((list) => (
-        <Link href={`/lists/${list.id}`}>
-          {`${list.title} - ${
-            list.items.length
-          } items - updated ${formatDistance(
-            list.updatedAt,
-            new Date()
-          )} ago - ${list.tags.join(", ")}`}
-        </Link>
-      ))}
+      <p className="text-3xl font-bold">Tier Lists</p>
+
+      {["idle", "loading"].includes(status) ? (
+        <div className="flex justify-center items-center">
+          <p className="text-2xl font-bold">Loading ...</p>
+        </div>
+      ) : (
+        <>
+          {lists.lists.map((list) => (
+            <Link
+              className="w-90 h-60 border-1 hover:border-2"
+              href={`/lists/${list.id}`}
+            >
+              <div className="flex flex-col h-full">
+                <div
+                  className="flex justify-center items-center"
+                  style={{ height: "inherit" }}
+                >
+                  <p>IMG.PNG</p>
+                </div>
+
+                <div className="h-18 border-t-1 px-4 py-2">
+                  <p className="text-2xl font-bold">{list.title}</p>
+
+                  <div className="flex justify-between items-end">
+                    <p>{`${list.items.length} item(s)`}</p>
+
+                    <p className="italic text-xs">{`Updated: ${formatDistance(
+                      list.updatedAt,
+                      new Date()
+                    )}`}</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </>
+      )}
     </div>
   );
 }
