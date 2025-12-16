@@ -62,7 +62,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
   //   dispatch(filterRankingsByUser({ id, user }));
   // };
 
-  if (["idle", "loading"].includes(status))
+  if (["idle", "loading"].includes(status) && !list)
     return (
       <div className="flex justify-center items-center h-screen">
         <p className="text-2xl font-bold">Loading ...</p>
