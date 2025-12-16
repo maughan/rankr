@@ -13,9 +13,6 @@ export async function PUT(req: Request) {
             itemId: d.itemId,
             user: d.user,
             value: d.value,
-            items: {
-              connect: [{ id: d.itemId }],
-            },
           },
         })
       )
