@@ -59,7 +59,7 @@ export default function Lists() {
   };
 
   return (
-    <div className="p-16 flex flex-col gap-4">
+    <div className="p-4 flex flex-col gap-4 sm:p-16">
       <div className="flex justify-between">
         <p className="text-3xl font-bold">Tier Lists</p>
 
@@ -114,7 +114,7 @@ export default function Lists() {
         <>
           <div className="fixed z-998 bg-white inset-0 opacity-40" />
 
-          <div className="fixed z-999 place-self-center bg-black min-w-100 w-fit h-fit p-8 rounded-sm inset-0">
+          <div className="fixed z-999 place-self-center bg-black h-fit w-9/10 p-8 rounded-sm inset-0 sm:w-100">
             <p className="text-2xl font-bold">Create list</p>
 
             <div className="flex flex-col gap-8 mt-8 w-full">

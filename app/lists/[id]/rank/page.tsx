@@ -70,7 +70,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <div className="p-16">
+      <div className="p-4 sm:p-16">
         <div className="flex justify-between">
           <Link
             className="rounded-sm bg-white font-bold text-black px-4 py-2"
@@ -78,22 +78,20 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
           >
             {`< Back`}
           </Link>
+
+          <button
+            className="rounded-sm bg-green-400 font-bold px-4 py-2 cursor-pointer"
+            onClick={handleRankSubmit}
+          >
+            Submit
+          </button>
         </div>
 
         <br />
 
         {list ? (
           <>
-            <div className="flex justify-between">
-              <p className="text-4xl font-bold">{list.title}</p>
-
-              <button
-                className="rounded-sm bg-green-400 font-bold px-4 py-2 cursor-pointer"
-                onClick={handleRankSubmit}
-              >
-                Submit
-              </button>
-            </div>
+            <p className="text-4xl font-bold">{list.title}</p>
 
             <p className="italic">{list.description}</p>
 
@@ -131,6 +129,8 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                 </div>
               ))}
             </div>
+
+            <br />
 
             <div className="w-full h-16">
               <Droppable id={-1}>

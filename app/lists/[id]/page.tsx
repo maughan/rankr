@@ -74,28 +74,26 @@ export default function List(props: PageProps<"/lists/[id]">) {
     );
 
   return (
-    <div className="p-16">
+    <div className="p-4 sm:p-16">
       <div className="flex justify-between align-center">
         <Link
           href="/lists"
-          className="px-4 py-2 bg-white text-black rounded-sm"
+          className="px-4 py-2 bg-white text-black rounded-sm font-bold"
         >{`< Back`}</Link>
+
+        <Link
+          href={`/lists/${id}/rank`}
+          className="px-4 py-2 bg-orange-200 text-black rounded-sm font-bold"
+        >
+          Rank it
+        </Link>
       </div>
 
       <br />
 
       {list ? (
         <>
-          <div className="flex justify-between">
-            <p className="text-4xl font-bold">{list.title}</p>
-
-            <Link
-              href={`/lists/${id}/rank`}
-              className="px-4 py-2 bg-orange-200 text-black rounded-sm"
-            >
-              Rank it
-            </Link>
-          </div>
+          <p className="text-4xl font-bold">{list.title}</p>
 
           <p className="italic">{list.description}</p>
 
@@ -165,7 +163,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
       <button
         onClick={handleShowItemModal}
-        className="text-black bg-white rounded-sm px-4 py-2 cursor-pointer"
+        className="text-black bg-white rounded-sm px-4 py-2 font-bold cursor-pointer"
       >
         Add item
       </button>
@@ -174,7 +172,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
         <>
           <div className="fixed z-998 bg-white inset-0 opacity-40" />
 
-          <div className="fixed z-999 place-self-center bg-black min-w-100 w-fit h-fit p-8 rounded-sm inset-0">
+          <div className="fixed z-999 place-self-center bg-black w-9/10 sm:w-100 h-fit p-8 rounded-sm inset-0">
             <p className="text-2xl font-bold">Create item</p>
 
             <div className="flex flex-col gap-8 mt-8 w-full">
