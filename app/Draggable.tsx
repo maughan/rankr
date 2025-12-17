@@ -8,8 +8,11 @@ export default function Draggable(props: any) {
   const style = transform
     ? {
         transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        touchAction: "none",
       }
-    : undefined;
+    : {
+        touchAction: "none",
+      };
 
   return (
     <button ref={setNodeRef} style={style} {...listeners} {...attributes}>

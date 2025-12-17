@@ -223,6 +223,15 @@ export const listSlice = createSlice({
       })
       .addCase(postItem.rejected, (state) => {
         state.status = "failed";
+      })
+      .addCase(postRankings.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(postRankings.fulfilled, (state) => {
+        state.status = "succeeded";
+      })
+      .addCase(postRankings.rejected, (state) => {
+        state.status = "failed";
       });
   },
 });

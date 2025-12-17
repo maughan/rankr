@@ -223,6 +223,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
               <button
                 className="rounded-sm bg-green-400 px-4 py-2 font-bold cursor-pointer"
                 onClick={handleAddItem}
+                disabled={status === "loading"}
               >
                 Save
               </button>

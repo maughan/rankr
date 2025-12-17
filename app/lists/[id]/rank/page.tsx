@@ -82,6 +82,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
           <button
             className="rounded-sm bg-green-400 font-bold px-4 py-2 cursor-pointer"
             onClick={handleRankSubmit}
+            disabled={status === "loading"}
           >
             Submit
           </button>
