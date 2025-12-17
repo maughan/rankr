@@ -8,7 +8,6 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { selectRankersByListId } from "@/lib/selectors";
 import {
   closeCreateItemModal,
-  createItem,
   fetchLists,
   getListById,
   openCreateItemModal,

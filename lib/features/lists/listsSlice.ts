@@ -19,8 +19,6 @@ export interface ListState {
     createTier: boolean;
     createItem: boolean;
   };
-  // list: TierListMetadata;
-  // tier: TierMetaData;
   editItem: Pick<TierItem, "title" | "img" | "description">;
   editList: Pick<TierList, "title" | "description">;
   rankings: Tier[];
@@ -47,12 +45,6 @@ export type updateItemPayload = {
 const listDefaults: any = {
   title: "",
   description: "",
-};
-
-const tierDefaults: any = {
-  title: "",
-  color: "",
-  value: 0,
 };
 
 const itemDefaults: any = {
@@ -141,24 +133,9 @@ export const listSlice = createSlice({
   name: "lists",
   initialState,
   reducers: {
-    // createList: (state) => {
-    //   state.lists = [...state.lists, createNewList(state.list, "Rhys")];
-    //   state.modals.createList = false;
-    // },
-    // createTier: (state) => {
-    //   state.lists[0].tiers = [
-    //     ...state.lists[0].tiers,
-    //     createNewTier(state.tier, "Rhys"),
-    //   ];
-    //   state.modals.createTier = false;
-    // },
-    createItem: (state) => {},
     updateListMeta: (state, action: PayloadAction<updateListPayload>) => {
       state.editList = { ...state.editList, ...action.payload };
     },
-    // updateTierMeta: (state, action: PayloadAction<updateTierPayload>) => {
-    //   state.tier = { ...state.tier, ...action.payload };
-    // },
     updateItemMeta: (state, action: PayloadAction<updateItemPayload>) => {
       state.editItem = { ...state.editItem, ...action.payload };
     },
@@ -176,14 +153,6 @@ export const listSlice = createSlice({
       state.modals.createList = false;
       state.editList = listDefaults;
     },
-    // openCreateTierModal: (state) => {
-    //   state.tier = tierDefaults;
-    //   state.modals.createTier = true;
-    // },
-    // closeCreateTierModal: (state) => {
-    //   state.modals.createTier = false;
-    //   state.tier = tierDefaults;
-    // },
     openCreateItemModal: (state) => {
       state.editItem = itemDefaults;
       state.modals.createItem = true;
@@ -259,17 +228,11 @@ export const listSlice = createSlice({
 });
 
 export const {
-  // createList,
-  // createTier,
   updateListMeta,
-  // updateTierMeta,
   updateItemMeta,
   clearLists,
-  createItem,
   openCreateListModal,
   closeCreateListModal,
-  // openCreateTierModal,
-  // closeCreateTierModal,
   openCreateItemModal,
   closeCreateItemModal,
   handleDropItem,
