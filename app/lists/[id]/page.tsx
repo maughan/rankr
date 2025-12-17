@@ -52,7 +52,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
   const handleAddItem = () => {
     if (!editItem.title.length || !editItem.img.length) return;
 
-    dispatch(postItem({ listId: parseInt(id), editItem, user: "Rhys" }))
+    dispatch(postItem({ listId: parseInt(id), editItem }))
       .unwrap()
       .then(() => dispatch(closeCreateItemModal()))
       .then(() => dispatch(fetchLists()))

@@ -23,17 +23,14 @@ export const createNewTier = (
   items: [],
 });
 
-export const createNewItem = (
-  { title, description, img }: Pick<TierItem, "title" | "description" | "img">,
-  user: string
-) => ({
+export const createNewItem = ({
   title,
   description,
   img,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  createdBy: user,
-  rankings: [],
+}: Pick<TierItem, "title" | "description" | "img">) => ({
+  title,
+  description,
+  img,
 });
 
 export const handleDropReorder = (end: number, item: number, list: Tier[]) => {
