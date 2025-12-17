@@ -120,7 +120,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
           {!users.length ? null : (
             <div>
               <p className="italic mb-2">Filter results:</p>
-              <div className="flex gap-4 items-center">
+              <div className="flex gap-4 items-center flex-wrap">
                 {users.map((user) => (
                   <div
                     className={`px-4 py-2 bg-white text-black rounded-md cursor-pointer font-bold ${

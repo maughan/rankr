@@ -63,7 +63,7 @@ export default function Lists() {
       <div className="flex justify-between">
         <p className="text-3xl font-bold">Tier Lists</p>
 
-        {!["idle", "loading"].includes(status) ? (
+        {!["idle", "loading"].includes(status) && lists ? (
           <button
             onClick={handleOpenCreateList}
             className="rounded-sm bg-white font-bold text-black px-4 py-2 cursor-pointer"
