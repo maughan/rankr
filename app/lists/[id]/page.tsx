@@ -16,6 +16,7 @@ import {
   updateItemMeta,
   updateItemPayload,
 } from "@/lib/features/lists/listsSlice";
+import { toast } from "sonner";
 
 export default function List(props: PageProps<"/lists/[id]">) {
   const { id } = React.use(props.params);
@@ -55,7 +56,11 @@ export default function List(props: PageProps<"/lists/[id]">) {
       .unwrap()
       .then(() => dispatch(closeCreateItemModal()))
       .then(() => dispatch(fetchLists()))
-      .catch((e) => console.error("e", e));
+      .then(() => toast.success("Item added successfully."))
+      .catch((e) => {
+        toast.error("Failed to add item.");
+        console.error("e", e);
+      });
   };
 
   // const handleFilterByUser = (user: string) => {
@@ -76,24 +81,22 @@ export default function List(props: PageProps<"/lists/[id]">) {
           href="/lists"
           className="px-4 py-2 bg-white text-black rounded-sm"
         >{`< Back`}</Link>
-
-        <p className="px-4 py-2 bg-gray-200 text-black rounded-sm cursor-not-allowed">
-          Rank it
-        </p>
-
-        {/* <Link
-          href={`/lists/${id}/rank`}
-          className="px-4 py-2 bg-orange-200 text-black rounded-sm"
-        >
-          Rank it
-        </Link> */}
       </div>
 
       <br />
 
       {list ? (
         <>
-          <p className="text-4xl font-bold">{list.title}</p>
+          <div className="flex justify-between">
+            <p className="text-4xl font-bold">{list.title}</p>
+
+            <Link
+              href={`/lists/${id}/rank`}
+              className="px-4 py-2 bg-orange-200 text-black rounded-sm"
+            >
+              Rank it
+            </Link>
+          </div>
 
           <p className="italic">{list.description}</p>
 

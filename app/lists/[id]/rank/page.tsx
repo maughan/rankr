@@ -2,26 +2,45 @@
 
 import React, { useEffect } from "react";
 import { DndContext } from "@dnd-kit/core";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
+  fetchLists,
+  getListById,
   handleDropItem,
   postRankings,
   startRanking,
 } from "@/lib/features/lists/listsSlice";
-import Link from "next/link";
 import Draggable from "@/app/Draggable";
 import Droppable from "@/app/Droppable";
+import { formatDistance } from "date-fns";
 
 export default function Rank(props: PageProps<"/lists/[id]">) {
+  const router = useRouter();
   const { id } = React.use(props.params);
   const dispatch = useAppDispatch();
-  const list = useAppSelector((state) => state.lists.lists[parseInt(id)]);
+  const list = useAppSelector((state) => getListById(state, parseInt(id)));
   const rankings = useAppSelector((state) => state.lists.rankings);
+  const status = useAppSelector((state) => state.lists.status);
+
   useEffect(() => {
-    if (!rankings.length) {
-      dispatch(startRanking({ id }));
+    if (status === "idle" && !list) {
+      dispatch(fetchLists())
+        .unwrap()
+        .then(() => {
+          if (!rankings.length) {
+            dispatch(startRanking({ list }));
+          }
+        });
     }
-  }, [dispatch, id, rankings]);
+
+    if (list && !rankings.length) {
+      dispatch(startRanking({ list }));
+    }
+  }, [dispatch, status, rankings]);
 
   const handleDragEnd = (event: any) => {
     const { over, active } = event;
@@ -31,29 +50,61 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
   };
 
   const handleRankSubmit = () => {
-    dispatch(postRankings({ list, rankings, user: "Rhys" }));
+    dispatch(postRankings({ list, rankings }))
+      .unwrap()
+      .then(() => toast.success("Ratings saved successfully."))
+      .then(() => dispatch(fetchLists()))
+      .then(() => router.push(`/lists/${id}`))
+      .catch((e) => {
+        toast.error("Error saving rankings.");
+        console.error(e);
+      });
   };
+
+  if (["idle", "loading"].includes(status) && !list)
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-2xl font-bold">Loading ...</p>
+      </div>
+    );
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div className="p-16">
         <div className="flex justify-between">
-          <Link href="/lists">Back</Link>
-
-          <button onClick={handleRankSubmit}>Submit</button>
+          <Link
+            className="rounded-sm bg-white font-bold text-black px-4 py-2"
+            href={`/lists/${id}`}
+          >
+            {`< Back`}
+          </Link>
         </div>
+
+        <br />
 
         {list ? (
           <>
-            <p className="text-4xl">{list.title}</p>
+            <div className="flex justify-between">
+              <p className="text-4xl font-bold">{list.title}</p>
 
-            <p>{list.description}</p>
+              <button
+                className="rounded-sm bg-green-400 font-bold px-4 py-2 cursor-pointer"
+                onClick={handleRankSubmit}
+              >
+                Submit
+              </button>
+            </div>
 
-            <p>
-              Created: {list.createdAt}; by: {list.createdBy}
+            <p className="italic">{list.description}</p>
+
+            <p className="text-xs flex gap-1">
+              Created {formatDistance(list.createdAt, new Date())} by
+              <p className="font-bold">{list.createdBy}</p>
             </p>
 
-            <p>Updated: {list.updatedAt}</p>
+            <p className="text-xs">
+              Last updated {formatDistance(list.updatedAt, new Date())}
+            </p>
 
             <br />
 

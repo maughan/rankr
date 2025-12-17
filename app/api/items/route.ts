@@ -16,6 +16,15 @@ export async function POST(req: Request) {
       },
     });
 
+    await prisma.list.update({
+      where: {
+        id: body.listId,
+      },
+      data: {
+        updatedAt: new Date().toISOString(),
+      },
+    });
+
     return Response.json(item);
   } catch (e) {
     console.error(e);

@@ -1,10 +1,13 @@
 "use client";
 
 import { FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 
-export default function LoginPage() {
+export default function SignupPage() {
+  const router = useRouter();
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -12,18 +15,17 @@ export default function LoginPage() {
     const username = formData.get("username");
     const password = formData.get("password");
 
-    const response = await fetch("/api/auth/login", {
+    const response = await fetch("/api/auth/user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
     });
 
     if (response.ok) {
-      console.log("LOGGED IN");
-      window.location.href = "/lists";
+      toast.success("User created successfully.");
+      router.push("/lists");
     } else {
-      toast.error("Failed to log in.");
-      // Handle errors
+      toast.error("Error creating user.");
     }
   }
 
@@ -56,15 +58,15 @@ export default function LoginPage() {
           className="rounded-sm bg-white px-4 py-2 font-bold text-black mt-4 cursor-pointer"
           type="submit"
         >
-          Login
+          Sign up
         </button>
       </form>
 
       <Link
-        href="/signup"
+        href="/login"
         className="rounded-sm bg-white px-4 py-2 font-bold text-black mt-4 w-42 text-center"
       >
-        Sign up
+        Log in
       </Link>
     </div>
   );

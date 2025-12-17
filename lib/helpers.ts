@@ -1,30 +1,15 @@
 import { ItemRanking, Tier, TierItem, TierList } from "@/app/types";
 
-export const createNewList = (
-  {
-    title,
-    description,
-    tags,
-  }: Pick<TierList, "title" | "description" | "tags">,
-  user: string
-): TierList => ({
-  id: 0,
+export const createNewList = ({
   title,
   description,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  createdBy: user,
-  tags,
-  tiers: [
-    createNewTier({ title: "S", color: "#ff7f7f", value: 7 }, user),
-    createNewTier({ title: "A", color: "#ffbf7f", value: 6 }, user),
-    createNewTier({ title: "B", color: "#ffdf7f", value: 5 }, user),
-    createNewTier({ title: "C", color: "#ffff7f", value: 4 }, user),
-    createNewTier({ title: "D", color: "#bfff7f", value: 3 }, user),
-    createNewTier({ title: "E", color: "#7fff7f", value: 2 }, user),
-    createNewTier({ title: "F", color: "#7fffff", value: 1 }, user),
-  ],
-  items: [],
+}: Pick<TierList, "title" | "description">): Pick<
+  TierList,
+  "title" | "description" | "tags"
+> => ({
+  title,
+  description,
+  tags: [],
 });
 
 export const createNewTier = (

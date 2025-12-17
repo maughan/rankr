@@ -1,13 +1,16 @@
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { jwtDecode } from "jwt-decode";
+
 import { Tier, TierItem, TierList } from "@/app/types";
 import {
   createNewItem,
+  createNewList,
   fetchUserRankings,
   handleDropReorder,
   processRankingData,
   processResponseData,
 } from "@/lib/helpers";
 import { RootState } from "@/lib/store";
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface ListState {
   lists: Array<TierList>;
@@ -19,6 +22,7 @@ export interface ListState {
   // list: TierListMetadata;
   // tier: TierMetaData;
   editItem: Pick<TierItem, "title" | "img" | "description">;
+  editList: Pick<TierList, "title" | "description">;
   rankings: Tier[];
   status: string;
 }
@@ -26,7 +30,6 @@ export interface ListState {
 export type updateListPayload = {
   title?: string;
   description?: string;
-  tags?: Array<string>;
 };
 
 export type updateTierPayload = {
@@ -44,10 +47,6 @@ export type updateItemPayload = {
 const listDefaults: any = {
   title: "",
   description: "",
-  createdAt: "",
-  updatedAt: "",
-  createdBy: "",
-  tags: [],
 };
 
 const tierDefaults: any = {
@@ -70,6 +69,7 @@ const initialState: ListState = {
     createItem: false,
   },
   editItem: itemDefaults,
+  editList: listDefaults,
   rankings: [],
   status: "idle",
 };
@@ -85,13 +85,11 @@ export const postItem = createAsyncThunk(
   async ({
     listId,
     editItem,
-    user,
   }: {
     listId: number;
     editItem: Pick<TierItem, "img" | "title" | "description">;
-    user: string;
   }) => {
-    const item = createNewItem(editItem, user);
+    const item = createNewItem(editItem);
     await fetch("/api/items", {
       method: "POST",
       body: JSON.stringify({ ...item, listId }),
@@ -99,18 +97,38 @@ export const postItem = createAsyncThunk(
   }
 );
 
+export const postList = createAsyncThunk(
+  "list/postList",
+  async ({
+    editList,
+  }: {
+    editList: Pick<TierList, "title" | "description">;
+  }) => {
+    const list = createNewList(editList);
+    await fetch("/api/lists", {
+      method: "POST",
+      body: JSON.stringify(list),
+    });
+  }
+);
+
 export const postRankings = createAsyncThunk(
   "lists/postRankings",
-  async ({
-    list,
-    rankings,
-    user,
-  }: {
-    list: any;
-    rankings: any[];
-    user: string;
-  }) => {
-    const userRankings = processRankingData(rankings, list, user);
+  async ({ list, rankings }: { list: any; rankings: any[] }) => {
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("auth_token="))
+      ?.split("=")[1];
+
+    let username = "";
+
+    if (token) {
+      const decoded = jwtDecode<{ username: string }>(token);
+      username = decoded.username;
+    }
+    if (!username.length) return;
+
+    const userRankings = processRankingData(rankings, list, username);
 
     const res = await fetch("/api/rankings", {
       method: "PUT",
@@ -135,9 +153,9 @@ export const listSlice = createSlice({
     //   state.modals.createTier = false;
     // },
     createItem: (state) => {},
-    // updateListMeta: (state, action: PayloadAction<updateListPayload>) => {
-    //   state.list = { ...state.list, ...action.payload };
-    // },
+    updateListMeta: (state, action: PayloadAction<updateListPayload>) => {
+      state.editList = { ...state.editList, ...action.payload };
+    },
     // updateTierMeta: (state, action: PayloadAction<updateTierPayload>) => {
     //   state.tier = { ...state.tier, ...action.payload };
     // },
@@ -150,14 +168,14 @@ export const listSlice = createSlice({
     clearLists: (state) => {
       state.lists = [];
     },
-    // openCreateListModal: (state) => {
-    //   state.list = listDefaults;
-    //   state.modals.createList = true;
-    // },
-    // closeCreateListModal: (state) => {
-    //   state.modals.createList = false;
-    //   state.list = listDefaults;
-    // },
+    openCreateListModal: (state) => {
+      state.editList = listDefaults;
+      state.modals.createList = true;
+    },
+    closeCreateListModal: (state) => {
+      state.modals.createList = false;
+      state.editList = listDefaults;
+    },
     // openCreateTierModal: (state) => {
     //   state.tier = tierDefaults;
     //   state.modals.createTier = true;
@@ -179,24 +197,40 @@ export const listSlice = createSlice({
       state.rankings = handleDropReorder(over, active, state.rankings);
     },
     startRanking: (state, action) => {
-      const list = state.lists[parseInt(action.payload.id)];
+      const list = action.payload.list as TierList;
+      if (!list) return;
 
-      const userRankings = fetchUserRankings(list, "Rhys");
+      const token = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith("auth_token="))
+        ?.split("=")[1];
 
-      if (!userRankings.length) {
-        state.rankings = list.tiers.map((tier) => ({ ...tier, items: [] }));
+      let username = "";
+
+      if (token) {
+        const decoded = jwtDecode<{ username: string }>(token);
+        username = decoded.username;
       }
 
+      if (!username.length) return;
+
+      const userRankings = fetchUserRankings(list, username);
+
       state.rankings = list.tiers.map((tier) => {
-        tier.items = [];
-        const correspondingRanking = userRankings.find(
-          (ranking) => ranking.value === tier.value
-        );
+        // collect all userRankings with the same value
+        const correspondingItems = userRankings
+          .filter((ranking) => ranking.value === tier.value)
+          .map((ranking) => ranking.itemId);
 
-        if (correspondingRanking) tier.items.push(correspondingRanking.itemId);
-
-        return tier;
+        return {
+          ...tier,
+          items: correspondingItems,
+        };
       });
+
+      if (!state.rankings.length) {
+        state.rankings = [...list.tiers];
+      }
     },
     filterRankingsByUser: (state, action) => {},
   },
@@ -227,13 +261,13 @@ export const listSlice = createSlice({
 export const {
   // createList,
   // createTier,
-  // updateListMeta,
+  updateListMeta,
   // updateTierMeta,
   updateItemMeta,
   clearLists,
   createItem,
-  // openCreateListModal,
-  // closeCreateListModal,
+  openCreateListModal,
+  closeCreateListModal,
   // openCreateTierModal,
   // closeCreateTierModal,
   openCreateItemModal,

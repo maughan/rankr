@@ -1,10 +1,30 @@
 import { ItemRanking } from "@/app/types";
 import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    console.log("B", body);
+
+    const biscuits = await cookies();
+    const token = biscuits.get("auth_token")?.value;
+    if (!token) return new Response(null, { status: 401 });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
+      username: string;
+    };
+
+    await prisma.ranking.deleteMany({
+      where: {
+        itemId: {
+          in: body.map(
+            (d: Pick<ItemRanking, "user" | "itemId" | "value">) => d.itemId
+          ),
+        },
+        user: decoded.username,
+      },
+    });
 
     const items = await Promise.all(
       body.map((d: Pick<ItemRanking, "user" | "itemId" | "value">) =>

@@ -9,11 +9,7 @@ const prisma = new PrismaClient({ adapter });
 
 // Example query to create a user based on the example schema
 
-async function main() {
-  const lists = await prisma.list.findMany();
-
-  console.log("LISTS", lists);
-}
+async function main() {}
 
 main()
   .then(async () => {
