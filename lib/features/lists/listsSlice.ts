@@ -6,6 +6,7 @@ import {
   createNewItem,
   createNewList,
   fetchUserRankings,
+  filterListResponseData,
   handleDropReorder,
   processRankingData,
   processResponseData,
@@ -22,6 +23,8 @@ export interface ListState {
   editItem: Pick<TierItem, "title" | "img" | "description">;
   editList: Pick<TierList, "title" | "description">;
   rankings: Tier[];
+  filteredListRankings: Tier[];
+  userfilter: string | null;
   status: string;
 }
 
@@ -63,6 +66,8 @@ const initialState: ListState = {
   editItem: itemDefaults,
   editList: listDefaults,
   rankings: [],
+  filteredListRankings: [],
+  userfilter: null,
   status: "idle",
 };
 
@@ -165,6 +170,22 @@ export const listSlice = createSlice({
       const { over, active } = action.payload;
       state.rankings = handleDropReorder(over, active, state.rankings);
     },
+    filterRankingsByUser: (
+      state,
+      action: PayloadAction<{ user: string | null; list: TierList | undefined }>
+    ) => {
+      const { user, list } = action.payload;
+
+      if (!list) return;
+
+      if (!user) {
+        state.filteredListRankings = list.tiers;
+        state.userfilter = null;
+      } else {
+        state.userfilter = user;
+        state.filteredListRankings = filterListResponseData(list, user);
+      }
+    },
     startRanking: (state, action) => {
       const list = action.payload.list as TierList;
       if (!list) return;
@@ -201,7 +222,6 @@ export const listSlice = createSlice({
         state.rankings = [...list.tiers];
       }
     },
-    filterRankingsByUser: (state, action) => {},
   },
   extraReducers: (builder) => {
     builder
@@ -246,9 +266,11 @@ export const {
   closeCreateItemModal,
   handleDropItem,
   startRanking,
+  filterRankingsByUser,
 } = listSlice.actions;
 
-export const getListById = (state: RootState, id: number) =>
-  state.lists.lists.find((list) => list.id === id);
+export const getListById = (state: RootState, id: number) => {
+  return state.lists.lists.find((list) => list.id === id);
+};
 
 export default listSlice.reducer;

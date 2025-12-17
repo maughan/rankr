@@ -105,6 +105,32 @@ export const processResponseData = (lists: TierList[]): TierList[] => {
   });
 };
 
+export const filterListResponseData = (
+  list: TierList,
+  user: string
+): Tier[] => {
+  const filtered = list.tiers.map((tier) => ({
+    ...tier,
+    items: [] as number[],
+  }));
+
+  list.items.map((item) => {
+    if (!item.rankings.length) return;
+
+    const ranking = item.rankings.find((ranking) => ranking.user === user);
+
+    if (!ranking) return;
+
+    const correspondingTier = filtered.find(
+      (tier) => tier.value === ranking.value
+    );
+
+    correspondingTier?.items.push(ranking.itemId);
+  });
+
+  return filtered;
+};
+
 export const fetchUserRankings = (list: TierList, user: string) => {
   if (!list) return [];
   return list.items

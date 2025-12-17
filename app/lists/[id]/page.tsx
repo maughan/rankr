@@ -9,6 +9,7 @@ import { selectRankersByListId } from "@/lib/selectors";
 import {
   closeCreateItemModal,
   fetchLists,
+  filterRankingsByUser,
   getListById,
   openCreateItemModal,
   postItem,
@@ -25,12 +26,20 @@ export default function List(props: PageProps<"/lists/[id]">) {
   const modals = useAppSelector((state) => state.lists.modals);
   const editItem = useAppSelector((state) => state.lists.editItem);
   const status = useAppSelector((state) => state.lists.status);
+  const filter = useAppSelector((state) => state.lists.userfilter);
+  const filteredRankings = useAppSelector(
+    (state) => state.lists.filteredListRankings
+  );
 
   useEffect(() => {
-    if (status === "idle") {
+    if (status === "idle" && !list) {
       dispatch(fetchLists());
     }
-  }, [dispatch, status]);
+
+    if (list) {
+      dispatch(filterRankingsByUser({ user: null, list }));
+    }
+  }, [dispatch, status, list]);
 
   const handleShowItemModal = () => {
     dispatch(openCreateItemModal());
@@ -62,9 +71,9 @@ export default function List(props: PageProps<"/lists/[id]">) {
       });
   };
 
-  // const handleFilterByUser = (user: string) => {
-  //   dispatch(filterRankingsByUser({ id, user }));
-  // };
+  const handleFilterByUser = (user: string | null) => {
+    dispatch(filterRankingsByUser({ user, list }));
+  };
 
   if (["idle", "loading"].includes(status) && !list)
     return (
@@ -108,21 +117,37 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
           <br />
 
-          <div className="flex gap-4">
-            {users.map((user) => (
-              <div
-                className="px-4 py-2 bg-white text-black rounded-md cursor-pointer"
-                // onClick={}
-              >
-                {user}
+          {!users.length ? null : (
+            <div>
+              <p className="italic mb-2">Filter results:</p>
+              <div className="flex gap-4 items-center">
+                {users.map((user) => (
+                  <div
+                    className={`px-4 py-2 bg-white text-black rounded-md cursor-pointer font-bold ${
+                      filter && filter !== user ? "opacity-40" : ""
+                    }`}
+                    onClick={() => handleFilterByUser(user)}
+                  >
+                    {user}
+                  </div>
+                ))}
+
+                {filter ? (
+                  <div
+                    className="rounded-sm bg-red-400 font-bold px-4 py-2 cursor-pointer"
+                    onClick={() => handleFilterByUser(null)}
+                  >
+                    Clear filter
+                  </div>
+                ) : null}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
 
           <br />
 
           <div className="flex flex-col">
-            {list.tiers.map((d) => (
+            {filteredRankings.map((d) => (
               <div className="flex">
                 <div
                   style={{ backgroundColor: d.color }}
