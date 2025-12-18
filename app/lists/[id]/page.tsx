@@ -206,14 +206,15 @@ export default function List(props: PageProps<"/lists/[id]">) {
                     .map(
                       (item) =>
                         item ? (
-                          <Image
-                            id={item.title}
-                            src={item.img}
-                            alt={d.title}
-                            height={64}
-                            width={64}
-                            // priority
-                          />
+                          <div className="h-16 w-16 relative">
+                            <Image
+                              id={item.title}
+                              src={item.img}
+                              alt={d.title}
+                              fill
+                              // priority
+                            />
+                          </div>
                         ) : null
 
                       // <img src={item?.img} className="h-16 w-16" />
@@ -233,7 +234,16 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
               if (isRanked) return null;
 
-              return <img src={item.img} className="w-16 h-16" />;
+              return (
+                <div className="w-16 h-16 relative">
+                  <Image
+                    src={item.img}
+                    alt={item.title}
+                    style={{ objectFit: "cover" }}
+                    fill
+                  />
+                </div>
+              );
             })}
           </div>
         </>
@@ -301,11 +311,15 @@ export default function List(props: PageProps<"/lists/[id]">) {
                 />
 
                 {editItem.img && (
-                  <img
-                    src={editItem.img}
-                    alt="Preview"
-                    className="mt-4 h-24 w-24 object-cover rounded"
-                  />
+                  <div className="w-24 h-24 relative">
+                    <Image
+                      src={editItem.img}
+                      alt="Preview"
+                      fill
+                      style={{ objectFit: "cover" }}
+                      className="mt-4 object-cover rounded"
+                    />
+                  </div>
                 )}
               </div>
             </div>

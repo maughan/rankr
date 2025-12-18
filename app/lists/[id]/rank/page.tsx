@@ -5,6 +5,7 @@ import { DndContext } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
@@ -123,7 +124,16 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                       })
                       .map((item) => (
                         <Draggable id={item?.id}>
-                          <img src={item?.img} className="h-16 w-16" />
+                          {item ? (
+                            <div className="w-16 h-16 relative">
+                              <Image
+                                src={item.img}
+                                alt={item.title}
+                                fill
+                                style={{ objectFit: "cover" }}
+                              />
+                            </div>
+                          ) : null}
                         </Draggable>
                       ))}
                   </Droppable>
@@ -144,7 +154,14 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
                   return (
                     <Draggable id={item.id}>
-                      <img src={item.img} className="w-16 h-16" />
+                      <div className="w-16 h-16 relative">
+                        <Image
+                          src={item.img}
+                          alt={item.title}
+                          fill
+                          style={{ objectFit: "cover" }}
+                        />
+                      </div>
                     </Draggable>
                   );
                 })}
