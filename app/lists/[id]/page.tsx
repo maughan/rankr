@@ -3,6 +3,8 @@
 import React, { useEffect } from "react";
 import Link from "next/link";
 import { formatDistance } from "date-fns";
+import ImageKit from "imagekit-javascript";
+import crypto from "crypto";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { selectRankersByListId } from "@/lib/selectors";
@@ -17,9 +19,11 @@ import {
   updateItemPayload,
 } from "@/lib/features/lists/listsSlice";
 import { toast } from "sonner";
+import Image from "next/image";
 
 export default function List(props: PageProps<"/lists/[id]">) {
   const { id } = React.use(props.params);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const dispatch = useAppDispatch();
   const list = useAppSelector((state) => getListById(state, parseInt(id)));
   const users = useAppSelector(selectRankersByListId(parseInt(id)));
@@ -30,6 +34,12 @@ export default function List(props: PageProps<"/lists/[id]">) {
   const filteredRankings = useAppSelector(
     (state) => state.lists.filteredListRankings
   );
+
+  const imagekit = new ImageKit({
+    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+    authenticationEndpoint: "/api/imagekit-auth",
+  } as any);
 
   useEffect(() => {
     if (status === "idle" && !list) {
@@ -43,6 +53,10 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
   const handleShowItemModal = () => {
     dispatch(openCreateItemModal());
+  };
+
+  const handleUploadButton = () => {
+    fileInputRef.current?.click(); // triggers the hidden input
   };
 
   const handleCloseItemModal = () => {
@@ -73,6 +87,35 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
   const handleFilterByUser = (user: string | null) => {
     dispatch(filterRankingsByUser({ user, list }));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const res = await fetch("/api/imagekit-auth");
+      const { token, expire, signature } = await res.json();
+      const result = await imagekit.upload({
+        file,
+        fileName: `${Date.now()}-${file.name}`,
+        folder: "/lists",
+        token,
+        expire,
+        signature,
+      } as any);
+
+      dispatch(
+        updateItemMeta({
+          img: result.url,
+        })
+      );
+
+      toast.success("Image uploaded");
+    } catch (err) {
+      console.error(err);
+      toast.error("Image upload failed");
+    }
   };
 
   if (["idle", "loading"].includes(status) && !list)
@@ -160,9 +203,21 @@ export default function List(props: PageProps<"/lists/[id]">) {
                     .map((item) => {
                       return list.items.find((it) => it.id === item);
                     })
-                    .map((item) => (
-                      <img src={item?.img} className="h-16 w-16" />
-                    ))}
+                    .map(
+                      (item) =>
+                        item ? (
+                          <Image
+                            id={item.title}
+                            src={item.img}
+                            alt={d.title}
+                            height={64}
+                            width={64}
+                            // priority
+                          />
+                        ) : null
+
+                      // <img src={item?.img} className="h-16 w-16" />
+                    )}
                 </div>
               </div>
             ))}
@@ -228,12 +283,30 @@ export default function List(props: PageProps<"/lists/[id]">) {
               <div>
                 <p className="font-bold">Image *</p>
 
+                {!editItem.img && (
+                  <button
+                    className="rounded-sm bg-white font-bold text-black px-4 py-2 mt-2"
+                    onClick={handleUploadButton}
+                  >
+                    Upload image
+                  </button>
+                )}
+
                 <input
-                  className="w-full h-8 text-white outline-none border-solid border-white border-b-2 focus:bg-slate-900"
-                  value={editItem.img}
-                  type="url"
-                  onChange={(e) => handleItemOnChange("img", e.target.value)}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                  ref={fileInputRef}
                 />
+
+                {editItem.img && (
+                  <img
+                    src={editItem.img}
+                    alt="Preview"
+                    className="mt-4 h-24 w-24 object-cover rounded"
+                  />
+                )}
               </div>
             </div>
 
