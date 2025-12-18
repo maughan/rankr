@@ -212,6 +212,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
                               src={item.img}
                               alt={d.title}
                               fill
+                              style={{ objectFit: "cover" }}
                               // priority
                             />
                           </div>
