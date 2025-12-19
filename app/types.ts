@@ -4,7 +4,10 @@ export interface TierList {
   description: string;
   createdAt: string;
   updatedAt: string;
-  createdBy: string;
+  createdBy: {
+    id: number;
+    username: string;
+  };
   tags: Array<string>;
   tiers: Array<Tier>;
   items: Array<TierItem>;
@@ -31,7 +34,11 @@ export interface TierItem {
 
 export interface ItemRanking {
   itemId: number;
-  user: string; // may replace with User partial later
+  userId: number; // may replace with User partial later
+  user: {
+    id: number;
+    username: string;
+  };
   value: number;
   createdAt: string;
   updatedAt: string;

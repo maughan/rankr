@@ -7,18 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-model List {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now()) @updatedAt
-  createdBy   String
-  tags        String[]
-  items       Item[]   @relation("ItemToList")
-  tiers       Tier[]   @relation("ListToTier")
-}
-
 model Tier {
   id    Int    @id @default(autoincrement())
   title String
@@ -35,23 +23,45 @@ model Item {
   img         String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
-  createdBy   String
+  createdById Int
+  createdBy   User      @relation(fields: [createdById], references: [id])
   rankings    Ranking[]
   lists       List[]    @relation("ItemToList")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  username  String    @unique
+  password  String
+  email     String?   @unique
+  lists     List[]
+  rankings  Ranking[]
+  items     Item[]
+}
+
+model List {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  createdById Int
+  createdBy   User     @relation(fields: [createdById], references: [id])
+
+  tags        String[]
+  items       Item[]   @relation("ItemToList")
+  tiers       Tier[]   @relation("ListToTier")
 }
 
 model Ranking {
   id        Int      @id @default(autoincrement())
   itemId    Int
-  user      String
+  userId    Int
   value     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
-  item      Item     @relation(fields: [itemId], references: [id])
-}
 
-model User {
-  id       Int    @id @default(autoincrement())
-  username String
-  password String
+  item Item @relation(fields: [itemId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }

@@ -20,6 +20,7 @@ import {
 } from "@/lib/features/lists/listsSlice";
 import { toast } from "sonner";
 import Image from "next/image";
+import { ImageKitLoader } from "@/lib/helpers";
 
 export default function List(props: PageProps<"/lists/[id]">) {
   const { id } = React.use(props.params);
@@ -85,7 +86,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
       });
   };
 
-  const handleFilterByUser = (user: string | null) => {
+  const handleFilterByUser = (user: number | null) => {
     dispatch(filterRankingsByUser({ user, list }));
   };
 
@@ -151,7 +152,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
           <p className="text-xs flex gap-1">
             Created {formatDistance(list.createdAt, new Date())} by
-            <p className="font-bold">{list.createdBy}</p>
+            <p className="font-bold">{list.createdBy.username}</p>
           </p>
 
           <p className="text-xs">
@@ -167,11 +168,11 @@ export default function List(props: PageProps<"/lists/[id]">) {
                 {users.map((user) => (
                   <div
                     className={`px-4 py-2 bg-white text-black rounded-md cursor-pointer font-bold ${
-                      filter && filter !== user ? "opacity-40" : ""
+                      filter && filter !== user.id ? "opacity-40" : ""
                     }`}
-                    onClick={() => handleFilterByUser(user)}
+                    onClick={() => handleFilterByUser(user.id)}
                   >
-                    {user}
+                    {user.username}
                   </div>
                 ))}
 
@@ -203,22 +204,21 @@ export default function List(props: PageProps<"/lists/[id]">) {
                     .map((item) => {
                       return list.items.find((it) => it.id === item);
                     })
-                    .map(
-                      (item) =>
-                        item ? (
-                          <div className="h-16 w-16 relative">
-                            <Image
-                              id={item.title}
-                              src={item.img}
-                              alt={d.title}
-                              fill
-                              style={{ objectFit: "cover" }}
-                              // priority
-                            />
-                          </div>
-                        ) : null
-
-                      // <img src={item?.img} className="h-16 w-16" />
+                    .map((item) =>
+                      item ? (
+                        <div className="h-16 w-16 relative">
+                          <Image
+                            loader={ImageKitLoader}
+                            id={item.title}
+                            src={item.img}
+                            alt={d.title}
+                            sizes="64px"
+                            fill
+                            priority
+                            style={{ objectFit: "cover" }}
+                          />
+                        </div>
+                      ) : null
                     )}
                 </div>
               </div>
@@ -238,10 +238,13 @@ export default function List(props: PageProps<"/lists/[id]">) {
               return (
                 <div className="w-16 h-16 relative">
                   <Image
+                    loader={ImageKitLoader}
                     src={item.img}
                     alt={item.title}
                     style={{ objectFit: "cover" }}
                     fill
+                    priority
+                    sizes="64px"
                   />
                 </div>
               );
@@ -314,9 +317,11 @@ export default function List(props: PageProps<"/lists/[id]">) {
                 {editItem.img && (
                   <div className="w-24 h-24 relative">
                     <Image
+                      loader={ImageKitLoader}
                       src={editItem.img}
                       alt="Preview"
                       fill
+                      sizes="96px"
                       style={{ objectFit: "cover" }}
                       className="mt-4 object-cover rounded"
                     />

@@ -9,16 +9,14 @@ export async function POST(req: Request) {
     const token = biscuits.get("auth_token")?.value;
     if (!token) return new Response(null, { status: 401 });
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      username: string;
-    };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
     const item = await prisma.item.create({
       data: {
         title: body.title,
         description: body.description,
         img: body.img,
-        createdBy: decoded.username,
+        createdById: decoded.sub,
         lists: {
           connect: [{ id: body.listId }],
         },

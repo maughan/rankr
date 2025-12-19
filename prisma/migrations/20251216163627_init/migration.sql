@@ -47,6 +47,15 @@ CREATE TABLE "Ranking" (
 );
 
 -- CreateTable
+CREATE TABLE "User" (
+    "id" SERIAL NOT NULL,
+    "username" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_ListToTier" (
     "A" INTEGER NOT NULL,
     "B" INTEGER NOT NULL,
@@ -78,6 +87,9 @@ CREATE INDEX "_ItemToRanking_B_index" ON "_ItemToRanking"("B");
 
 -- CreateIndex
 CREATE INDEX "_ItemToList_B_index" ON "_ItemToList"("B");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
 
 -- AddForeignKey
 ALTER TABLE "_ListToTier" ADD CONSTRAINT "_ListToTier_A_fkey" FOREIGN KEY ("A") REFERENCES "List"("id") ON DELETE CASCADE ON UPDATE CASCADE;

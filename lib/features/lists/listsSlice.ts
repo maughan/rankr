@@ -24,7 +24,7 @@ export interface ListState {
   editList: Pick<TierList, "title" | "description">;
   rankings: Tier[];
   filteredListRankings: Tier[];
-  userfilter: string | null;
+  userfilter: number | null;
   status: string;
 }
 
@@ -118,14 +118,17 @@ export const postRankings = createAsyncThunk(
       ?.split("=")[1];
 
     let username = "";
+    let id = 0;
 
     if (token) {
-      const decoded = jwtDecode<{ username: string }>(token);
+      const decoded = jwtDecode<{ sub: number; username: string }>(token);
       username = decoded.username;
+      id = decoded.sub;
     }
     if (!username.length) return;
+    if (id === 0) return;
 
-    const userRankings = processRankingData(rankings, list, username);
+    const userRankings = processRankingData(rankings, { id, username });
 
     const res = await fetch("/api/rankings", {
       method: "PUT",
@@ -172,7 +175,7 @@ export const listSlice = createSlice({
     },
     filterRankingsByUser: (
       state,
-      action: PayloadAction<{ user: string | null; list: TierList | undefined }>
+      action: PayloadAction<{ user: number | null; list: TierList | undefined }>
     ) => {
       const { user, list } = action.payload;
 
@@ -196,15 +199,18 @@ export const listSlice = createSlice({
         ?.split("=")[1];
 
       let username = "";
+      let id = 0;
 
       if (token) {
-        const decoded = jwtDecode<{ username: string }>(token);
+        const decoded = jwtDecode<{ sub: number; username: string }>(token);
         username = decoded.username;
+        id = decoded.sub;
       }
-
+      console.log("HERE", username, id);
       if (!username.length) return;
+      if (id === 0) return;
 
-      const userRankings = fetchUserRankings(list, username);
+      const userRankings = fetchUserRankings(list, id);
 
       state.rankings = list.tiers.map((tier) => {
         // collect all userRankings with the same value

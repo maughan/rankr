@@ -7,7 +7,22 @@ export async function GET() {
     include: {
       items: {
         include: {
-          rankings: true,
+          rankings: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  username: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      createdBy: {
+        select: {
+          username: true,
+          id: true,
         },
       },
       tiers: true,
@@ -22,10 +37,8 @@ export async function POST(req: Request) {
     const token = biscuits.get("auth_token")?.value;
     if (!token) return new Response(null, { status: 401 });
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      username: string;
-    };
-
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    console.log("DEC", decoded);
     const data = await req.json();
 
     await prisma.list.create({
@@ -33,7 +46,7 @@ export async function POST(req: Request) {
         title: data.title,
         description: data.description,
         tags: data.tags,
-        createdBy: decoded.username,
+        createdById: decoded.sub,
         tiers: {
           connect: [
             { id: 1 },

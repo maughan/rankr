@@ -11,9 +11,7 @@ export async function PUT(req: Request) {
     const token = biscuits.get("auth_token")?.value;
     if (!token) return new Response(null, { status: 401 });
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      username: string;
-    };
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
     await prisma.ranking.deleteMany({
       where: {
@@ -22,7 +20,7 @@ export async function PUT(req: Request) {
             (d: Pick<ItemRanking, "user" | "itemId" | "value">) => d.itemId
           ),
         },
-        user: decoded.username,
+        userId: decoded.sub,
       },
     });
 
@@ -31,7 +29,7 @@ export async function PUT(req: Request) {
         prisma.ranking.create({
           data: {
             itemId: d.itemId,
-            user: d.user,
+            userId: d.user.id,
             value: d.value,
           },
         })

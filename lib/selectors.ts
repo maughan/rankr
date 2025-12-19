@@ -8,12 +8,14 @@ export const selectRankersByListId = (id: number) =>
     (list) => {
       if (!list) return [];
 
-      const users = new Set<string>();
+      const users: { id: number; username: string }[] = [];
 
       list.items.forEach((item) =>
-        item?.rankings?.forEach((ranking) => users.add(ranking.user))
+        item?.rankings?.forEach((ranking) =>
+          users.push({ id: ranking.user.id, username: ranking.user.username })
+        )
       );
 
-      return [...users];
+      return Array.from(new Map(users.map((item) => [item.id, item])).values());
     }
   );

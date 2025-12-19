@@ -1,5 +1,15 @@
 import { ItemRanking, Tier, TierItem, TierList } from "@/app/types";
 
+export const ImageKitLoader = ({
+  src,
+  width,
+}: {
+  src: string;
+  width: number;
+}) => {
+  return `${src}?tr=w-${width}`;
+};
+
 export const createNewList = ({
   title,
   description,
@@ -12,10 +22,11 @@ export const createNewList = ({
   tags: [],
 });
 
-export const createNewTier = (
-  { title, color, value }: Pick<Tier, "title" | "color" | "value">,
-  user: string
-): Tier => ({
+export const createNewTier = ({
+  title,
+  color,
+  value,
+}: Pick<Tier, "title" | "color" | "value">): Tier => ({
   id: 0,
   title,
   color,
@@ -51,8 +62,7 @@ export const handleDropReorder = (end: number, item: number, list: Tier[]) => {
 
 export const processRankingData = (
   userRankings: Tier[],
-  list: TierList,
-  user: string
+  user: { id: number; username: string }
 ): Pick<ItemRanking, "itemId" | "user" | "value">[] => {
   const userRankingData: Pick<ItemRanking, "itemId" | "user" | "value">[] = [];
   userRankings.map((tier) =>
@@ -66,24 +76,6 @@ export const processRankingData = (
   );
 
   return userRankingData;
-  // // for each user ranking
-  // await
-  // // put ranking object in db
-  // // update tier object in db
-  // console.log("URS", userRankingData, list.items);
-  // userRankingData.forEach((data) => {
-  //   let matchingItem = list.items.find((item) => item.id === data.id);
-
-  //   if (!matchingItem) return;
-
-  //   if (!matchingItem.rankings) {
-  //     matchingItem = { ...matchingItem, rankings: [] };
-  //   }
-
-  //   matchingItem.rankings.push(data);
-  // });
-  // console.log("LIST", list);
-  // return list;
 };
 
 export const processResponseData = (lists: TierList[]): TierList[] => {
@@ -107,7 +99,7 @@ export const processResponseData = (lists: TierList[]): TierList[] => {
 
 export const filterListResponseData = (
   list: TierList,
-  user: string
+  user: number
 ): Tier[] => {
   const filtered = list.tiers.map((tier) => ({
     ...tier,
@@ -117,7 +109,7 @@ export const filterListResponseData = (
   list.items.map((item) => {
     if (!item.rankings.length) return;
 
-    const ranking = item.rankings.find((ranking) => ranking.user === user);
+    const ranking = item.rankings.find((ranking) => ranking.user.id === user);
 
     if (!ranking) return;
 
@@ -131,9 +123,9 @@ export const filterListResponseData = (
   return filtered;
 };
 
-export const fetchUserRankings = (list: TierList, user: string) => {
+export const fetchUserRankings = (list: TierList, user: number) => {
   if (!list) return [];
   return list.items
-    .map((item) => item?.rankings?.find((ranking) => ranking.user === user))
+    .map((item) => item?.rankings?.find((ranking) => ranking.userId === user))
     .filter((a) => !!a);
 };

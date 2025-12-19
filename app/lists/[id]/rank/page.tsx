@@ -99,7 +99,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
             <p className="text-xs flex gap-1">
               Created {formatDistance(list.createdAt, new Date())} by
-              <p className="font-bold">{list.createdBy}</p>
+              <p className="font-bold">{list.createdBy.username}</p>
             </p>
 
             <p className="text-xs">
