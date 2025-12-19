@@ -54,6 +54,8 @@ export type updateItemPayload = {
   img?: string;
 };
 
+type fetchListsSuccessPayload = TierList[];
+
 const listDefaults: any = {
   title: "",
   description: "",
@@ -291,6 +293,7 @@ export const listSlice = createSlice({
         state.status = "loading";
       })
       .addCase(fetchLists.fulfilled, (state, action) => {
+        if (!action.payload) return;
         state.status = "succeeded";
         state.lists = processResponseData(action.payload);
       })
