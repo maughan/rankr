@@ -31,25 +31,13 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
   useEffect(() => {
     if (status === "idle" && !list) {
-      dispatch(fetchLists())
-        .unwrap()
-        .then(() => {
-          if (!rankings.length) {
-            dispatch(startRanking({ list }));
-          }
-        });
+      dispatch(fetchLists()).unwrap();
     }
 
-    if (list && !rankings.length) {
+    if (list && rankings.length === 0) {
       dispatch(startRanking({ list }));
     }
-
-    return () => {
-      if (rankings.length) {
-        dispatch(clearRankings());
-      }
-    };
-  }, [dispatch, status, rankings]);
+  }, [dispatch, status, list, rankings.length]);
 
   const handleDragEnd = (event: any) => {
     const { over, active } = event;
@@ -63,8 +51,9 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
     dispatch(postRankings({ list, rankings }))
       .unwrap()
       .then(() => toast.success("Ratings saved successfully."))
-      .then(() => dispatch(fetchLists()))
+      .then(() => dispatch(clearRankings()))
       .then(() => router.push(`/lists/${id}`))
+      .then(() => dispatch(fetchLists()))
       .catch((e) => {
         toast.error("Error saving rankings.");
         console.error(e);

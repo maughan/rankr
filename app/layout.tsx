@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 import "./globals.css";
 import Head from "./head";
 import Link from "next/link";
+import RouteChangeHandler from "./RouteChangeHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased mt-14 sm:mt-2`}
       >
         <Toaster position="top-right" expand richColors />
-        <StoreProvider>{children}</StoreProvider>
+        <StoreProvider>
+          <RouteChangeHandler />
+          {children}
+        </StoreProvider>
         <Link
           href="/"
           className="px-4 py-2 pt-4 sm:pt-6 font-bold text-3xl absolute top-0 left-0"
