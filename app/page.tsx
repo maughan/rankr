@@ -56,17 +56,18 @@ export default function Home() {
     <div className="flex flex-col min-h-screen items-center justify-center font-sans p-16 gap-4">
       <button
         onClick={handleOpenEditUser}
-        className="rounded-sm text-black font-bold px-4 py-2 bg-white cursor-pointer"
+        className="rounded-sm text-black font-bold px-4 py-2 bg-white cursor-pointer absolute top-6 right-6"
       >
         Edit user
       </button>
-
-      <Link
-        className="rounded-sm text-black font-bold px-4 py-2 bg-white"
-        href="/lists"
-      >
-        Go to lists
-      </Link>
+      <div className="flex flex-col items-center justify-center font-sans p-16 gap-4">
+        <Link
+          className="rounded-sm text-black font-bold px-4 py-2 bg-white"
+          href="/lists"
+        >
+          Go to lists
+        </Link>
+      </div>
 
       {modals.editUser ? (
         <>

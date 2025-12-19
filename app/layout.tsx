@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 
 import "./globals.css";
 import Head from "./head";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,10 +25,16 @@ export default function RootLayout({
     <html lang="en">
       <Head />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased mt-2`}
       >
         <Toaster position="top-right" expand richColors />
         <StoreProvider>{children}</StoreProvider>
+        <Link
+          href="/"
+          className="px-4 py-2 pt-6 font-bold text-3xl absolute top-0 left-0"
+        >
+          Rankr
+        </Link>
       </body>
     </html>
   );
