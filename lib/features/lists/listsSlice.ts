@@ -99,11 +99,11 @@ export const fetchLists = createAsyncThunk("lists/fetchLists", async () => {
 
       document.cookie = `auth_token=; Max-Age=0; path=/;`;
       window.location.href = "/login";
-      return;
+      return [];
     }
 
     toast.error("Error fetching lists");
-    return;
+    return [];
   }
 
   return (await res.json()) as TierList[];
@@ -293,7 +293,6 @@ export const listSlice = createSlice({
         state.status = "loading";
       })
       .addCase(fetchLists.fulfilled, (state, action) => {
-        if (!action.payload) return;
         state.status = "succeeded";
         state.lists = processResponseData(action.payload);
       })
