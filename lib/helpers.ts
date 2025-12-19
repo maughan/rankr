@@ -63,15 +63,22 @@ export const handleDropReorder = (end: number, item: number, list: Tier[]) => {
 
 export const processRankingData = (
   userRankings: Tier[],
-  user: { id: number; username: string }
-): Pick<ItemRanking, "itemId" | "user" | "value">[] => {
-  const userRankingData: Pick<ItemRanking, "itemId" | "user" | "value">[] = [];
+  user: { id: number; username: string },
+  listId: number
+): { itemId: number; userId: number; value: number; listId: number }[] => {
+  const userRankingData: {
+    itemId: number;
+    userId: number;
+    value: number;
+    listId: number;
+  }[] = [];
   userRankings.map((tier) =>
     tier.items.forEach((item) =>
       userRankingData.push({
         itemId: item,
-        user,
+        userId: user.id,
         value: tier.value,
+        listId,
       })
     )
   );

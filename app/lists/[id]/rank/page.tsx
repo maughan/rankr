@@ -18,6 +18,7 @@ import {
 import Draggable from "@/app/Draggable";
 import Droppable from "@/app/Droppable";
 import { formatDistance } from "date-fns";
+import { ImageKitLoader } from "@/lib/helpers";
 
 export default function Rank(props: PageProps<"/lists/[id]">) {
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
   };
 
   const handleRankSubmit = () => {
+    if (!list) return;
     dispatch(postRankings({ list, rankings }))
       .unwrap()
       .then(() => toast.success("Ratings saved successfully."))
@@ -127,9 +129,12 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                           {item ? (
                             <div className="w-16 h-16 relative">
                               <Image
+                                loader={ImageKitLoader}
                                 src={item.img}
                                 alt={item.title}
+                                sizes="64px"
                                 fill
+                                priority
                                 style={{ objectFit: "cover" }}
                               />
                             </div>
@@ -156,9 +161,12 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                     <Draggable id={item.id}>
                       <div className="w-16 h-16 relative">
                         <Image
+                          loader={ImageKitLoader}
                           src={item.img}
                           alt={item.title}
                           fill
+                          sizes="64px"
+                          priority
                           style={{ objectFit: "cover" }}
                         />
                       </div>

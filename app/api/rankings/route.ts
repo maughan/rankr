@@ -22,26 +22,45 @@ export async function PUT(req: Request) {
       throw new Error("Token invalid");
     }
 
+    const list = await prisma.list.findUnique({
+      where: {
+        id: body[0].listId,
+      },
+      include: {
+        items: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    const listItemIds = list?.items.map((item) => item.id);
+
     await prisma.ranking.deleteMany({
       where: {
         itemId: {
-          in: body.map(
-            (d: Pick<ItemRanking, "user" | "itemId" | "value">) => d.itemId
-          ),
+          in: listItemIds,
         },
         userId: decoded.sub,
       },
     });
 
     const items = await Promise.all(
-      body.map((d: Pick<ItemRanking, "user" | "itemId" | "value">) =>
-        prisma.ranking.create({
-          data: {
-            itemId: d.itemId,
-            userId: d.user.id,
-            value: d.value,
-          },
-        })
+      body.map(
+        (d: {
+          itemId: number;
+          userId: number;
+          value: number;
+          listId: number;
+        }) =>
+          prisma.ranking.create({
+            data: {
+              itemId: d.itemId,
+              userId: d.userId,
+              value: d.value,
+            },
+          })
       )
     );
 

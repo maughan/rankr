@@ -155,7 +155,7 @@ export const postList = createAsyncThunk(
 
 export const postRankings = createAsyncThunk(
   "lists/postRankings",
-  async ({ list, rankings }: { list: any; rankings: any[] }) => {
+  async ({ list, rankings }: { list: TierList; rankings: any[] }) => {
     const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("auth_token="))
@@ -173,7 +173,11 @@ export const postRankings = createAsyncThunk(
     if (!username.length) return;
     if (id === 0) return;
 
-    const userRankings = processRankingData(rankings, { id, username });
+    const userRankings = processRankingData(
+      rankings,
+      { id, username },
+      list.id
+    );
 
     const res = await fetch("/api/rankings", {
       method: "PUT",
