@@ -14,12 +14,16 @@ export const ImageKitLoader = ({
 export const createNewList = ({
   title,
   description,
-}: Pick<TierList, "title" | "description">): Pick<
+  img,
+  hidden,
+}: Pick<TierList, "title" | "description" | "img" | "hidden">): Pick<
   TierList,
-  "title" | "description" | "tags"
+  "title" | "description" | "tags" | "hidden" | "img"
 > => ({
   title,
   description,
+  img,
+  hidden,
   tags: [],
 });
 

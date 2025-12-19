@@ -10,13 +10,19 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { selectRankersByListId } from "@/lib/selectors";
 import {
   closeCreateItemModal,
+  closeCreateListModal,
   fetchLists,
   filterRankingsByUser,
   getListById,
   openCreateItemModal,
+  openCreateListModal,
+  openUpdateListModal,
+  patchList,
   postItem,
   updateItemMeta,
   updateItemPayload,
+  updateListMeta,
+  updateListPayload,
 } from "@/lib/features/lists/listsSlice";
 import { toast } from "sonner";
 import Image from "next/image";
@@ -30,6 +36,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
   const users = useAppSelector(selectRankersByListId(parseInt(id)));
   const modals = useAppSelector((state) => state.lists.modals);
   const editItem = useAppSelector((state) => state.lists.editItem);
+  const editList = useAppSelector((state) => state.lists.editList);
   const status = useAppSelector((state) => state.lists.status);
   const filter = useAppSelector((state) => state.lists.userfilter);
   const filteredRankings = useAppSelector(
@@ -64,9 +71,28 @@ export default function List(props: PageProps<"/lists/[id]">) {
     dispatch(closeCreateItemModal());
   };
 
+  const handleOpenCreateList = () => {
+    dispatch(openUpdateListModal(list));
+  };
+
+  const handleCloseCreateList = () => {
+    dispatch(closeCreateListModal());
+  };
+
   const handleItemOnChange = (key: keyof updateItemPayload, value: string) => {
     dispatch(
       updateItemMeta({
+        [key]: value,
+      })
+    );
+  };
+
+  const handleListOnChange = (
+    key: keyof updateListPayload,
+    value: string | boolean
+  ) => {
+    dispatch(
+      updateListMeta({
         [key]: value,
       })
     );
@@ -119,6 +145,18 @@ export default function List(props: PageProps<"/lists/[id]">) {
     }
   };
 
+  const handleUpdateList = () => {
+    if (!editList.title.length || !editList.description.length) return;
+
+    dispatch(patchList({ editList, id: parseInt(id) }))
+      .unwrap()
+      .then(() => dispatch(closeCreateListModal()))
+      .then(() => dispatch(fetchLists()))
+      .catch((e) => {
+        console.error("e", e);
+      });
+  };
+
   if (["idle", "loading"].includes(status) && !list)
     return (
       <div className="flex justify-center items-center h-screen">
@@ -146,19 +184,29 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
       {list ? (
         <>
-          <p className="text-4xl font-bold">{list.title}</p>
+          <div className="flex justify-between">
+            <div>
+              <p className="text-4xl font-bold">{list.title}</p>
 
-          <p className="italic">{list.description}</p>
+              <p className="italic">{list.description}</p>
 
-          <p className="text-xs flex gap-1">
-            Created {formatDistance(list.createdAt, new Date())} by
-            <p className="font-bold">{list.createdBy.username}</p>
-          </p>
+              <p className="text-xs flex gap-1">
+                Created {formatDistance(list.createdAt, new Date())} by
+                <p className="font-bold">{list.createdBy.username}</p>
+              </p>
 
-          <p className="text-xs">
-            Last updated {formatDistance(list.updatedAt, new Date())}
-          </p>
+              <p className="text-xs">
+                Last updated {formatDistance(list.updatedAt, new Date())}
+              </p>
+            </div>
 
+            <button
+              onClick={handleOpenCreateList}
+              className="rounded-sm font-bold text-black bg-white px-4 py-2 h-min cursor-pointer"
+            >
+              Edit list
+            </button>
+          </div>
           <br />
 
           {!users.length ? null : (
@@ -342,6 +390,105 @@ export default function List(props: PageProps<"/lists/[id]">) {
                 className="rounded-sm bg-green-400 px-4 py-2 font-bold cursor-pointer"
                 onClick={handleAddItem}
                 disabled={status === "loading"}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </>
+      ) : null}
+
+      {modals.createList ? (
+        <>
+          <div className="fixed z-998 bg-white inset-0 opacity-40" />
+
+          <div className="fixed z-999 place-self-center bg-black h-fit w-9/10 p-8 rounded-sm inset-0 sm:w-100">
+            <p className="text-2xl font-bold">Create list</p>
+
+            <div className="flex flex-col gap-8 mt-8 w-full">
+              <div className="w-full">
+                <p className="font-bold">List name *</p>
+
+                <input
+                  aria-label="Item name"
+                  className="w-full h-8 text-white outline-none border-solid border-white border-b-2 focus:bg-slate-900"
+                  value={editList.title}
+                  onChange={(e) => handleListOnChange("title", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <p className="font-bold">Description</p>
+
+                <input
+                  className="w-full h-8 text-white outline-none border-solid border-white border-b-2 focus:bg-slate-900"
+                  value={editList.description}
+                  type="text"
+                  onChange={(e) =>
+                    handleListOnChange("description", e.target.value)
+                  }
+                />
+              </div>
+
+              <div>
+                <p className="font-bold">Image *</p>
+
+                {!editList.img && (
+                  <button
+                    className="rounded-sm bg-white font-bold text-black px-4 py-2 mt-2 cursor-pointer"
+                    onClick={handleUploadButton}
+                  >
+                    Upload image
+                  </button>
+                )}
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageUpload}
+                  ref={fileInputRef}
+                />
+
+                {editList.img && (
+                  <div className="w-24 h-24 relative">
+                    <Image
+                      loader={ImageKitLoader}
+                      src={editList.img}
+                      alt="Preview"
+                      fill
+                      sizes="96px"
+                      style={{ objectFit: "cover" }}
+                      className="mt-4 object-cover rounded"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-between items-center">
+                <p className="font-bold">Hide list</p>
+
+                <input
+                  type="checkbox"
+                  checked={editList.hidden}
+                  onChange={(e) => {
+                    handleListOnChange("hidden", e.target.checked);
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between mt-16">
+              <button
+                className="rounded-sm bg-red-400 px-4 py-2 font-bold cursor-pointer"
+                onClick={handleCloseCreateList}
+              >
+                Close
+              </button>
+
+              <button
+                className="rounded-sm bg-green-400 px-4 py-2 font-bold cursor-pointer"
+                onClick={handleUpdateList}
               >
                 Save
               </button>

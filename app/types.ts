@@ -2,6 +2,8 @@ export interface TierList {
   id: number;
   title: string;
   description: string;
+  img: string;
+  hidden: boolean;
   createdAt: string;
   updatedAt: string;
   createdBy: {

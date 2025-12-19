@@ -9,6 +9,7 @@ import Image from "next/image";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
+  clearRankings,
   fetchLists,
   getListById,
   handleDropItem,
@@ -42,6 +43,12 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
     if (list && !rankings.length) {
       dispatch(startRanking({ list }));
     }
+
+    return () => {
+      if (rankings.length) {
+        dispatch(clearRankings());
+      }
+    };
   }, [dispatch, status, rankings]);
 
   const handleDragEnd = (event: any) => {

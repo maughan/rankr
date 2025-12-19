@@ -53,7 +53,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center font-sans p-16 gap-4">
+    <div className="flex flex-col sm:min-h-screen items-center justify-center font-sans p-16 gap-4">
       <button
         onClick={handleOpenEditUser}
         className="rounded-sm text-black font-bold px-4 py-2 bg-white cursor-pointer absolute top-4 sm:top-6 right-6"

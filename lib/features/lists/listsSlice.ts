@@ -24,7 +24,7 @@ export interface ListState {
     editUser: boolean;
   };
   editItem: Pick<TierItem, "title" | "img" | "description">;
-  editList: Pick<TierList, "title" | "description">;
+  editList: Pick<TierList, "title" | "description" | "img" | "hidden">;
   editUser: Pick<User, "email" | "username">;
   rankings: Tier[];
   filteredListRankings: Tier[];
@@ -34,6 +34,8 @@ export interface ListState {
 
 export type updateListPayload = {
   title?: string;
+  img?: string;
+  hidden?: boolean;
   description?: string;
 };
 
@@ -54,11 +56,11 @@ export type updateItemPayload = {
   img?: string;
 };
 
-type fetchListsSuccessPayload = TierList[];
-
 const listDefaults: any = {
   title: "",
   description: "",
+  img: "",
+  hidden: true,
 };
 
 const itemDefaults: any = {
@@ -116,8 +118,6 @@ export const updateUser = createAsyncThunk(
       method: "POST",
       body: JSON.stringify(data),
     });
-
-    console.log("res", res);
   }
 );
 
@@ -143,13 +143,48 @@ export const postList = createAsyncThunk(
   async ({
     editList,
   }: {
-    editList: Pick<TierList, "title" | "description">;
+    editList: Pick<TierList, "title" | "description" | "img" | "hidden">;
   }) => {
     const list = createNewList(editList);
     await fetch("/api/lists", {
       method: "POST",
       body: JSON.stringify(list),
     });
+  }
+);
+
+export const patchList = createAsyncThunk(
+  "list/patchList",
+  async ({
+    editList,
+    id,
+  }: {
+    editList: Pick<TierList, "title" | "description" | "img" | "hidden">;
+    id: number;
+  }) => {
+    const res = await fetch("/api/lists", {
+      method: "PATCH",
+      body: JSON.stringify({ ...editList, id }),
+    });
+
+    if (!res.ok) {
+      const resJson = await res.json();
+      if (resJson.error === "Invalid token") {
+        console.log("LOGOUT");
+
+        document.cookie = `auth_token=; Max-Age=0; path=/;`;
+        window.location.href = "/login";
+        return [];
+      }
+
+      throw new Error("MEME");
+      toast.error("Failed to update list");
+      return;
+    }
+
+    if (res.ok) {
+      toast.success("List updated successfully");
+    }
   }
 );
 
@@ -207,6 +242,16 @@ export const listSlice = createSlice({
     },
     openCreateListModal: (state) => {
       state.editList = listDefaults;
+      state.modals.createList = true;
+    },
+    openUpdateListModal: (state, action) => {
+      const { img, description, hidden, title } = action.payload;
+      state.editList = {
+        img,
+        description,
+        hidden,
+        title,
+      };
       state.modals.createList = true;
     },
     closeCreateListModal: (state) => {
@@ -290,6 +335,9 @@ export const listSlice = createSlice({
         state.rankings = [...list.tiers];
       }
     },
+    clearRankings: (state) => {
+      state.rankings = [];
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -330,6 +378,7 @@ export const {
   updateUserMeta,
   clearLists,
   openCreateListModal,
+  openUpdateListModal,
   closeCreateListModal,
   openCreateItemModal,
   closeCreateItemModal,
@@ -338,6 +387,7 @@ export const {
   handleDropItem,
   startRanking,
   filterRankingsByUser,
+  clearRankings,
 } = listSlice.actions;
 
 export const getListById = (state: RootState, id: number) => {

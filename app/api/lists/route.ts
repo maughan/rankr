@@ -21,6 +21,9 @@ export async function GET() {
     }
 
     const lists = await prisma.list.findMany({
+      where: {
+        hidden: false,
+      },
       include: {
         items: {
           include: {
@@ -63,7 +66,7 @@ export async function POST(req: Request) {
       where: { id: decoded.sub },
       select: { tokenVersion: true },
     });
-    console.log("HERE", user, decoded);
+
     if (!user || user.tokenVersion !== decoded.tokenVersion) {
       throw new Error("Token invalid");
     }
@@ -76,6 +79,8 @@ export async function POST(req: Request) {
         description: data.description,
         tags: data.tags,
         createdById: decoded.sub,
+        img: data.img,
+        hidden: data.hidden,
         tiers: {
           connect: [
             { id: 1 },
@@ -91,6 +96,56 @@ export async function POST(req: Request) {
     });
 
     return Response.json("Success", { status: 200 });
+  } catch (e) {
+    return Response.error();
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const biscuits = await cookies();
+    const token = biscuits.get("auth_token")?.value;
+    if (!token) return new Response(null, { status: 401 });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.sub },
+    });
+
+    if (!user || user.tokenVersion !== decoded.tokenVersion) {
+      throw new Error("Token invalid");
+    }
+
+    const data = await req.json();
+
+    const ownsList = await prisma.list.findFirst({
+      where: {
+        id: data.id,
+        createdById: user.id,
+      },
+    });
+
+    if (!ownsList)
+      return NextResponse.json(
+        { message: "Failed to update list" },
+        { status: 401 }
+      );
+
+    await prisma.list.update({
+      where: {
+        id: data.id,
+        createdById: user.id,
+      },
+      data: {
+        title: data.title,
+        description: data.description,
+        img: data.img,
+        hidden: data.hidden,
+      },
+    });
+
+    return NextResponse.json({ messsage: "Success" }, { status: 200 });
   } catch (e) {
     return Response.error();
   }

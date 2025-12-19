@@ -46,7 +46,8 @@ model List {
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
-
+  hidden      Boolean @default(true)
+  img         String?
   createdById Int
   createdBy   User     @relation(fields: [createdById], references: [id])
 
