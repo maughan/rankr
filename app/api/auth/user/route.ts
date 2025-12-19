@@ -33,7 +33,11 @@ export async function POST(req: Request) {
     }
 
     const token = jwt.sign(
-      { sub: newUser.id, username: newUser.username },
+      {
+        sub: newUser.id,
+        username: newUser.username,
+        tokenVersion: newUser.tokenVersion,
+      },
       JWT_SECRET,
       { expiresIn: "30d" }
     );
@@ -47,7 +51,7 @@ export async function POST(req: Request) {
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return Response.json({ success: true });

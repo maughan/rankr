@@ -11,6 +11,15 @@ export async function POST(req: Request) {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
 
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.sub },
+      select: { tokenVersion: true },
+    });
+
+    if (!user || user.tokenVersion !== decoded.tokenVersion) {
+      throw new Error("Token invalid");
+    }
+
     const item = await prisma.item.create({
       data: {
         title: body.title,

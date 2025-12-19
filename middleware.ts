@@ -16,7 +16,10 @@ export async function middleware(req: NextRequest) {
   }
 
   // Protect these routes
-  if (req.nextUrl.pathname.startsWith("/lists")) {
+  if (
+    req.nextUrl.pathname.startsWith("/lists") ||
+    req.nextUrl.pathname === "/"
+  ) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", req.url));
     }

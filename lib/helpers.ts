@@ -1,4 +1,5 @@
 import { ItemRanking, Tier, TierItem, TierList } from "@/app/types";
+import { jwtDecode } from "jwt-decode";
 
 export const ImageKitLoader = ({
   src,
@@ -128,4 +129,30 @@ export const fetchUserRankings = (list: TierList, user: number) => {
   return list.items
     .map((item) => item?.rankings?.find((ranking) => ranking.userId === user))
     .filter((a) => !!a);
+};
+
+export const getUserFromToken = () => {
+  const token = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("auth_token="))
+    ?.split("=")[1];
+
+  let username = "";
+  let id = 0;
+  let email = "";
+
+  if (token) {
+    const decoded = jwtDecode<{ sub: number; username: string; email: string }>(
+      token
+    );
+    username = decoded.username;
+    id = decoded.sub;
+    email = decoded.email ?? "";
+  }
+
+  return {
+    username,
+    id,
+    email,
+  };
 };

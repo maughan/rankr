@@ -1,34 +1,54 @@
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
+import { NextResponse } from "next/server";
 
 export async function GET() {
-  const lists = await prisma.list.findMany({
-    include: {
-      items: {
-        include: {
-          rankings: {
-            include: {
-              user: {
-                select: {
-                  id: true,
-                  username: true,
+  try {
+    const biscuits = await cookies();
+    const token = biscuits.get("auth_token")?.value;
+    if (!token) return new Response(null, { status: 401 });
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.sub },
+      select: { tokenVersion: true },
+    });
+
+    if (!user || user.tokenVersion !== decoded.tokenVersion) {
+      return NextResponse.json({ error: "Invalid token" }, { status: 500 });
+    }
+
+    const lists = await prisma.list.findMany({
+      include: {
+        items: {
+          include: {
+            rankings: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    username: true,
+                  },
                 },
               },
             },
           },
         },
-      },
-      createdBy: {
-        select: {
-          username: true,
-          id: true,
+        createdBy: {
+          select: {
+            username: true,
+            id: true,
+          },
         },
+        tiers: true,
       },
-      tiers: true,
-    },
-  });
-  return Response.json(lists);
+    });
+    return NextResponse.json(lists);
+  } catch (e) {
+    return NextResponse.json({ error: e }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
@@ -38,7 +58,16 @@ export async function POST(req: Request) {
     if (!token) return new Response(null, { status: 401 });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    console.log("DEC", decoded);
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.sub },
+      select: { tokenVersion: true },
+    });
+    console.log("HERE", user, decoded);
+    if (!user || user.tokenVersion !== decoded.tokenVersion) {
+      throw new Error("Token invalid");
+    }
+
     const data = await req.json();
 
     await prisma.list.create({

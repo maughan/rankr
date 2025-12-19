@@ -1,17 +1,19 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { jwtDecode } from "jwt-decode";
 
-import { Tier, TierItem, TierList } from "@/app/types";
+import { Tier, TierItem, TierList, User } from "@/app/types";
 import {
   createNewItem,
   createNewList,
   fetchUserRankings,
   filterListResponseData,
+  getUserFromToken,
   handleDropReorder,
   processRankingData,
   processResponseData,
 } from "@/lib/helpers";
 import { RootState } from "@/lib/store";
+import { toast } from "sonner";
 
 export interface ListState {
   lists: Array<TierList>;
@@ -19,9 +21,11 @@ export interface ListState {
     createList: boolean;
     createTier: boolean;
     createItem: boolean;
+    editUser: boolean;
   };
   editItem: Pick<TierItem, "title" | "img" | "description">;
   editList: Pick<TierList, "title" | "description">;
+  editUser: Pick<User, "email" | "username">;
   rankings: Tier[];
   filteredListRankings: Tier[];
   userfilter: number | null;
@@ -37,6 +41,11 @@ export type updateTierPayload = {
   title?: string;
   color?: string;
   value?: number;
+};
+
+export type updateUserPayload = {
+  email?: string;
+  username?: string;
 };
 
 export type updateItemPayload = {
@@ -56,15 +65,22 @@ const itemDefaults: any = {
   img: "",
 };
 
+const editUserDefault: any = {
+  username: "",
+  email: "",
+};
+
 const initialState: ListState = {
   lists: [],
   modals: {
     createList: false,
     createTier: false,
     createItem: false,
+    editUser: false,
   },
   editItem: itemDefaults,
   editList: listDefaults,
+  editUser: editUserDefault,
   rankings: [],
   filteredListRankings: [],
   userfilter: null,
@@ -72,10 +88,36 @@ const initialState: ListState = {
 };
 
 export const fetchLists = createAsyncThunk("lists/fetchLists", async () => {
-  const res = await fetch("/api/lists");
+  const res: any = await fetch("/api/lists");
+
+  if (!res.ok) {
+    const resJson = await res.json();
+    if (resJson.error === "Invalid token") {
+      console.log("LOGOUT");
+
+      document.cookie = `auth_token=; Max-Age=0; path=/;`;
+      window.location.href = "/login";
+      return;
+    }
+
+    toast.error("Error fetching lists");
+    return;
+  }
 
   return (await res.json()) as TierList[];
 });
+
+export const updateUser = createAsyncThunk(
+  "users/updateUser",
+  async (data: Pick<User, "email" | "username">) => {
+    const res = await fetch("/api/user/update", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+
+    console.log("res", res);
+  }
+);
 
 export const postItem = createAsyncThunk(
   "lists/postItem",
@@ -125,6 +167,7 @@ export const postRankings = createAsyncThunk(
       username = decoded.username;
       id = decoded.sub;
     }
+
     if (!username.length) return;
     if (id === 0) return;
 
@@ -147,6 +190,9 @@ export const listSlice = createSlice({
     updateItemMeta: (state, action: PayloadAction<updateItemPayload>) => {
       state.editItem = { ...state.editItem, ...action.payload };
     },
+    updateUserMeta: (state, action: PayloadAction<updateUserPayload>) => {
+      state.editUser = { ...state.editUser, ...action.payload };
+    },
     addItemToList: (state, action: PayloadAction<any>) => {
       state.lists[action.payload.id].tiers.push(action.payload);
     },
@@ -168,6 +214,16 @@ export const listSlice = createSlice({
     closeCreateItemModal: (state) => {
       state.modals.createItem = false;
       state.editItem = itemDefaults;
+    },
+    openEditUserModal: (state) => {
+      const { email, username } = getUserFromToken();
+      state.editUser.email = email;
+      state.editUser.username = username;
+      state.modals.editUser = true;
+    },
+    closeEditUserModal: (state) => {
+      state.modals.editUser = false;
+      state.editUser = editUserDefault;
     },
     handleDropItem: (state, action) => {
       const { over, active } = action.payload;
@@ -206,7 +262,7 @@ export const listSlice = createSlice({
         username = decoded.username;
         id = decoded.sub;
       }
-      console.log("HERE", username, id);
+
       if (!username.length) return;
       if (id === 0) return;
 
@@ -265,11 +321,14 @@ export const listSlice = createSlice({
 export const {
   updateListMeta,
   updateItemMeta,
+  updateUserMeta,
   clearLists,
   openCreateListModal,
   closeCreateListModal,
   openCreateItemModal,
   closeCreateItemModal,
+  openEditUserModal,
+  closeEditUserModal,
   handleDropItem,
   startRanking,
   filterRankingsByUser,

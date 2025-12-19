@@ -299,7 +299,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
                 {!editItem.img && (
                   <button
-                    className="rounded-sm bg-white font-bold text-black px-4 py-2 mt-2"
+                    className="rounded-sm bg-white font-bold text-black px-4 py-2 mt-2 cursor-pointer"
                     onClick={handleUploadButton}
                   >
                     Upload image

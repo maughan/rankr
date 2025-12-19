@@ -23,9 +23,14 @@ export async function POST(req: Request) {
       return new Response("Invalid credentials", { status: 401 });
 
     const token = jwt.sign(
-      { sub: user.id, username: user.username },
+      {
+        sub: user.id,
+        username: user.username,
+        email: user.email,
+        tokenVersion: user.tokenVersion,
+      },
       JWT_SECRET,
-      { expiresIn: "30d" }
+      { expiresIn: "7d" }
     );
 
     const biscuits = await cookies();
@@ -37,7 +42,7 @@ export async function POST(req: Request) {
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: 60 * 60 * 24 * 7,
     });
 
     return Response.json({ success: true });

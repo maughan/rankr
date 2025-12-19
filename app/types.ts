@@ -43,3 +43,11 @@ export interface ItemRanking {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface User {
+  id: number;
+  password: string;
+  username: string;
+  email: string;
+  tokenVersion: number;
+}
