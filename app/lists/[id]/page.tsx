@@ -26,7 +26,7 @@ import {
 } from "@/lib/features/lists/listsSlice";
 import { toast } from "sonner";
 import Image from "next/image";
-import { ImageKitLoader } from "@/lib/helpers";
+import { getUserFromToken, ImageKitLoader } from "@/lib/helpers";
 
 export default function List(props: PageProps<"/lists/[id]">) {
   const { id } = React.use(props.params);
@@ -42,6 +42,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
   const filteredRankings = useAppSelector(
     (state) => state.lists.filteredListRankings
   );
+  const user = getUserFromToken();
 
   const imagekit = new ImageKit({
     publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
@@ -200,12 +201,14 @@ export default function List(props: PageProps<"/lists/[id]">) {
               </p>
             </div>
 
-            <button
-              onClick={handleOpenCreateList}
-              className="rounded-sm font-bold text-black bg-white px-4 py-2 h-min cursor-pointer"
-            >
-              Edit list
-            </button>
+            {list.createdBy.id === user.id ? (
+              <button
+                onClick={handleOpenCreateList}
+                className="rounded-sm font-bold text-black bg-white px-4 py-2 h-min cursor-pointer"
+              >
+                Edit list
+              </button>
+            ) : null}
           </div>
           <br />
 
