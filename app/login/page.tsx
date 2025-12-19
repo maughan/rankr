@@ -19,7 +19,7 @@ export default function LoginPage() {
     });
 
     if (response.ok) {
-      window.location.href = "/lists";
+      window.location.href = "/";
     } else {
       toast.error("Failed to log in.");
       // Handle errors

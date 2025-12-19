@@ -23,7 +23,7 @@ export default function SignupPage() {
 
     if (response.ok) {
       toast.success("User created successfully.");
-      router.push("/lists");
+      router.push("/");
     } else {
       toast.error("Error creating user.");
     }
