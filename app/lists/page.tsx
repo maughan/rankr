@@ -143,7 +143,8 @@ export default function Lists() {
                       alt=""
                       src={list.img}
                       fill
-                      sizes="64px"
+                      sizes="358px"
+                      priority
                       style={{ objectFit: "cover" }}
                     />
                   </div>

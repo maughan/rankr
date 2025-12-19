@@ -146,6 +146,37 @@ export default function List(props: PageProps<"/lists/[id]">) {
     }
   };
 
+  const handleListImageUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const res = await fetch("/api/imagekit-auth");
+      const { token, expire, signature } = await res.json();
+      const result = await imagekit.upload({
+        file,
+        fileName: `${Date.now()}-${file.name}`,
+        folder: "/lists",
+        token,
+        expire,
+        signature,
+      } as any);
+
+      dispatch(
+        updateListMeta({
+          img: result.url,
+        })
+      );
+
+      toast.success("Image uploaded");
+    } catch (err) {
+      console.error(err);
+      toast.error("Image upload failed");
+    }
+  };
+
   const handleUpdateList = () => {
     if (!editList.title.length || !editList.description.length) return;
 
@@ -449,7 +480,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={handleImageUpload}
+                  onChange={handleListImageUpload}
                   ref={fileInputRef}
                 />
 
