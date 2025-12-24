@@ -16,7 +16,9 @@ import { RootState } from "@/lib/store";
 import { toast } from "sonner";
 
 export interface ListState {
+  items: Array<TierItem>;
   lists: Array<TierList>;
+  userLists: Array<TierList>;
   modals: {
     createList: boolean;
     createTier: boolean;
@@ -75,7 +77,9 @@ const editUserDefault: any = {
 };
 
 const initialState: ListState = {
+  items: [],
   lists: [],
+  userLists: [],
   modals: {
     createList: false,
     createTier: false,
@@ -90,6 +94,46 @@ const initialState: ListState = {
   userfilter: null,
   status: "idle",
 };
+
+export const fetchItems = createAsyncThunk("lists/fetchItems", async () => {
+  const res: any = await fetch("/api/items");
+  const resJson = await res.json();
+
+  if (!res.ok) {
+    if (resJson.error === "Invalid token") {
+      console.log("LOGOUT");
+
+      document.cookie = `auth_token=; Max-Age=0; path=/;`;
+      window.location.href = "/login";
+      return [];
+    }
+
+    toast.error("Error fetching lists");
+    return [];
+  }
+
+  return resJson.items as TierItem[];
+});
+
+export const fetchMyLists = createAsyncThunk("lists/fetchMyLists", async () => {
+  const res: any = await fetch("/api/user/lists");
+  const resJson = await res.json();
+
+  if (!res.ok) {
+    if (resJson.error === "Invalid token") {
+      console.log("LOGOUT");
+
+      document.cookie = `auth_token=; Max-Age=0; path=/;`;
+      window.location.href = "/login";
+      return [];
+    }
+
+    toast.error("Error fetching lists");
+    return [];
+  }
+
+  return resJson.lists as TierList[];
+});
 
 export const fetchLists = createAsyncThunk("lists/fetchLists", async () => {
   const res: any = await fetch("/api/lists");
@@ -341,6 +385,26 @@ export const listSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(fetchItems.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchItems.fulfilled, (state, action) => {
+        state.items = action.payload;
+        state.status = "succeeded";
+      })
+      .addCase(fetchItems.rejected, (state) => {
+        state.status = "failed";
+      })
+      .addCase(fetchMyLists.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchMyLists.fulfilled, (state, action) => {
+        state.userLists = action.payload;
+        state.status = "succeeded";
+      })
+      .addCase(fetchMyLists.rejected, (state) => {
+        state.status = "failed";
+      })
       .addCase(fetchLists.pending, (state) => {
         state.status = "loading";
       })

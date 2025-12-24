@@ -1,30 +1,33 @@
 "use client";
 
-import React from "react";
+import { useRef, useEffect } from "react";
 import Link from "next/link";
-import { useEffect } from "react";
-import { formatDistance } from "date-fns";
-import { toast } from "sonner";
-import ImageKit from "imagekit-javascript";
 import Image from "next/image";
+import { toast } from "sonner";
+import { formatDistance } from "date-fns";
+import ImageKit from "imagekit-javascript";
+import { useRouter } from "next/navigation";
 
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   closeCreateListModal,
   fetchLists,
+  fetchMyLists,
   openCreateListModal,
   postList,
   updateListMeta,
   updateListPayload,
 } from "@/lib/features/lists/listsSlice";
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+
 import { ImageKitLoader } from "@/lib/helpers";
 
-export default function Lists() {
+export default function MyLists() {
   const dispatch = useAppDispatch();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const lists = useAppSelector((state) => state.lists);
   const status = useAppSelector((state) => state.lists.status);
+  const lists = useAppSelector((state) => state.lists.userLists);
   const modals = useAppSelector((state) => state.lists.modals);
   const editList = useAppSelector((state) => state.lists.editList);
 
@@ -35,10 +38,33 @@ export default function Lists() {
   } as any);
 
   useEffect(() => {
-    if (!lists.lists.length) {
-      dispatch(fetchLists());
+    if (status === "idle") {
+      dispatch(fetchMyLists());
     }
   }, [dispatch, status]);
+
+  const handleOnChange = (
+    key: keyof updateListPayload,
+    value: string | boolean
+  ) => {
+    dispatch(
+      updateListMeta({
+        [key]: value,
+      })
+    );
+  };
+
+  const handleOpenCreateList = () => {
+    dispatch(openCreateListModal());
+  };
+
+  const handleCloseCreateList = () => {
+    dispatch(closeCreateListModal());
+  };
+
+  const handleUploadButton = () => {
+    fileInputRef.current?.click(); // triggers the hidden input
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -69,29 +95,6 @@ export default function Lists() {
     }
   };
 
-  const handleOpenCreateList = () => {
-    dispatch(openCreateListModal());
-  };
-
-  const handleCloseCreateList = () => {
-    dispatch(closeCreateListModal());
-  };
-
-  const handleUploadButton = () => {
-    fileInputRef.current?.click(); // triggers the hidden input
-  };
-
-  const handleOnChange = (
-    key: keyof updateListPayload,
-    value: string | boolean
-  ) => {
-    dispatch(
-      updateListMeta({
-        [key]: value,
-      })
-    );
-  };
-
   const handleAddList = () => {
     if (!editList.title.length || !editList.description.length) return;
 
@@ -101,19 +104,23 @@ export default function Lists() {
       .then(() => dispatch(fetchLists()))
       .then(() => toast.success("List created successfully."))
       .catch((e) => {
-        toast.error("Failed to add item.");
+        toast.error("Failed to create list.");
         console.error("e", e);
       });
+  };
+
+  const handleView = (id: number) => {
+    router.push(`/lists/mylists/${id}`);
   };
 
   return (
     <div className="p-4 flex flex-col gap-4 sm:p-16">
       <div className="flex justify-between">
-        <p className="text-3xl font-bold">Tier Lists</p>
+        <p className="text-3xl font-bold">Your Lists</p>
 
         {!["idle", "loading"].includes(status) && lists ? (
           <button
-            onClick={handleOpenCreateList}
+            onClick={() => {}}
             className="rounded-sm bg-white font-bold text-black px-4 py-2 cursor-pointer"
           >
             Create list
@@ -126,11 +133,42 @@ export default function Lists() {
           <p className="text-2xl font-bold">Loading ...</p>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-4 pt-4">
-          {lists.lists.map((list) => (
+        <div className="flex flex-wrap gap-4 pt-4 w-full">
+          <table className="w-full">
+            <thead>
+              <td className="font-bold p-2">List name</td>
+              <td className="font-bold p-2">Items</td>
+              <td className="font-bold p-2">Responses</td>
+              <td className="font-bold p-2">Private</td>
+              <td className="font-bold p-2"></td>
+            </thead>
+            <tbody>
+              {lists.map((list) => (
+                <tr
+                  className="cursor-pointer"
+                  onClick={() => handleView(list.id)}
+                >
+                  <td className="p-2 overflow-elipsis">{list.title}</td>
+                  <td className="p-2">{list.items.length}</td>
+                  <td className="p-2">
+                    {
+                      new Set(
+                        list.items.flatMap((item) =>
+                          item.rankings.map((ranking) => ranking.userId)
+                        )
+                      ).size
+                    }
+                  </td>
+                  <td className="p-2">{list.hidden ? "Y" : "N"}</td>
+                  <td>{/* todo: add actions/icons */}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {/* {lists.map((list) => (
             <Link
               className="w-90 h-60 border-1 hover:border-2"
-              href={`/lists/${list.id}`}
+              href={`/lists/mylists/${list.id}`}
             >
               <div className="flex flex-col h-full">
                 {list.img ? (
@@ -171,7 +209,7 @@ export default function Lists() {
                 </div>
               </div>
             </Link>
-          ))}
+          ))} */}
         </div>
       )}
 

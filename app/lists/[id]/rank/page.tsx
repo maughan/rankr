@@ -111,7 +111,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                 <div className="flex">
                   <div
                     style={{ backgroundColor: d.color }}
-                    className="text-black text-2xl font-bold p-4 min-w-16 min-h-16 flex justify-center items-center"
+                    className="text-black text-2xl font-bold p-4 min-w-17 min-h-16 flex justify-center items-center"
                   >
                     {d.title}
                   </div>

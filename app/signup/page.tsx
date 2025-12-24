@@ -12,13 +12,14 @@ export default function SignupPage() {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
+    const email = formData.get("email");
     const username = formData.get("username");
     const password = formData.get("password");
 
     const response = await fetch("/api/auth/user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, username, password }),
     });
 
     if (response.ok) {
@@ -35,6 +36,18 @@ export default function SignupPage() {
         onSubmit={handleSubmit}
         className="flex-col flex gap-8 w-full sm:w-100"
       >
+        <div className="flex flex-col gap-2">
+          <p className="font-bold">Email</p>
+
+          <input
+            className="outline-none border-b-2 focus:bg-slate-900"
+            type="email"
+            name="email"
+            placeholder="example@rankr.gg"
+            required
+          />
+        </div>
+
         <div className="flex flex-col gap-2">
           <p className="font-bold">Username</p>
 
@@ -53,6 +66,7 @@ export default function SignupPage() {
             className="outline-none border-b-2 focus:bg-slate-900"
             type="password"
             name="password"
+            placeholder="*******"
             required
           />
         </div>

@@ -7,11 +7,11 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 
 export async function POST(req: Request) {
   try {
-    const { username, password } = await req.json();
+    const { email, username, password } = await req.json();
 
     const existingUser = await prisma.user.findFirst({
       where: {
-        username,
+        OR: [{ username, email }],
       },
     });
 
@@ -23,6 +23,7 @@ export async function POST(req: Request) {
 
     const newUser = await prisma.user.create({
       data: {
+        email,
         username,
         password: hashPass,
       },
@@ -36,10 +37,11 @@ export async function POST(req: Request) {
       {
         sub: newUser.id,
         username: newUser.username,
+        email: newUser.email,
         tokenVersion: newUser.tokenVersion,
       },
       JWT_SECRET,
-      { expiresIn: "30d" }
+      { expiresIn: "7d" }
     );
 
     const biscuits = await cookies();

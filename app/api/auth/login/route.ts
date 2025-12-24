@@ -7,11 +7,14 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 
 export async function POST(req: Request) {
   try {
-    const { username, password } = await req.json();
+    const { email, password } = await req.json();
+
+    // const { username, password } = await req.json();
 
     const user = await prisma.user.findFirst({
       where: {
-        username,
+        email,
+        // username,
       },
     });
 

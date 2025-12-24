@@ -9,13 +9,15 @@ export default function LoginPage() {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
+    const email = formData.get("email");
     const username = formData.get("username");
     const password = formData.get("password");
 
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ email, username, password }),
+      // body: JSON.stringify({ username, password }),
     });
 
     if (response.ok) {
@@ -33,6 +35,18 @@ export default function LoginPage() {
         className="flex-col flex gap-8 w-full sm:w-100"
       >
         <div className="flex flex-col gap-2">
+          <p className="font-bold">Email</p>
+
+          <input
+            className="outline-none border-b-2 focus:bg-slate-900"
+            type="email"
+            name="email"
+            placeholder="example@rankr.gg"
+            required
+          />
+        </div>
+
+        {/* <div className="flex flex-col gap-2">
           <p className="font-bold">Username</p>
 
           <input
@@ -41,7 +55,7 @@ export default function LoginPage() {
             name="username"
             required
           />
-        </div>
+        </div> */}
 
         <div className="flex flex-col gap-2">
           <p className="font-bold">Password</p>
@@ -50,6 +64,7 @@ export default function LoginPage() {
             className="outline-none border-b-2 focus:bg-slate-900"
             type="password"
             name="password"
+            placeholder="******"
             required
           />
         </div>

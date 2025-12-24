@@ -94,9 +94,12 @@ export const processResponseData = (lists: TierList[]): TierList[] => {
   return lists.map((list) => {
     list.items.map((item) => {
       if (!item.rankings.length) return;
+      const filteredRankings = item.rankings.filter(
+        (ranking) => ranking.value !== 0
+      );
       const aggVal = Math.round(
-        item.rankings.map((rank) => rank.value).reduce((a, b) => a + b) /
-          item.rankings.length
+        filteredRankings.map((rank) => rank.value).reduce((a, b) => a + b) /
+          filteredRankings.length
       );
 
       const correspondingTier = list.tiers.find(
