@@ -98,7 +98,7 @@ export const processResponseData = (lists: TierList[]): TierList[] => {
         (ranking) => ranking.value !== 0
       );
       const aggVal = Math.round(
-        filteredRankings.map((rank) => rank.value).reduce((a, b) => a + b) /
+        filteredRankings.map((rank) => rank.value).reduce((a, b) => a + b, 0) /
           filteredRankings.length
       );
 
