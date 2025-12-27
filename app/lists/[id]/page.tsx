@@ -72,10 +72,10 @@ export default function List(props: PageProps<"/lists/[id]">) {
     );
   };
 
-  const handleAddItem = () => {
-    if (!editItem.title.length || !editItem.img.length) return;
+  const handleAddItems = (urls: string[]) => {
+    if (!urls || !urls.length) return;
 
-    dispatch(postItem({ listId: parseInt(id), editItem }))
+    dispatch(postItem({ listId: parseInt(id), urls }))
       .unwrap()
       .then(() => dispatch(closeCreateItemModal()))
       .then(() => dispatch(fetchLists()))
@@ -91,31 +91,30 @@ export default function List(props: PageProps<"/lists/[id]">) {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || !files.length) return;
 
     try {
-      const res = await fetch("/api/imagekit-auth");
-      const { token, expire, signature } = await res.json();
-      const result = await imagekit.upload({
-        file,
-        fileName: `${Date.now()}-${file.name}`,
-        folder: "/lists",
-        token,
-        expire,
-        signature,
-      } as any);
+      const uploadPromises = Array.from(files).map(async (file, i) => {
+        const res = await fetch("/api/imagekit-auth");
+        const { token, expire, signature } = await res.json();
+        return imagekit.upload({
+          file,
+          fileName: `${Date.now()}-${list?.title}-${i}`,
+          folder: "/lists",
+          token,
+          expire,
+          signature,
+        } as any);
+      });
 
-      dispatch(
-        updateItemMeta({
-          img: result.url,
-        })
-      );
-
-      toast.success("Image uploaded");
+      const results = await Promise.all(uploadPromises);
+      const imageUrls = results.map((r) => r.url);
+      console.log("IMGI", imageUrls);
+      handleAddItems(imageUrls);
     } catch (err) {
       console.error(err);
-      toast.error("Image upload failed");
+      toast.error("Failed to add items");
     }
   };
 
@@ -200,7 +199,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
                 <div className="flex">
                   <div
                     style={{ backgroundColor: d.color }}
-                    className="text-black text-2xl font-bold p-4 min-w-16 min-h-16 flex justify-center items-center"
+                    className="text-black text-2xl font-bold p-4 min-w-20 min-h-20 flex justify-center items-center"
                   >
                     {d.title}
                   </div>
@@ -211,7 +210,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
                       })
                       .map((item) =>
                         item ? (
-                          <div className="h-16 w-16 relative">
+                          <div className="h-20 w-20 relative">
                             <Image
                               loader={ImageKitLoader}
                               id={item.title}
@@ -233,7 +232,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
           <br />
 
-          <div className="w-full min-h-16 flex flex-wrap">
+          <div className="w-full min-h-20 flex flex-wrap">
             {list.items.map((item) => {
               const isRanked = list.tiers.find((tier) =>
                 tier.items.includes(item.id)
@@ -242,7 +241,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
               if (isRanked) return null;
 
               return (
-                <div className="w-16 h-16 relative">
+                <div className="w-20 h-20 relative">
                   <Image
                     loader={ImageKitLoader}
                     src={item.img}
@@ -262,99 +261,20 @@ export default function List(props: PageProps<"/lists/[id]">) {
       <br />
 
       <button
-        onClick={handleShowItemModal}
-        className="text-black bg-white rounded-sm px-4 py-2 font-bold cursor-pointer"
+        className="rounded-sm bg-white font-bold text-black px-4 py-2 mt-2 cursor-pointer"
+        onClick={handleUploadButton}
       >
-        Add item
+        Add items
       </button>
 
-      {modals.createItem ? (
-        <>
-          <div className="fixed z-998 bg-white inset-0 opacity-40" />
-
-          <div className="fixed z-999 place-self-center bg-black w-9/10 sm:w-100 h-fit p-8 rounded-sm inset-0">
-            <p className="text-2xl font-bold">Create item</p>
-
-            <div className="flex flex-col gap-8 mt-8 w-full">
-              <div className="w-full">
-                <p className="font-bold">Item name *</p>
-
-                <input
-                  aria-label="Item name"
-                  className="w-full h-8 text-white outline-none border-solid border-white border-b-2 focus:bg-slate-900"
-                  value={editItem.title}
-                  onChange={(e) => handleItemOnChange("title", e.target.value)}
-                />
-              </div>
-
-              <div>
-                <p className="font-bold">Description</p>
-
-                <input
-                  className="w-full h-8 text-white outline-none border-solid border-white border-b-2 focus:bg-slate-900"
-                  value={editItem.description}
-                  type="text"
-                  onChange={(e) =>
-                    handleItemOnChange("description", e.target.value)
-                  }
-                />
-              </div>
-
-              <div>
-                <p className="font-bold">Image *</p>
-
-                {!editItem.img && (
-                  <button
-                    className="rounded-sm bg-white font-bold text-black px-4 py-2 mt-2 cursor-pointer"
-                    onClick={handleUploadButton}
-                  >
-                    Upload image
-                  </button>
-                )}
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageUpload}
-                  ref={fileInputRef}
-                />
-
-                {editItem.img && (
-                  <div className="w-24 h-24 relative">
-                    <Image
-                      loader={ImageKitLoader}
-                      src={editItem.img}
-                      alt="Preview"
-                      fill
-                      sizes="96px"
-                      style={{ objectFit: "cover" }}
-                      className="mt-4 object-cover rounded"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex justify-between mt-16">
-              <button
-                className="rounded-sm bg-red-400 px-4 py-2 font-bold cursor-pointer"
-                onClick={handleCloseItemModal}
-              >
-                Close
-              </button>
-
-              <button
-                className="rounded-sm bg-green-400 px-4 py-2 font-bold cursor-pointer"
-                onClick={handleAddItem}
-                disabled={status === "loading"}
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </>
-      ) : null}
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        multiple
+        onChange={handleImageUpload}
+        ref={fileInputRef}
+      />
     </div>
   );
 }

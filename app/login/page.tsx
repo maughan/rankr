@@ -1,10 +1,11 @@
 "use client";
 
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 
 export default function LoginPage() {
+  const [passwordInputType, setPasswordInputType] = useState("password");
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -16,7 +17,11 @@ export default function LoginPage() {
     const response = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, username, password }),
+      body: JSON.stringify({
+        email: `${email}`.toLowerCase(),
+        username,
+        password,
+      }),
       // body: JSON.stringify({ username, password }),
     });
 
@@ -27,6 +32,12 @@ export default function LoginPage() {
       // Handle errors
     }
   }
+
+  const togglePasswordPrivacy = () => {
+    setPasswordInputType(
+      passwordInputType === "password" ? "text" : "password"
+    );
+  };
 
   return (
     <div className="flex items-center justify-center flex-col h-screen p-4 ">
@@ -60,13 +71,22 @@ export default function LoginPage() {
         <div className="flex flex-col gap-2">
           <p className="font-bold">Password</p>
 
-          <input
-            className="outline-none border-b-2 focus:bg-slate-900"
-            type="password"
-            name="password"
-            placeholder="******"
-            required
-          />
+          <div className="flex relative">
+            <input
+              className="outline-none border-b-2 w-full focus:bg-slate-900"
+              type={passwordInputType}
+              name="password"
+              pattern="(?=.*[A-Z])(?=.*\d).{8,}"
+              title="Password must be at least 8 characters, include one uppercase letter and one number"
+              placeholder="******"
+              required
+            />
+
+            <div
+              className="h-4 w-4 bg-red-400 absolute top-0 right-0 cursor-pointer"
+              onClick={togglePasswordPrivacy}
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-4">

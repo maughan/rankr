@@ -46,17 +46,19 @@ export async function POST(req: Request) {
       throw new Error("Token invalid");
     }
 
-    const item = await prisma.item.create({
-      data: {
-        title: body.title,
-        description: body.description,
-        img: body.img,
-        createdById: decoded.sub,
-        lists: {
-          connect: [{ id: body.listId }],
+    const itemPromises = body.urls.map((url: string) =>
+      prisma.item.create({
+        data: {
+          img: url,
+          createdById: decoded.sub,
+          lists: {
+            connect: [{ id: body.listId }],
+          },
         },
-      },
-    });
+      })
+    );
+
+    const items = await Promise.all(itemPromises);
 
     await prisma.list.update({
       where: {
@@ -67,7 +69,7 @@ export async function POST(req: Request) {
       },
     });
 
-    return Response.json(item);
+    return Response.json(items);
   } catch (e) {
     console.error(e);
   }

@@ -167,17 +167,10 @@ export const updateUser = createAsyncThunk(
 
 export const postItem = createAsyncThunk(
   "lists/postItem",
-  async ({
-    listId,
-    editItem,
-  }: {
-    listId: number;
-    editItem: Pick<TierItem, "img" | "title" | "description">;
-  }) => {
-    const item = createNewItem(editItem);
+  async ({ listId, urls }: { listId: number; urls: string[] }) => {
     await fetch("/api/items", {
       method: "POST",
-      body: JSON.stringify({ ...item, listId }),
+      body: JSON.stringify({ urls, listId }),
     });
   }
 );
