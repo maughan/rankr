@@ -69,7 +69,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
-      <div className="p-4 sm:p-16">
+      <div className="p-4 sm:p-20">
         <div className="flex justify-between">
           <Link
             className="rounded-sm bg-white font-bold text-black px-4 py-2"
@@ -111,7 +111,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                 <div className="flex">
                   <div
                     style={{ backgroundColor: d.color }}
-                    className="text-black text-2xl font-bold p-4 min-w-17 min-h-16 flex justify-center items-center"
+                    className="text-black text-2xl font-bold p-4 min-w-20 min-h-20 flex justify-center items-center"
                   >
                     {d.title}
                   </div>
@@ -123,7 +123,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                       .map((item) => (
                         <Draggable id={item?.id}>
                           {item ? (
-                            <div className="w-16 h-16 relative">
+                            <div className="w-20 h-20 relative">
                               <Image
                                 loader={ImageKitLoader}
                                 src={item.img}
@@ -144,7 +144,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
             <br />
 
-            <div className="w-full h-16">
+            <div className="w-full h-20">
               <Droppable id={-1}>
                 {list.items.map((item) => {
                   const isRanked = rankings.find((tier) =>
@@ -155,7 +155,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
                   return (
                     <Draggable id={item.id}>
-                      <div className="w-16 h-16 relative">
+                      <div className="w-20 h-20 relative">
                         <Image
                           loader={ImageKitLoader}
                           src={item.img}
