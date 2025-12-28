@@ -74,7 +74,6 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
   };
 
   const handleToggleSelectItem = (id: number) => {
-    console.log("HEREID", id);
     dispatch(toggleSelectItem({ id }));
   };
 
@@ -268,7 +267,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
         <>
           <div className="fixed z-998 bg-white inset-0 opacity-40" />
 
-          <div className="fixed z-999 place-self-center bg-black max-h-9/10 overflow-scroll w-9/10 rounded-sm inset-0 sm:w-100">
+          <div className="fixed z-999 fixed bg-black max-h-9/10 overflow-scroll w-9/10 rounded-sm inset-0 sm:w-100">
             <div className="relative w-full max-w-md border-2 border-black">
               <Image
                 loader={ImageKitLoader}
