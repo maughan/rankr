@@ -7,7 +7,7 @@ export default function Modal({ handleClose, open, children }) {
 
       <div
         className="fixed inset-0 z-999 flex items-center justify-center"
-        onClick={handleClose}
+        // onClick={handleClose}
       >
         <div className="bg-black max-h-[90%] w-[90%] sm:w-[60%] rounded-sm overflow-auto relative">
           <div className="w-full relative">
