@@ -49,18 +49,24 @@ export const createNewItem = ({
   img,
 });
 
-export const handleDropReorder = (end: number, item: number, list: Tier[]) => {
+export const handleDropReorder = (
+  end: number,
+  items: number[],
+  list: Tier[]
+) => {
   const endTier = list.find((tier) => tier.id === end);
 
-  const currentTier = list.find((tier) => tier.items.includes(item));
+  items.forEach((item) => {
+    const currentTier = list.find((tier) => tier.items.includes(item));
 
-  if (currentTier) {
-    currentTier.items = currentTier.items.filter((id) => id !== item);
-  }
+    if (currentTier) {
+      currentTier.items = currentTier.items.filter((id) => id !== item);
+    }
 
-  if (endTier) {
-    endTier.items.push(item);
-  }
+    if (endTier) {
+      endTier.items.push(item);
+    }
+  });
 
   return list;
 };

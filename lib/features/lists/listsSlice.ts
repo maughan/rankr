@@ -24,6 +24,7 @@ export interface ListState {
     createTier: boolean;
     createItem: boolean;
     editUser: boolean;
+    tierItems: boolean;
   };
   editItem: Pick<TierItem, "title" | "img" | "description">;
   editList: Pick<TierList, "title" | "description" | "img" | "hidden">;
@@ -32,6 +33,8 @@ export interface ListState {
   filteredListRankings: Tier[];
   userfilter: number | null;
   status: string;
+  openTier: Tier | null;
+  selectedItems: number[];
 }
 
 export type updateListPayload = {
@@ -85,6 +88,7 @@ const initialState: ListState = {
     createTier: false,
     createItem: false,
     editUser: false,
+    tierItems: false,
   },
   editItem: itemDefaults,
   editList: listDefaults,
@@ -93,6 +97,8 @@ const initialState: ListState = {
   filteredListRankings: [],
   userfilter: null,
   status: "idle",
+  openTier: null,
+  selectedItems: [],
 };
 
 export const fetchItems = createAsyncThunk("lists/fetchItems", async () => {
@@ -303,6 +309,32 @@ export const listSlice = createSlice({
       state.modals.createItem = false;
       state.editItem = itemDefaults;
     },
+    toggleSelectItem: (state, action) => {
+      const { id } = action.payload;
+      state.selectedItems.includes(id)
+        ? (state.selectedItems = state.selectedItems.filter(
+            (item) => item !== id
+          ))
+        : (state.selectedItems = [...state.selectedItems, id]);
+    },
+    openTierModal: (state, action) => {
+      state.modals.tierItems = true;
+      state.openTier = action.payload.tier;
+    },
+    saveTierModal: (state) => {
+      state.rankings = handleDropReorder(
+        state.openTier?.id ?? 0,
+        state.selectedItems,
+        state.rankings
+      );
+      state.modals.tierItems = false;
+      state.openTier = null;
+      state.selectedItems = [];
+    },
+    closeTierModal: (state) => {
+      state.modals.tierItems = false;
+      state.openTier = null;
+    },
     openEditUserModal: (state) => {
       const { email, username } = getUserFromToken();
       state.editUser.email = email;
@@ -315,7 +347,7 @@ export const listSlice = createSlice({
     },
     handleDropItem: (state, action) => {
       const { over, active } = action.payload;
-      state.rankings = handleDropReorder(over, active, state.rankings);
+      state.rankings = handleDropReorder(over, [active], state.rankings);
     },
     filterRankingsByUser: (
       state,
@@ -445,6 +477,10 @@ export const {
   startRanking,
   filterRankingsByUser,
   clearRankings,
+  openTierModal,
+  closeTierModal,
+  saveTierModal,
+  toggleSelectItem,
 } = listSlice.actions;
 
 export const getListById = (state: RootState, id: number) => {
