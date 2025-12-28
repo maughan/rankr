@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { Eye, EyeClosed } from "lucide-react";
 
 export default function LoginPage() {
   const [passwordInputType, setPasswordInputType] = useState("password");
@@ -57,17 +58,6 @@ export default function LoginPage() {
           />
         </div>
 
-        {/* <div className="flex flex-col gap-2">
-          <p className="font-bold">Username</p>
-
-          <input
-            className="outline-none border-b-2 focus:bg-slate-900"
-            type="text"
-            name="username"
-            required
-          />
-        </div> */}
-
         <div className="flex flex-col gap-2">
           <p className="font-bold">Password</p>
 
@@ -82,10 +72,17 @@ export default function LoginPage() {
               required
             />
 
-            <div
-              className="h-4 w-4 bg-red-400 absolute top-0 right-0 cursor-pointer"
-              onClick={togglePasswordPrivacy}
-            />
+            {passwordInputType === "password" ? (
+              <Eye
+                className="h-4 w-4 absolute top-0 right-0 cursor-pointer"
+                onClick={togglePasswordPrivacy}
+              />
+            ) : (
+              <EyeClosed
+                className="h-4 w-4 absolute top-0 right-0 cursor-pointer"
+                onClick={togglePasswordPrivacy}
+              />
+            )}
           </div>
         </div>
 

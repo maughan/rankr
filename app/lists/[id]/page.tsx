@@ -4,6 +4,8 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { formatDistance } from "date-fns";
 import ImageKit from "imagekit-javascript";
+import { toast } from "sonner";
+import Image from "next/image";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { selectRankersByListId } from "@/lib/selectors";
@@ -16,8 +18,8 @@ import {
   openImageModal,
   postItem,
 } from "@/lib/features/lists/listsSlice";
-import { toast } from "sonner";
-import Image from "next/image";
+import Modal from "../../components/modal";
+import Button from "../../components/button";
 import { ImageKitLoader } from "@/lib/helpers";
 
 const DOUBLE_TAP_DELAY = 300;
@@ -270,12 +272,7 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
       <br />
 
-      <button
-        className="rounded-sm bg-white font-bold text-black px-4 py-2 mt-2 cursor-pointer"
-        onClick={handleUploadButton}
-      >
-        Add items
-      </button>
+      <Button onClick={handleUploadButton}>Add items</Button>
 
       <input
         type="file"
@@ -286,34 +283,19 @@ export default function List(props: PageProps<"/lists/[id]">) {
         ref={fileInputRef}
       />
 
-      {modals.imageModal ? (
-        <>
-          <div className="fixed inset-0 z-998 bg-white opacity-40" />
-
-          <div className="fixed inset-0 z-999 flex items-center justify-center">
-            <div className="bg-black max-h-[90%] w-[90%] sm:w-full rounded-sm overflow-auto relative">
-              <div className="relative w-full max-w-md border-2 border-black">
-                <Image
-                  loader={ImageKitLoader}
-                  src={imageModalUrl}
-                  alt={""}
-                  width={400}
-                  height={300}
-                  className="w-full h-auto object-contain"
-                  priority
-                />
-
-                <p
-                  className="absolute top-2 right-2 font-bold text-black px-2 py-1 bg-red-400 rounded-3xl w-7 h-7 flex items-center justify-center cursor-pointer"
-                  onClick={handleCloseImageModal}
-                >
-                  X
-                </p>
-              </div>
-            </div>
-          </div>
-        </>
-      ) : null}
+      <Modal open={modals.imageModal} handleClose={handleCloseImageModal}>
+        <div className="relative w-full max-w-md sm:max-w-full border-2 border-black">
+          <Image
+            loader={ImageKitLoader}
+            src={imageModalUrl}
+            alt={""}
+            width={400}
+            height={300}
+            className="w-full h-auto object-contain"
+            priority
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

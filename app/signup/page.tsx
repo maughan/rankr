@@ -1,12 +1,18 @@
 "use client";
 
-import { FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { Eye, EyeClosed } from "lucide-react";
 
 export default function SignupPage() {
-  const router = useRouter();
+  const [passwordInputType, setPasswordInputType] = useState("password");
+
+  const togglePasswordPrivacy = () => {
+    setPasswordInputType(
+      passwordInputType === "password" ? "text" : "password"
+    );
+  };
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,7 +30,7 @@ export default function SignupPage() {
 
     if (response.ok) {
       toast.success("User created successfully.");
-      router.push("/");
+      window.location.replace("/");
     } else {
       toast.error("Error creating user.");
     }
@@ -62,13 +68,27 @@ export default function SignupPage() {
         <div className="flex flex-col gap-2">
           <p className="font-bold">Password</p>
 
-          <input
-            className="outline-none border-b-2 focus:bg-slate-900"
-            type="password"
-            name="password"
-            placeholder="*******"
-            required
-          />
+          <div className="flex relative">
+            <input
+              className="outline-none border-b-2 focus:bg-slate-900 w-full"
+              type={passwordInputType}
+              name="password"
+              placeholder="*******"
+              required
+            />
+
+            {passwordInputType === "password" ? (
+              <Eye
+                className="h-4 w-4 absolute top-0 right-0 cursor-pointer"
+                onClick={togglePasswordPrivacy}
+              />
+            ) : (
+              <EyeClosed
+                className="h-4 w-4 absolute top-0 right-0 cursor-pointer"
+                onClick={togglePasswordPrivacy}
+              />
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col gap-4">

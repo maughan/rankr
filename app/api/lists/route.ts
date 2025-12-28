@@ -24,6 +24,9 @@ export async function GET() {
       where: {
         hidden: false,
       },
+      orderBy: {
+        updatedAt: "desc",
+      },
       include: {
         items: {
           include: {

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { X } from "lucide-react";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
@@ -225,12 +226,10 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                   {openTier?.title}
                 </div>
 
-                <p
-                  className="absolute top-0 right-0 text-xl font-bold"
+                <X
+                  className="absolute top-0 right-0 cursor-pointer"
                   onClick={handleCloseTierModal}
-                >
-                  X
-                </p>
+                />
               </div>
 
               <div className="flex flex-wrap mt-8 justify-around">

@@ -126,7 +126,7 @@ export default function Lists() {
           <p className="text-2xl font-bold">Loading ...</p>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-4 pt-4">
+        <div className="flex flex-wrap justify-evenly gap-4 pt-4">
           {lists.lists.map((list) => (
             <Link
               className="w-90 h-60 border-1 hover:border-2"
