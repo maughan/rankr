@@ -57,22 +57,6 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
     }
   };
 
-  const lastTap = useRef(0);
-
-  const handleDoubleTap = () => {
-    dispatch(openImageModal({ url }));
-  };
-
-  const handlePointerUp = () => {
-    const now = Date.now();
-    if (now - lastTap.current < DOUBLE_TAP_DELAY) {
-      lastTap.current = 0;
-      handleDoubleTap();
-    } else {
-      lastTap.current = now;
-    }
-  };
-
   const handleCloseImageModal = () => {
     dispatch(closeImageModal());
   };

@@ -13,11 +13,8 @@ import {
   fetchLists,
   filterRankingsByUser,
   getListById,
-  openCreateItemModal,
   openImageModal,
   postItem,
-  updateItemMeta,
-  updateItemPayload,
 } from "@/lib/features/lists/listsSlice";
 import { toast } from "sonner";
 import Image from "next/image";
