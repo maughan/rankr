@@ -213,52 +213,54 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
       {modals.tierItems ? (
         <>
-          <div className="fixed z-998 bg-white inset-0 opacity-40" />
+          <div className="fixed inset-0 z-998 bg-white opacity-40" />
 
-          <div className="fixed z-999 place-self-center bg-black max-h-9/10 overflow-scroll w-9/10 p-8 rounded-sm inset-0 sm:w-100">
-            <div className="flex justify-center items-center relative w-full">
-              <div
-                style={{ backgroundColor: openTier?.color }}
-                className="text-black text-2xl font-bold p-4 min-w-20 min-h-20 flex justify-center items-center"
-              >
-                {openTier?.title}
+          <div className="fixed inset-0 z-999 flex items-center justify-center">
+            <div className="bg-black max-h-[90%] w-[90%] sm:w-full rounded-sm overflow-auto relative p-4">
+              <div className="flex justify-center items-center relative w-full">
+                <div
+                  style={{ backgroundColor: openTier?.color }}
+                  className="text-black text-2xl font-bold p-4 min-w-20 min-h-20 flex justify-center items-center"
+                >
+                  {openTier?.title}
+                </div>
+
+                <p
+                  className="absolute top-0 right-0 text-xl font-bold"
+                  onClick={handleCloseTierModal}
+                >
+                  X
+                </p>
               </div>
 
-              <p
-                className="absolute top-0 right-0 text-xl font-bold"
-                onClick={handleCloseTierModal}
+              <div className="flex flex-wrap mt-8 justify-around">
+                {list?.items.map((item) => (
+                  <div
+                    className={`w-20 h-20 relative border-2 border-black ${
+                      selectedItems.includes(item.id) ? "border-green-400" : ""
+                    }`}
+                    onClick={() => handleToggleSelectItem(item.id)}
+                  >
+                    <Image
+                      loader={ImageKitLoader}
+                      src={item.img}
+                      alt={item.title}
+                      fill
+                      sizes="64px"
+                      priority
+                      style={{ objectFit: "cover" }}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <button
+                className="bg-white rounded-sm font-bold text-black px-4 py-2 mt-8"
+                onClick={handleSaveTierModal}
               >
-                X
-              </p>
+                Submit
+              </button>
             </div>
-
-            <div className="flex flex-wrap mt-8 justify-around">
-              {list?.items.map((item) => (
-                <div
-                  className={`w-20 h-20 relative border-2 border-black ${
-                    selectedItems.includes(item.id) ? "border-green-400" : ""
-                  }`}
-                  onClick={() => handleToggleSelectItem(item.id)}
-                >
-                  <Image
-                    loader={ImageKitLoader}
-                    src={item.img}
-                    alt={item.title}
-                    fill
-                    sizes="64px"
-                    priority
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
-              ))}
-            </div>
-
-            <button
-              className="bg-white rounded-sm font-bold text-black px-4 py-2 mt-8"
-              onClick={handleSaveTierModal}
-            >
-              Submit
-            </button>
           </div>
         </>
       ) : null}
