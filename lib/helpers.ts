@@ -59,6 +59,8 @@ export const handleDropReorder = (
   items.forEach((item) => {
     const currentTier = list.find((tier) => tier.items.includes(item));
 
+    if (currentTier?.id === endTier?.id) return;
+
     if (currentTier) {
       currentTier.items = currentTier.items.filter((id) => id !== item);
     }

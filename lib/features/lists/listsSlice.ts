@@ -25,6 +25,7 @@ export interface ListState {
     createItem: boolean;
     editUser: boolean;
     tierItems: boolean;
+    imageModal: boolean;
   };
   editItem: Pick<TierItem, "title" | "img" | "description">;
   editList: Pick<TierList, "title" | "description" | "img" | "hidden">;
@@ -35,6 +36,7 @@ export interface ListState {
   status: string;
   openTier: Tier | null;
   selectedItems: number[];
+  imageModalUrl: string;
 }
 
 export type updateListPayload = {
@@ -89,6 +91,7 @@ const initialState: ListState = {
     createItem: false,
     editUser: false,
     tierItems: false,
+    imageModal: false,
   },
   editItem: itemDefaults,
   editList: listDefaults,
@@ -99,6 +102,7 @@ const initialState: ListState = {
   status: "idle",
   openTier: null,
   selectedItems: [],
+  imageModalUrl: "",
 };
 
 export const fetchItems = createAsyncThunk("lists/fetchItems", async () => {
@@ -220,7 +224,6 @@ export const patchList = createAsyncThunk(
         return [];
       }
 
-      throw new Error("MEME");
       toast.error("Failed to update list");
       return;
     }
@@ -344,6 +347,15 @@ export const listSlice = createSlice({
     closeEditUserModal: (state) => {
       state.modals.editUser = false;
       state.editUser = editUserDefault;
+    },
+    openImageModal: (state, action) => {
+      console.log("HERE", action.payload);
+      state.imageModalUrl = action.payload.url;
+      state.modals.imageModal = true;
+    },
+    closeImageModal: (state) => {
+      state.modals.imageModal = false;
+      state.imageModalUrl = "";
     },
     handleDropItem: (state, action) => {
       const { over, active } = action.payload;
@@ -481,6 +493,8 @@ export const {
   closeTierModal,
   saveTierModal,
   toggleSelectItem,
+  openImageModal,
+  closeImageModal,
 } = listSlice.actions;
 
 export const getListById = (state: RootState, id: number) => {

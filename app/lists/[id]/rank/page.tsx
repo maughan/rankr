@@ -10,6 +10,7 @@ import Image from "next/image";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
   clearRankings,
+  closeImageModal,
   closeTierModal,
   fetchLists,
   getListById,
@@ -36,6 +37,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
   const modals = useAppSelector((state) => state.lists.modals);
   const selectedItems = useAppSelector((state) => state.lists.selectedItems);
   const openTier = useAppSelector((state) => state.lists.openTier);
+  const imageModalUrl = useAppSelector((state) => state.lists.imageModalUrl);
 
   useEffect(() => {
     if (status === "idle" && !list) {
@@ -49,9 +51,30 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
   const handleDragEnd = (event: any) => {
     const { over, active } = event;
+
     if (over) {
       dispatch(handleDropItem({ over: over.id, active: active.id }));
     }
+  };
+
+  const lastTap = useRef(0);
+
+  const handleDoubleTap = () => {
+    dispatch(openImageModal({ url }));
+  };
+
+  const handlePointerUp = () => {
+    const now = Date.now();
+    if (now - lastTap.current < DOUBLE_TAP_DELAY) {
+      lastTap.current = 0;
+      handleDoubleTap();
+    } else {
+      lastTap.current = now;
+    }
+  };
+
+  const handleCloseImageModal = () => {
+    dispatch(closeImageModal());
   };
 
   const handleOpenTierModal = (tier: Tier) => {
@@ -150,7 +173,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                           return list.items.find((it) => it.id === item);
                         })
                         .map((item) => (
-                          <Draggable id={item?.id}>
+                          <Draggable id={item?.id} url={item?.img}>
                             {item ? (
                               <div className="w-20 h-20 relative">
                                 <Image
@@ -183,7 +206,7 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                     if (isRanked) return null;
 
                     return (
-                      <Draggable id={item.id}>
+                      <Draggable id={item.id} url={item.img}>
                         <div className="w-20 h-20 relative">
                           <Image
                             loader={ImageKitLoader}
@@ -253,6 +276,33 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
             >
               Submit
             </button>
+          </div>
+        </>
+      ) : null}
+
+      {modals.imageModal ? (
+        <>
+          <div className="fixed z-998 bg-white inset-0 opacity-40" />
+
+          <div className="fixed z-999 place-self-center bg-black max-h-9/10 overflow-scroll w-9/10 rounded-sm inset-0 sm:w-100">
+            <div className="relative w-full max-w-md border-2 border-black">
+              <Image
+                loader={ImageKitLoader}
+                src={imageModalUrl}
+                alt={""}
+                width={400}
+                height={300}
+                className="w-full h-auto object-contain"
+                priority
+              />
+
+              <p
+                className="absolute top-2 right-2 font-bold text-black px-2 py-1 bg-red-400 rounded-3xl w-7 h-7 flex items-center justify-center cursor-pointer"
+                onClick={handleCloseImageModal}
+              >
+                X
+              </p>
+            </div>
           </div>
         </>
       ) : null}

@@ -1,19 +1,20 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { formatDistance } from "date-fns";
 import ImageKit from "imagekit-javascript";
-import crypto from "crypto";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { selectRankersByListId } from "@/lib/selectors";
 import {
   closeCreateItemModal,
+  closeImageModal,
   fetchLists,
   filterRankingsByUser,
   getListById,
   openCreateItemModal,
+  openImageModal,
   postItem,
   updateItemMeta,
   updateItemPayload,
@@ -22,6 +23,8 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { ImageKitLoader } from "@/lib/helpers";
 
+const DOUBLE_TAP_DELAY = 300;
+
 export default function List(props: PageProps<"/lists/[id]">) {
   const { id } = React.use(props.params);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -29,9 +32,10 @@ export default function List(props: PageProps<"/lists/[id]">) {
   const list = useAppSelector((state) => getListById(state, parseInt(id)));
   const users = useAppSelector(selectRankersByListId(parseInt(id)));
   const modals = useAppSelector((state) => state.lists.modals);
-  const editItem = useAppSelector((state) => state.lists.editItem);
   const status = useAppSelector((state) => state.lists.status);
   const filter = useAppSelector((state) => state.lists.userfilter);
+  const imageModalUrl = useAppSelector((state) => state.lists.imageModalUrl);
+
   const filteredRankings = useAppSelector(
     (state) => state.lists.filteredListRankings
   );
@@ -52,24 +56,24 @@ export default function List(props: PageProps<"/lists/[id]">) {
     }
   }, [dispatch, status, list]);
 
-  const handleShowItemModal = () => {
-    dispatch(openCreateItemModal());
-  };
-
   const handleUploadButton = () => {
     fileInputRef.current?.click(); // triggers the hidden input
   };
 
-  const handleCloseItemModal = () => {
-    dispatch(closeCreateItemModal());
+  const lastTap = useRef(0);
+
+  const handleDoubleTap = (url: string) => {
+    dispatch(openImageModal({ url }));
   };
 
-  const handleItemOnChange = (key: keyof updateItemPayload, value: string) => {
-    dispatch(
-      updateItemMeta({
-        [key]: value,
-      })
-    );
+  const handlePointerUp = (url: string) => {
+    const now = Date.now();
+    if (now - lastTap.current < DOUBLE_TAP_DELAY) {
+      lastTap.current = 0;
+      handleDoubleTap(url);
+    } else {
+      lastTap.current = now;
+    }
   };
 
   const handleAddItems = (urls: string[]) => {
@@ -110,12 +114,15 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
       const results = await Promise.all(uploadPromises);
       const imageUrls = results.map((r) => r.url);
-      console.log("IMGI", imageUrls);
       handleAddItems(imageUrls);
     } catch (err) {
       console.error(err);
       toast.error("Failed to add items");
     }
+  };
+
+  const handleCloseImageModal = () => {
+    dispatch(closeImageModal());
   };
 
   if (["idle", "loading"].includes(status) && !list)
@@ -210,7 +217,10 @@ export default function List(props: PageProps<"/lists/[id]">) {
                       })
                       .map((item) =>
                         item ? (
-                          <div className="h-20 w-20 relative">
+                          <div
+                            className="h-20 w-20 relative"
+                            onPointerUp={() => handlePointerUp(item.img)}
+                          >
                             <Image
                               loader={ImageKitLoader}
                               id={item.title}
@@ -241,7 +251,10 @@ export default function List(props: PageProps<"/lists/[id]">) {
               if (isRanked) return null;
 
               return (
-                <div className="w-20 h-20 relative">
+                <div
+                  className="w-20 h-20 relative"
+                  onPointerUp={() => handlePointerUp(item.img)}
+                >
                   <Image
                     loader={ImageKitLoader}
                     src={item.img}
@@ -275,6 +288,33 @@ export default function List(props: PageProps<"/lists/[id]">) {
         onChange={handleImageUpload}
         ref={fileInputRef}
       />
+
+      {modals.imageModal ? (
+        <>
+          <div className="fixed z-998 bg-white inset-0 opacity-40" />
+
+          <div className="fixed z-999 place-self-center bg-black max-h-9/10 overflow-scroll w-9/10 rounded-sm inset-0 sm:w-100">
+            <div className="relative w-full max-w-md border-2 border-black">
+              <Image
+                loader={ImageKitLoader}
+                src={imageModalUrl}
+                alt={""}
+                width={400}
+                height={300}
+                className="w-full h-auto object-contain"
+                priority
+              />
+
+              <p
+                className="absolute top-2 right-2 font-bold text-black px-2 py-1 bg-red-400 rounded-3xl w-7 h-7 flex items-center justify-center cursor-pointer"
+                onClick={handleCloseImageModal}
+              >
+                X
+              </p>
+            </div>
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }
