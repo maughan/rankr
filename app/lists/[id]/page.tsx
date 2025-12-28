@@ -288,26 +288,28 @@ export default function List(props: PageProps<"/lists/[id]">) {
 
       {modals.imageModal ? (
         <>
-          <div className="fixed z-998 bg-white inset-0 opacity-40" />
+          <div className="fixed inset-0 z-998 bg-white opacity-40" />
 
-          <div className="fixed z-999 place-self-center bg-black max-h-9/10 overflow-scroll w-9/10 rounded-sm inset-0 sm:w-100">
-            <div className="relative w-full max-w-md border-2 border-black">
-              <Image
-                loader={ImageKitLoader}
-                src={imageModalUrl}
-                alt={""}
-                width={400}
-                height={300}
-                className="w-full h-auto object-contain"
-                priority
-              />
+          <div className="fixed inset-0 z-999 flex items-center justify-center">
+            <div className="bg-black max-h-[90%] w-[90%] sm:w-full rounded-sm overflow-auto relative">
+              <div className="relative w-full max-w-md border-2 border-black">
+                <Image
+                  loader={ImageKitLoader}
+                  src={imageModalUrl}
+                  alt={""}
+                  width={400}
+                  height={300}
+                  className="w-full h-auto object-contain"
+                  priority
+                />
 
-              <p
-                className="absolute top-2 right-2 font-bold text-black px-2 py-1 bg-red-400 rounded-3xl w-7 h-7 flex items-center justify-center cursor-pointer"
-                onClick={handleCloseImageModal}
-              >
-                X
-              </p>
+                <p
+                  className="absolute top-2 right-2 font-bold text-black px-2 py-1 bg-red-400 rounded-3xl w-7 h-7 flex items-center justify-center cursor-pointer"
+                  onClick={handleCloseImageModal}
+                >
+                  X
+                </p>
+              </div>
             </div>
           </div>
         </>
