@@ -93,6 +93,7 @@ export async function POST(req: Request) {
             { id: 5 },
             { id: 6 },
             { id: 7 },
+            { id: 8 },
           ],
         },
       },
