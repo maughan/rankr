@@ -1,11 +1,15 @@
 import { configureStore } from "@reduxjs/toolkit";
-import listsReducer from "./features/lists/listsSlice";
+import { baseApi } from "@/lib/api/baseApi";
+import uiReducer from "./store/uiSlice";
 
 export const makeStore = () => {
   return configureStore({
     reducer: {
-      lists: listsReducer,
+      ui: uiReducer,
+      [baseApi.reducerPath]: baseApi.reducer,
     },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware().concat(baseApi.middleware),
   });
 };
 

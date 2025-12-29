@@ -3,7 +3,7 @@
 import React, { useRef } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { useAppDispatch } from "@/lib/hooks";
-import { openImageModal } from "@/lib/features/lists/listsSlice";
+import { uiActions } from "@/lib/store/uiSlice";
 
 const DOUBLE_TAP_DELAY = 300;
 
@@ -21,13 +21,14 @@ export default function Draggable({ id, children, url }: any) {
   const lastTap = useRef(0);
 
   const handleDoubleTap = () => {
-    dispatch(openImageModal({ url }));
+    dispatch(uiActions.openImageModal(url));
   };
 
   const handlePointerUp = () => {
     const now = Date.now();
     if (now - lastTap.current < DOUBLE_TAP_DELAY) {
       lastTap.current = 0;
+      navigator.vibrate?.(20);
       handleDoubleTap();
     } else {
       lastTap.current = now;
@@ -35,16 +36,8 @@ export default function Draggable({ id, children, url }: any) {
   };
 
   return (
-    <div
-      onPointerUp={handlePointerUp} // wrapper handles double-tap
-      style={{ display: "inline-block" }}
-    >
-      <div
-        ref={setNodeRef}
-        style={style}
-        {...attributes}
-        {...listeners} // inner div handles drag
-      >
+    <div onPointerUp={handlePointerUp} style={{ display: "inline-block" }}>
+      <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
         {children}
       </div>
     </div>

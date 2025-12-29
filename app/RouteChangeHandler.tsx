@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useAppDispatch } from "@/lib/hooks";
-import { clearRankings } from "@/lib/features/lists/listsSlice";
+import { uiActions } from "@/lib/store/uiSlice";
 
 export default function RouteChangeHandler() {
   const pathname = usePathname();
@@ -12,7 +12,7 @@ export default function RouteChangeHandler() {
 
   useEffect(() => {
     if (prev.current !== pathname) {
-      dispatch(clearRankings());
+      dispatch(uiActions.clearRankings());
     }
     prev.current = pathname;
   }, [pathname, dispatch]);

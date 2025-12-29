@@ -1,21 +1,26 @@
 import { createSelector } from "@reduxjs/toolkit";
-
-import { RootState } from "./store";
+import { listsApi } from "./api/listsApi";
 
 export const selectRankersByListId = (id: number) =>
   createSelector(
-    (state: RootState) => state.lists.lists.find((list) => list.id === id),
-    (list) => {
+    [
+      (state: any) => listsApi.endpoints.getLists.select()(state)?.data ?? [], // get cached lists
+    ],
+    (lists) => {
+      const list = lists.find((list: any) => list.id === id);
       if (!list) return [];
 
-      const users: { id: number; username: string }[] = [];
+      const usersMap = new Map<number, string>();
 
-      list.items.forEach((item) =>
-        item?.rankings?.forEach((ranking) =>
-          users.push({ id: ranking.user.id, username: ranking.user.username })
-        )
-      );
+      list.items.forEach((item: any) => {
+        item.rankings?.forEach((ranking: any) => {
+          usersMap.set(ranking.user.id, ranking.user.username);
+        });
+      });
 
-      return Array.from(new Map(users.map((item) => [item.id, item])).values());
+      return Array.from(usersMap.entries()).map(([id, username]) => ({
+        id,
+        username,
+      }));
     }
   );

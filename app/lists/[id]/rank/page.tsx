@@ -1,122 +1,112 @@
 "use client";
 
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { formatDistance } from "date-fns";
 
-import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import {
-  clearRankings,
-  closeImageModal,
-  closeTierModal,
-  fetchLists,
-  getListById,
-  handleDropItem,
-  openTierModal,
-  postRankings,
-  saveTierModal,
-  startRanking,
-  toggleSelectItem,
-} from "@/lib/features/lists/listsSlice";
+  useGetListsQuery,
+  useSubmitRankingsMutation,
+} from "@/lib/api/listsApi";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { uiActions } from "@/lib/store/uiSlice";
 import Draggable from "@/app/Draggable";
 import Droppable from "@/app/Droppable";
-import { formatDistance } from "date-fns";
-import { ImageKitLoader } from "@/lib/helpers";
-import { Tier } from "@/app/types";
+import {
+  getUserFromToken,
+  ImageKitLoader,
+  processRankingData,
+} from "@/lib/helpers";
+import { Tier, TierItem } from "@/app/types";
 
-export default function Rank(props: PageProps<"/lists/[id]">) {
+export default function Rank() {
   const router = useRouter();
-  const { id } = React.use(props.params);
+  const { id } = useParams<{ id: string }>();
+  const listId = Number(id);
+
   const dispatch = useAppDispatch();
-  const list = useAppSelector((state) => getListById(state, parseInt(id)));
-  const rankings = useAppSelector((state) => state.lists.rankings);
-  const status = useAppSelector((state) => state.lists.status);
-  const modals = useAppSelector((state) => state.lists.modals);
-  const selectedItems = useAppSelector((state) => state.lists.selectedItems);
-  const openTier = useAppSelector((state) => state.lists.openTier);
-  const imageModalUrl = useAppSelector((state) => state.lists.imageModalUrl);
 
+  /** RTK Query */
+  const { data: lists = [], isLoading } = useGetListsQuery();
+  const [submitRankings, { isLoading: isSubmitting }] =
+    useSubmitRankingsMutation();
+
+  const list = lists.find((l) => l.id === listId);
+
+  /** UI state */
+  const { rankings, modals, selectedItems, openTier, imageModalUrl } =
+    useAppSelector((state) => state.ui);
+
+  /** Init rankings */
   useEffect(() => {
-    if (status === "idle" && !list) {
-      dispatch(fetchLists()).unwrap();
-    }
-
     if (list && rankings.length === 0) {
-      dispatch(startRanking({ list }));
+      dispatch(uiActions.startRanking(list));
     }
-  }, [dispatch, status, list, rankings.length]);
+  }, [list]);
 
   const handleDragEnd = (event: any) => {
     const { over, active } = event;
-
     if (over) {
-      dispatch(handleDropItem({ over: over.id, active: active.id }));
+      dispatch(
+        uiActions.handleDropItem({
+          over: over.id,
+          active: active.id,
+        })
+      );
     }
   };
 
-  const handleCloseImageModal = () => {
-    dispatch(closeImageModal());
-  };
-
-  const handleOpenTierModal = (tier: Tier) => {
-    dispatch(openTierModal({ tier }));
-  };
-
-  const handleCloseTierModal = () => {
-    dispatch(closeTierModal());
-  };
-
-  const handleSaveTierModal = () => {
-    dispatch(saveTierModal());
-  };
-
-  const handleToggleSelectItem = (id: number) => {
-    dispatch(toggleSelectItem({ id }));
-  };
-
-  const handleRankSubmit = () => {
+  const handleRankSubmit = async () => {
     if (!list) return;
-    dispatch(postRankings({ list, rankings }))
-      .unwrap()
-      .then(() => toast.success("Ratings saved successfully."))
-      .then(() => dispatch(clearRankings()))
-      .then(() => router.push(`/lists/${id}`))
-      .then(() => dispatch(fetchLists()))
-      .catch((e) => {
-        toast.error("Error saving rankings.");
-        console.error(e);
-      });
+
+    try {
+      const { id, username } = getUserFromToken();
+      const userRankings = processRankingData(
+        rankings,
+        { id, username },
+        list.id
+      );
+
+      await submitRankings(userRankings).unwrap();
+
+      toast.success("Ratings saved successfully.");
+      router.push(`/lists/${id}`);
+      dispatch(uiActions.clearRankings());
+    } catch (e) {
+      console.error(e);
+      toast.error("Error saving rankings.");
+    }
   };
 
-  if (["idle", "loading"].includes(status) && !list)
+  if (isLoading || !list) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p className="text-2xl font-bold">Loading ...</p>
+        <p className="text-2xl font-bold">Loading...</p>
       </div>
     );
+  }
 
   return (
-    <div
-      className={`${modals.tierItems ? "max-h-screen overflow-hidden" : ""}`}
-    >
+    <div className={modals.tierItems ? "max-h-screen overflow-hidden" : ""}>
       <DndContext onDragEnd={handleDragEnd}>
         <div className="p-4 sm:p-20">
           <div className="flex justify-between">
             <Link
-              className="rounded-sm bg-white font-bold text-black px-4 py-2"
               href={`/lists/${id}`}
+              className="rounded-sm bg-white font-bold text-black px-4 py-2"
             >
-              {`< Back`}
+              {"< Back"}
             </Link>
 
             <button
-              className="rounded-sm bg-green-400 font-bold px-4 py-2 cursor-pointer"
+              className="rounded-sm bg-green-400 font-bold px-4 py-2"
               onClick={handleRankSubmit}
-              disabled={status === "loading"}
+              disabled={isSubmitting}
             >
               Submit
             </button>
@@ -124,101 +114,96 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
           <br />
 
-          {list ? (
-            <>
-              <p className="text-4xl font-bold">{list.title}</p>
+          <p className="text-4xl font-bold">{list.title}</p>
+          <p className="italic">{list.description}</p>
 
-              <p className="italic">{list.description}</p>
+          <p className="text-xs flex gap-1">
+            Created {formatDistance(list.createdAt, new Date())} by
+            <span className="font-bold">{list.createdBy.username}</span>
+          </p>
 
-              <p className="text-xs flex gap-1">
-                Created {formatDistance(list.createdAt, new Date())} by
-                <p className="font-bold">{list.createdBy.username}</p>
-              </p>
+          <p className="text-xs">
+            Last updated {formatDistance(list.updatedAt, new Date())}
+          </p>
 
-              <p className="text-xs">
-                Last updated {formatDistance(list.updatedAt, new Date())}
-              </p>
+          <br />
 
-              <br />
+          <div className="flex flex-col">
+            {rankings.map((tier) => (
+              <div key={tier.id} className="flex">
+                <div
+                  style={{ backgroundColor: tier.color }}
+                  className="text-black text-2xl font-bold p-4 min-w-20 min-h-20 flex justify-center items-center cursor-pointer"
+                  onClick={() => dispatch(uiActions.openTierModal(tier))}
+                >
+                  {tier.title}
+                </div>
 
-              <div className="flex flex-col">
-                {rankings.map((d) => (
-                  <div className="flex">
-                    <div
-                      style={{ backgroundColor: d.color }}
-                      className="text-black text-2xl font-bold p-4 min-w-20 min-h-20 flex justify-center items-center cursor-pointer"
-                      onClick={() => handleOpenTierModal(d)}
-                    >
-                      {d.title}
-                    </div>
-                    <Droppable id={d.id}>
-                      {d.items
-                        .map((item) => {
-                          return list.items.find((it) => it.id === item);
-                        })
-                        .map((item) => (
-                          <Draggable id={item?.id} url={item?.img}>
-                            {item ? (
-                              <div className="w-20 h-20 relative">
-                                <Image
-                                  loader={ImageKitLoader}
-                                  src={item.img}
-                                  alt={item.title}
-                                  sizes="64px"
-                                  fill
-                                  priority
-                                  style={{ objectFit: "cover" }}
-                                />
-                              </div>
-                            ) : null}
+                <Droppable id={tier.id}>
+                  {tier.items
+                    .map((itemId) =>
+                      list.items.find((i: TierItem) => i.id === itemId)
+                    )
+                    .map(
+                      (item) =>
+                        item && (
+                          <Draggable key={item.id} id={item.id} url={item.img}>
+                            <div className="w-20 h-20 relative">
+                              <Image
+                                loader={ImageKitLoader}
+                                src={item.img}
+                                alt={item.title}
+                                fill
+                                sizes="64px"
+                                style={{ objectFit: "cover" }}
+                              />
+                            </div>
                           </Draggable>
-                        ))}
-                    </Droppable>
-                  </div>
-                ))}
-              </div>
-
-              <br />
-
-              <div className="w-full h-20">
-                <Droppable id={-1}>
-                  {list.items.map((item) => {
-                    const isRanked = rankings.find((tier) =>
-                      tier.items.includes(item.id)
-                    );
-
-                    if (isRanked) return null;
-
-                    return (
-                      <Draggable id={item.id} url={item.img}>
-                        <div className="w-20 h-20 relative">
-                          <Image
-                            loader={ImageKitLoader}
-                            src={item.img}
-                            alt={item.title}
-                            fill
-                            sizes="64px"
-                            priority
-                            style={{ objectFit: "cover" }}
-                          />
-                        </div>
-                      </Draggable>
-                    );
-                  })}
+                        )
+                    )}
                 </Droppable>
               </div>
-            </>
-          ) : null}
+            ))}
+          </div>
+
+          <br />
+
+          <Droppable id={-1}>
+            <div className="flex flex-wrap">
+              {list.items.map((item: TierItem) => {
+                const isRanked = rankings.some((tier) =>
+                  tier.items.includes(item.id)
+                );
+
+                if (isRanked) return null;
+
+                return (
+                  <Draggable key={item.id} id={item.id} url={item.img}>
+                    <div className="w-20 h-20 relative">
+                      <Image
+                        loader={ImageKitLoader}
+                        src={item.img}
+                        alt={item.title}
+                        fill
+                        sizes="64px"
+                        style={{ objectFit: "cover" }}
+                      />
+                    </div>
+                  </Draggable>
+                );
+              })}
+            </div>
+          </Droppable>
         </div>
       </DndContext>
 
-      {modals.tierItems ? (
+      {/* Tier modal */}
+      {modals.tierItems && (
         <>
-          <div className="fixed inset-0 z-998 bg-white opacity-40" />
-
-          <div className="fixed inset-0 z-999 flex items-center justify-center">
-            <div className="bg-black max-h-[90%] w-[90%] sm:w-full rounded-sm overflow-auto relative p-4">
-              <div className="flex justify-center items-center relative w-full">
+          <div className="fixed inset-0 z-40 bg-white opacity-40" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="bg-black max-h-[90%] w-[90%] sm:w-full rounded-sm p-4 overflow-auto relative">
+              <div className="flex justify-center relative">
                 <div
                   style={{ backgroundColor: openTier?.color }}
                   className="text-black text-2xl font-bold p-4 min-w-20 min-h-20 flex justify-center items-center"
@@ -228,17 +213,22 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
                 <X
                   className="absolute top-0 right-0 cursor-pointer"
-                  onClick={handleCloseTierModal}
+                  onClick={() => dispatch(uiActions.closeTierModal())}
                 />
               </div>
 
               <div className="flex flex-wrap mt-8 justify-around">
-                {list?.items.map((item) => (
+                {list.items.map((item: TierItem) => (
                   <div
-                    className={`w-20 h-20 relative border-2 border-black ${
-                      selectedItems.includes(item.id) ? "border-green-400" : ""
+                    key={item.id}
+                    className={`w-20 h-20 relative border-2 ${
+                      selectedItems.includes(item.id)
+                        ? "border-green-400"
+                        : "border-black"
                     }`}
-                    onClick={() => handleToggleSelectItem(item.id)}
+                    onClick={() =>
+                      dispatch(uiActions.toggleSelectItem(item.id))
+                    }
                   >
                     <Image
                       loader={ImageKitLoader}
@@ -246,7 +236,6 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                       alt={item.title}
                       fill
                       sizes="64px"
-                      priority
                       style={{ objectFit: "cover" }}
                     />
                   </div>
@@ -255,22 +244,22 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
 
               <button
                 className="bg-white rounded-sm font-bold text-black px-4 py-2 mt-8"
-                onClick={handleSaveTierModal}
+                onClick={() => dispatch(uiActions.saveTierModal())}
               >
                 Submit
               </button>
             </div>
           </div>
         </>
-      ) : null}
+      )}
 
-      {modals.imageModal ? (
+      {/* Image modal */}
+      {modals.imageModal && (
         <>
-          <div className="fixed inset-0 z-998 bg-white opacity-40" />
-
-          <div className="fixed inset-0 z-999 flex items-center justify-center">
-            <div className="bg-black max-h-[90%] w-[90%] sm:w-full rounded-sm overflow-auto relative">
-              <div className="relative w-full max-w-md border-2 border-black">
+          <div className="fixed inset-0 z-40 bg-white opacity-40" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="bg-black rounded-sm p-4 relative">
+              <div className="relative w-full max-w-md">
                 <Image
                   loader={ImageKitLoader}
                   src={imageModalUrl}
@@ -278,20 +267,18 @@ export default function Rank(props: PageProps<"/lists/[id]">) {
                   width={400}
                   height={300}
                   className="w-full h-auto object-contain"
-                  priority
                 />
-
-                <p
-                  className="absolute top-2 right-2 font-bold text-black px-2 py-1 bg-red-400 rounded-3xl w-7 h-7 flex items-center justify-center cursor-pointer"
-                  onClick={handleCloseImageModal}
+                <button
+                  className="absolute top-2 right-2 bg-red-400 rounded-full w-7 h-7 flex items-center justify-center font-bold"
+                  onClick={() => dispatch(uiActions.closeImageModal())}
                 >
                   X
-                </p>
+                </button>
               </div>
             </div>
           </div>
         </>
-      ) : null}
+      )}
     </div>
   );
 }

@@ -1,44 +1,33 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import Link from "next/link";
-import { useEffect } from "react";
 import { formatDistance } from "date-fns";
 import { toast } from "sonner";
 import ImageKit from "imagekit-javascript";
 import Image from "next/image";
 
-import {
-  closeCreateListModal,
-  fetchLists,
-  openCreateListModal,
-  postList,
-  updateListMeta,
-  updateListPayload,
-} from "@/lib/features/lists/listsSlice";
+import { useGetListsQuery, useCreateListMutation } from "@/lib/api/listsApi";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { uiActions } from "@/lib/store/uiSlice";
 import { ImageKitLoader } from "@/lib/helpers";
 
 export default function Lists() {
   const dispatch = useAppDispatch();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const lists = useAppSelector((state) => state.lists);
-  const status = useAppSelector((state) => state.lists.status);
-  const modals = useAppSelector((state) => state.lists.modals);
-  const editList = useAppSelector((state) => state.lists.editList);
+  // RTK Query
+  const { data: lists = [], isLoading } = useGetListsQuery();
+  const [createList, { isLoading: isCreating }] = useCreateListMutation();
+
+  // UI state
+  const { modals, editList } = useAppSelector((state) => state.ui);
 
   const imagekit = new ImageKit({
     publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
     urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
     authenticationEndpoint: "/api/imagekit-auth",
   } as any);
-
-  useEffect(() => {
-    if (!lists.lists.length) {
-      dispatch(fetchLists());
-    }
-  }, [dispatch, status]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,6 +36,7 @@ export default function Lists() {
     try {
       const res = await fetch("/api/imagekit-auth");
       const { token, expire, signature } = await res.json();
+
       const result = await imagekit.upload({
         file,
         fileName: `${Date.now()}-${file.name}`,
@@ -56,12 +46,7 @@ export default function Lists() {
         signature,
       } as any);
 
-      dispatch(
-        updateListMeta({
-          img: result.url,
-        })
-      );
-
+      dispatch(uiActions.updateListMeta({ img: result.url }));
       toast.success("Image uploaded");
     } catch (err) {
       console.error(err);
@@ -69,41 +54,17 @@ export default function Lists() {
     }
   };
 
-  const handleOpenCreateList = () => {
-    dispatch(openCreateListModal());
-  };
+  const handleAddList = async () => {
+    if (!editList.title || !editList.description) return;
 
-  const handleCloseCreateList = () => {
-    dispatch(closeCreateListModal());
-  };
-
-  const handleUploadButton = () => {
-    fileInputRef.current?.click(); // triggers the hidden input
-  };
-
-  const handleOnChange = (
-    key: keyof updateListPayload,
-    value: string | boolean
-  ) => {
-    dispatch(
-      updateListMeta({
-        [key]: value,
-      })
-    );
-  };
-
-  const handleAddList = () => {
-    if (!editList.title.length || !editList.description.length) return;
-
-    dispatch(postList({ editList }))
-      .unwrap()
-      .then(() => dispatch(closeCreateListModal()))
-      .then(() => dispatch(fetchLists()))
-      .then(() => toast.success("List created successfully."))
-      .catch((e) => {
-        toast.error("Failed to add item.");
-        console.error("e", e);
-      });
+    try {
+      await createList(editList).unwrap();
+      dispatch(uiActions.closeCreateListModal());
+      toast.success("List created successfully");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to create list");
+    }
   };
 
   return (
@@ -111,48 +72,43 @@ export default function Lists() {
       <div className="flex justify-between">
         <p className="text-3xl font-bold">Tier Lists</p>
 
-        {!["idle", "loading"].includes(status) && lists ? (
+        {!isLoading && (
           <button
-            onClick={handleOpenCreateList}
+            onClick={() => dispatch(uiActions.openCreateListModal())}
             className="rounded-sm bg-white font-bold text-black px-4 py-2 cursor-pointer"
           >
             Create list
           </button>
-        ) : null}
+        )}
       </div>
 
-      {["idle", "loading"].includes(status) ? (
+      {isLoading ? (
         <div className="flex justify-center items-center">
-          <p className="text-2xl font-bold">Loading ...</p>
+          <p className="text-2xl font-bold">Loading...</p>
         </div>
       ) : (
         <div className="flex flex-wrap justify-evenly gap-4 pt-4">
-          {lists.lists.map((list) => (
+          {lists.map((list) => (
             <Link
+              key={list.id}
               className="w-90 h-60 border-1 hover:border-2"
               href={`/lists/${list.id}`}
             >
               <div className="flex flex-col h-full">
                 {list.img ? (
-                  <div
-                    className="flex justify-center items-center relative"
-                    style={{ height: "inherit" }}
-                  >
+                  <div className="relative flex-1">
                     <Image
                       loader={ImageKitLoader}
-                      alt=""
                       src={list.img}
+                      alt=""
                       fill
                       sizes="358px"
-                      priority
                       style={{ objectFit: "cover" }}
+                      priority
                     />
                   </div>
                 ) : (
-                  <div
-                    className="flex justify-center items-center"
-                    style={{ height: "inherit" }}
-                  >
+                  <div className="flex flex-1 items-center justify-center">
                     <p>IMG.PNG</p>
                   </div>
                 )}
@@ -163,10 +119,10 @@ export default function Lists() {
                   <div className="flex justify-between items-end">
                     <p>{`${list.items.length} item(s)`}</p>
 
-                    <p className="italic text-xs">{`Updated: ${formatDistance(
-                      list.updatedAt,
-                      new Date()
-                    )}`}</p>
+                    <p className="italic text-xs">
+                      Updated{" "}
+                      {formatDistance(new Date(list.updatedAt), new Date())}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -175,104 +131,106 @@ export default function Lists() {
         </div>
       )}
 
-      {modals.createList ? (
+      {modals.createList && (
         <>
-          <div className="fixed z-998 bg-white inset-0 opacity-40" />
+          <div className="fixed inset-0 bg-white opacity-40 z-50" />
 
-          <div className="fixed z-999 place-self-center bg-black h-fit w-9/10 p-8 rounded-sm inset-0 sm:w-100">
-            <p className="text-2xl font-bold">Create list</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="bg-black w-9/10 sm:w-100 p-8 rounded-sm">
+              <p className="text-2xl font-bold">Create list</p>
 
-            <div className="flex flex-col gap-8 mt-8 w-full">
-              <div className="w-full">
-                <p className="font-bold">List name *</p>
-
+              <div className="flex flex-col gap-8 mt-8">
                 <input
-                  aria-label="Item name"
-                  className="w-full h-8 text-white outline-none border-solid border-white border-b-2 focus:bg-slate-900"
+                  className="border-b-2 bg-transparent outline-none"
+                  placeholder="List name"
                   value={editList.title}
-                  onChange={(e) => handleOnChange("title", e.target.value)}
-                />
-              </div>
-
-              <div>
-                <p className="font-bold">Description</p>
-
-                <input
-                  className="w-full h-8 text-white outline-none border-solid border-white border-b-2 focus:bg-slate-900"
-                  value={editList.description}
-                  type="text"
                   onChange={(e) =>
-                    handleOnChange("description", e.target.value)
+                    dispatch(
+                      uiActions.updateListMeta({
+                        title: e.target.value,
+                      })
+                    )
                   }
                 />
-              </div>
 
-              <div>
-                <p className="font-bold">Image *</p>
+                <input
+                  className="border-b-2 bg-transparent outline-none"
+                  placeholder="Description"
+                  value={editList.description}
+                  onChange={(e) =>
+                    dispatch(
+                      uiActions.updateListMeta({
+                        description: e.target.value,
+                      })
+                    )
+                  }
+                />
 
                 {!editList.img && (
                   <button
-                    className="rounded-sm bg-white font-bold text-black px-4 py-2 mt-2 cursor-pointer"
-                    onClick={handleUploadButton}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-white text-black px-4 py-2 rounded-sm"
                   >
                     Upload image
                   </button>
                 )}
 
                 <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageUpload}
                   ref={fileInputRef}
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleImageUpload}
                 />
 
                 {editList.img && (
-                  <div className="w-24 h-24 relative">
+                  <div className="relative w-24 h-24">
                     <Image
                       loader={ImageKitLoader}
                       src={editList.img}
-                      alt="Preview"
+                      alt=""
                       fill
-                      sizes="96px"
                       style={{ objectFit: "cover" }}
-                      className="mt-4 object-cover rounded"
                     />
                   </div>
                 )}
+
+                <label className="flex justify-between items-center">
+                  <span>Hide list</span>
+                  <input
+                    type="checkbox"
+                    checked={editList.hidden}
+                    onChange={(e) =>
+                      dispatch(
+                        uiActions.updateListMeta({
+                          hidden: e.target.checked,
+                        })
+                      )
+                    }
+                  />
+                </label>
               </div>
 
-              <div className="flex justify-between items-center">
-                <p className="font-bold">Hide list</p>
+              <div className="flex justify-between mt-8">
+                <button
+                  onClick={() => dispatch(uiActions.closeCreateListModal())}
+                  className="bg-red-400 px-4 py-2 rounded-sm"
+                >
+                  Close
+                </button>
 
-                <input
-                  type="checkbox"
-                  checked={editList.hidden}
-                  onChange={(e) => {
-                    handleOnChange("hidden", e.target.checked);
-                  }}
-                />
+                <button
+                  onClick={handleAddList}
+                  disabled={isCreating}
+                  className="bg-green-400 px-4 py-2 rounded-sm"
+                >
+                  Save
+                </button>
               </div>
-            </div>
-
-            <div className="flex justify-between mt-16">
-              <button
-                className="rounded-sm bg-red-400 px-4 py-2 font-bold cursor-pointer"
-                onClick={handleCloseCreateList}
-              >
-                Close
-              </button>
-
-              <button
-                className="rounded-sm bg-green-400 px-4 py-2 font-bold cursor-pointer"
-                onClick={handleAddList}
-              >
-                Save
-              </button>
             </div>
           </div>
         </>
-      ) : null}
+      )}
     </div>
   );
 }
