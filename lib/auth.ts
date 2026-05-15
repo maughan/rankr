@@ -1,19 +1,21 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 
-export interface AuthTokenPayload extends JwtPayload {
-  sub: string;
+export interface AuthTokenPayload {
+  sub: number;
   username: string;
+  email: string;
+  tokenVersion: number;
+  iat?: number;
+  exp?: number;
 }
 
-function isAuthTokenPayload(
-  payload: JwtPayload | string
-): payload is AuthTokenPayload {
+function isAuthTokenPayload(decoded: unknown): decoded is AuthTokenPayload {
   return (
-    typeof payload === "object" &&
-    payload !== null &&
-    typeof payload.sub === "number" &&
-    typeof (payload as any).username === "string"
+    typeof decoded === "object" &&
+    decoded !== null &&
+    typeof (decoded as AuthTokenPayload).sub === "number" &&
+    typeof (decoded as AuthTokenPayload).username === "string"
   );
 }
 
@@ -25,11 +27,9 @@ export async function getUserFromRequest() {
   if (!token) return null;
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET) as unknown;
 
-    if (!isAuthTokenPayload(decoded)) {
-      return null;
-    }
+    if (!isAuthTokenPayload(decoded)) return null;
 
     return decoded;
   } catch {

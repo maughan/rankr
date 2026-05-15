@@ -1,13 +1,11 @@
 import { createSelector } from "@reduxjs/toolkit";
 import { listsApi } from "./api/listsApi";
+import { getUserFromToken } from "./helpers";
 
 export const selectRankersByListId = (id: number) =>
   createSelector(
-    [
-      (state: any) => listsApi.endpoints.getLists.select()(state)?.data ?? [], // get cached lists
-    ],
-    (lists) => {
-      const list = lists.find((list: any) => list.id === id);
+    [(state: any) => listsApi.endpoints.getList.select(id)(state)?.data],
+    (list) => {
       if (!list) return [];
 
       const usersMap = new Map<number, string>();
@@ -17,10 +15,12 @@ export const selectRankersByListId = (id: number) =>
           usersMap.set(ranking.user.id, ranking.user.username);
         });
       });
-
-      return Array.from(usersMap.entries()).map(([id, username]) => ({
-        id,
-        username,
-      }));
+      const user = getUserFromToken();
+      return Array.from(usersMap.entries())
+        .map(([id, username]) => ({
+          id,
+          username,
+        }))
+        .filter((u) => u.id !== user.id);
     }
   );

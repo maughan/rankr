@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 export function logout() {
   document.cookie = `auth_token=; Max-Age=0; path=/;`;
-  window.location.href = "/login";
+  window.location.href = "/";
 }
 
 export async function apiFetch<T>(

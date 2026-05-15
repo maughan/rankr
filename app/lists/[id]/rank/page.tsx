@@ -6,11 +6,10 @@ import { toast } from "sonner";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { X } from "lucide-react";
-import { formatDistance } from "date-fns";
+import { X, Pencil } from "lucide-react";
 
 import {
-  useGetListsQuery,
+  useGetListQuery,
   useSubmitRankingsMutation,
 } from "@/lib/api/listsApi";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -24,6 +23,66 @@ import {
 } from "@/lib/helpers";
 import { Tier, TierItem } from "@/app/types";
 
+// ── Tier label colours ────────────────────────────────────────────────────────
+
+const TIER_STYLE: Record<string, { bg: string; text: string }> = {
+  S: { bg: "#C44545", text: "#ffffff" },
+  A: { bg: "#E08C2C", text: "#2A1A04" },
+  B: { bg: "#97C459", text: "#173404" },
+  C: { bg: "#5DCAA5", text: "#04342C" },
+  D: { bg: "#85B7EB", text: "#042C53" },
+  F: { bg: "#AFA9EC", text: "#26215C" },
+};
+
+// ── Item card (matches list view) ─────────────────────────────────────────────
+
+function ItemCard({ item }: { item: TierItem }) {
+  const base =
+    "w-[70px] bg-rk-surface border border-rk-stroke rounded-[8px] overflow-hidden cursor-grab active:cursor-grabbing";
+
+  if (item.img) {
+    return (
+      <div className={base}>
+        <div className="relative h-[44px]">
+          <Image
+            loader={ImageKitLoader}
+            src={item.img}
+            alt=""
+            fill
+            sizes="70px"
+            style={{ objectFit: "cover" }}
+          />
+        </div>
+        <div className="px-1.5 py-1.5">
+          <p className="text-[11px] text-rk-secondary leading-tight truncate">
+            {item.name ?? "—"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={base}>
+      <div
+        className="h-[44px] flex items-center justify-center rounded-t-[6px]"
+        style={{ backgroundColor: item.color ?? "#334155" }}
+      >
+        <span className="text-white text-[11px] font-[500] select-none">
+          {item.short_label}
+        </span>
+      </div>
+      <div className="px-1.5 py-1.5">
+        <p className="text-[11px] text-rk-secondary leading-tight truncate">
+          {item.name}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
 export default function Rank() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
@@ -31,18 +90,13 @@ export default function Rank() {
 
   const dispatch = useAppDispatch();
 
-  /** RTK Query */
-  const { data: lists = [], isLoading } = useGetListsQuery();
+  const { data: list, isLoading } = useGetListQuery(listId);
   const [submitRankings, { isLoading: isSubmitting }] =
     useSubmitRankingsMutation();
 
-  const list = lists.find((l) => l.id === listId);
-
-  /** UI state */
   const { rankings, modals, selectedItems, openTier, imageModalUrl } =
     useAppSelector((state) => state.ui);
 
-  /** Init rankings */
   useEffect(() => {
     if (list && rankings.length === 0) {
       dispatch(uiActions.startRanking(list));
@@ -52,12 +106,7 @@ export default function Rank() {
   const handleDragEnd = (event: any) => {
     const { over, active } = event;
     if (over) {
-      dispatch(
-        uiActions.handleDropItem({
-          over: over.id,
-          active: active.id,
-        })
-      );
+      dispatch(uiActions.handleDropItem({ over: over.id, active: active.id }));
     }
   };
 
@@ -65,16 +114,16 @@ export default function Rank() {
     if (!list) return;
 
     try {
-      const { id, username } = getUserFromToken();
+      const { id: userId, username } = getUserFromToken();
       const userRankings = processRankingData(
         rankings,
-        { id, username },
+        { id: userId, username },
         list.id
       );
 
       await submitRankings(userRankings).unwrap();
 
-      toast.success("Ratings saved successfully.");
+      toast.success("Rankings saved.");
       router.push(`/lists/${id}`);
       dispatch(uiActions.clearRankings());
     } catch (e) {
@@ -85,180 +134,226 @@ export default function Rank() {
 
   if (isLoading || !list) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-2xl font-bold">Loading...</p>
+      <div className="fixed inset-0 z-10 bg-rk-page flex items-center justify-center">
+        <p className="text-rk-muted text-[15px]">Loading…</p>
       </div>
     );
   }
 
   return (
-    <div className={modals.tierItems ? "max-h-screen overflow-hidden" : ""}>
+    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
       <DndContext onDragEnd={handleDragEnd}>
-        <div className="p-4 sm:p-20">
-          <div className="flex justify-between">
+        {/* ── Top bar ─────────────────────────────────────────────────────── */}
+        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+              Rankr
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
             <Link
               href={`/lists/${id}`}
-              className="rounded-sm bg-white font-bold text-black px-4 py-2"
+              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
             >
-              {"< Back"}
+              Back
             </Link>
-
             <button
-              className="rounded-sm bg-green-400 font-bold px-4 py-2"
               onClick={handleRankSubmit}
               disabled={isSubmitting}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50"
             >
+              <Pencil size={12} strokeWidth={2.5} />
               Submit
             </button>
           </div>
+        </div>
 
-          <br />
-
-          <p className="text-4xl font-bold">{list.title}</p>
-          <p className="italic">{list.description}</p>
-
-          <p className="text-xs flex gap-1">
-            Created {formatDistance(list.createdAt, new Date())} by
-            <span className="font-bold">{list.createdBy.username}</span>
-          </p>
-
-          <p className="text-xs">
-            Last updated {formatDistance(list.updatedAt, new Date())}
-          </p>
-
-          <br />
-
-          <div className="flex flex-col">
-            {rankings.map((tier) => (
-              <div key={tier.id} className="flex">
-                <div
-                  style={{ backgroundColor: tier.color }}
-                  className="text-black text-2xl font-bold p-4 min-w-20 min-h-20 flex justify-center items-center cursor-pointer"
-                  onClick={() => dispatch(uiActions.openTierModal(tier))}
-                >
-                  {tier.title}
-                </div>
-
-                <Droppable id={tier.id}>
-                  {tier.items
-                    .map((itemId) =>
-                      list.items.find((i: TierItem) => i.id === itemId)
-                    )
-                    .map(
-                      (item) =>
-                        item && (
-                          <Draggable key={item.id} id={item.id} url={item.img}>
-                            <div className="w-20 h-20 relative">
-                              <Image
-                                loader={ImageKitLoader}
-                                src={item.img}
-                                alt={item.title}
-                                fill
-                                sizes="64px"
-                                style={{ objectFit: "cover" }}
-                              />
-                            </div>
-                          </Draggable>
-                        )
-                    )}
-                </Droppable>
-              </div>
-            ))}
+        {/* ── Content ─────────────────────────────────────────────────────── */}
+        <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl">
+          {/* Header */}
+          <div>
+            <p
+              className="text-rk-primary font-[500] leading-tight"
+              style={{ fontSize: 22, letterSpacing: "-0.4px" }}
+            >
+              {list.title}
+            </p>
+            {list.description && (
+              <p className="text-[12px] text-rk-muted mt-0.5">
+                {list.description}
+              </p>
+            )}
           </div>
 
-          <br />
+          {/* ── Tier rows ─────────────────────────────────────────────────── */}
+          <div className="flex flex-col gap-[6px]">
+            {rankings.map((tier) => {
+              const style = TIER_STYLE[tier.title] ?? {
+                bg: tier.color,
+                text: "#000000",
+              };
+              const tierItems = tier.items
+                .map((itemId) =>
+                  list.items.find((i: TierItem) => i.id === itemId)
+                )
+                .filter((i): i is TierItem => !!i);
 
-          <Droppable id={-1}>
-            <div className="flex flex-wrap">
+              return (
+                <div
+                  key={tier.id}
+                  className="flex overflow-hidden border border-rk-stroke"
+                  style={{ borderRadius: 10 }}
+                >
+                  {/* Tier label — click to open item picker */}
+                  <button
+                    className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px] hover:opacity-90 transition-opacity"
+                    style={{ backgroundColor: style.bg, minHeight: 76 }}
+                    onClick={() => dispatch(uiActions.openTierModal(tier))}
+                  >
+                    <span
+                      className="text-[26px] font-[500] leading-none select-none"
+                      style={{ color: style.text }}
+                    >
+                      {tier.title}
+                    </span>
+                    <span
+                      className="text-[10px] leading-none"
+                      style={{ color: style.text, opacity: 0.65 }}
+                    >
+                      {tierItems.length}
+                    </span>
+                  </button>
+
+                  {/* Droppable items area */}
+                  <Droppable
+                    id={tier.id}
+                    className="flex flex-wrap gap-2 p-3 flex-1 min-h-[76px] content-start"
+                    style={{ backgroundColor: "#0F1828" }}
+                  >
+                    {tierItems.map((item) => (
+                      <Draggable key={item.id} id={item.id} url={item.img}>
+                        <ItemCard item={item} />
+                      </Draggable>
+                    ))}
+                  </Droppable>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* ── Unranked pool ──────────────────────────────────────────────── */}
+          <div>
+            <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
+              Unranked
+            </p>
+            <Droppable
+              id={-1}
+              className="flex flex-wrap gap-2 min-h-[76px] content-start"
+            >
               {list.items.map((item: TierItem) => {
                 const isRanked = rankings.some((tier) =>
                   tier.items.includes(item.id)
                 );
-
                 if (isRanked) return null;
-
                 return (
                   <Draggable key={item.id} id={item.id} url={item.img}>
-                    <div className="w-20 h-20 relative">
-                      <Image
-                        loader={ImageKitLoader}
-                        src={item.img}
-                        alt={item.title}
-                        fill
-                        sizes="64px"
-                        style={{ objectFit: "cover" }}
-                      />
-                    </div>
+                    <ItemCard item={item} />
                   </Draggable>
                 );
               })}
-            </div>
-          </Droppable>
+            </Droppable>
+          </div>
         </div>
       </DndContext>
 
-      {/* Tier modal */}
-      {modals.tierItems && (
+      {/* ── Tier item picker modal ─────────────────────────────────────────── */}
+      {modals.createTier && (
         <>
-          <div className="fixed inset-0 z-40 bg-white opacity-40" />
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="bg-black max-h-[90%] w-[90%] sm:w-full rounded-sm p-4 overflow-auto relative">
-              <div className="flex justify-center relative">
-                <div
-                  style={{ backgroundColor: openTier?.color }}
-                  className="text-black text-2xl font-bold p-4 min-w-20 min-h-20 flex justify-center items-center"
-                >
-                  {openTier?.title}
+          <div className="fixed inset-0 z-[998] bg-black/50" />
+          <div className="fixed inset-0 z-[999] flex items-center justify-center px-4">
+            <div
+              className="max-h-[90%] w-full sm:w-[480px] overflow-auto relative rounded-[10px]"
+              style={{ backgroundColor: "#142036", border: "1px solid #1E2C44" }}
+            >
+              <div className="p-6 flex flex-col gap-4">
+                {/* Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    {openTier && (
+                      <div
+                        className="w-9 h-9 rounded-[8px] flex items-center justify-center flex-shrink-0"
+                        style={{
+                          backgroundColor:
+                            TIER_STYLE[openTier.title]?.bg ?? openTier.color,
+                        }}
+                      >
+                        <span
+                          className="text-[18px] font-[500] leading-none select-none"
+                          style={{
+                            color:
+                              TIER_STYLE[openTier.title]?.text ?? "#000000",
+                          }}
+                        >
+                          {openTier.title}
+                        </span>
+                      </div>
+                    )}
+                    <p className="text-rk-primary text-[17px] font-[500]">
+                      Select items
+                    </p>
+                  </div>
+                  <X
+                    size={16}
+                    className="cursor-pointer text-rk-muted hover:text-rk-primary transition-colors"
+                    onClick={() => dispatch(uiActions.closeTierModal())}
+                  />
                 </div>
 
-                <X
-                  className="absolute top-0 right-0 cursor-pointer"
-                  onClick={() => dispatch(uiActions.closeTierModal())}
-                />
-              </div>
+                {/* Items grid */}
+                <div className="flex flex-wrap gap-2">
+                  {list.items.map((item: TierItem) => (
+                    <div
+                      key={item.id}
+                      className={`rounded-[8px] overflow-hidden cursor-pointer transition-all ${
+                        selectedItems.includes(item.id)
+                          ? "ring-2 ring-rk-accent"
+                          : "ring-1 ring-rk-stroke hover:ring-rk-muted"
+                      }`}
+                      onClick={() =>
+                        dispatch(uiActions.toggleSelectItem({ id: item.id }))
+                      }
+                    >
+                      <ItemCard item={item} />
+                    </div>
+                  ))}
+                </div>
 
-              <div className="flex flex-wrap mt-8 justify-around">
-                {list.items.map((item: TierItem) => (
-                  <div
-                    key={item.id}
-                    className={`w-20 h-20 relative border-2 ${
-                      selectedItems.includes(item.id)
-                        ? "border-green-400"
-                        : "border-black"
-                    }`}
-                    onClick={() =>
-                      dispatch(uiActions.toggleSelectItem(item.id))
-                    }
+                {/* Save */}
+                <div className="flex justify-end">
+                  <button
+                    className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+                    onClick={() => dispatch(uiActions.saveTierModal())}
                   >
-                    <Image
-                      loader={ImageKitLoader}
-                      src={item.img}
-                      alt={item.title}
-                      fill
-                      sizes="64px"
-                      style={{ objectFit: "cover" }}
-                    />
-                  </div>
-                ))}
+                    Save
+                  </button>
+                </div>
               </div>
-
-              <button
-                className="bg-white rounded-sm font-bold text-black px-4 py-2 mt-8"
-                onClick={() => dispatch(uiActions.saveTierModal())}
-              >
-                Submit
-              </button>
             </div>
           </div>
         </>
       )}
 
-      {/* Image modal */}
+      {/* ── Legacy image zoom modal ──────────────────────────────────────────── */}
       {modals.imageModal && (
         <>
-          <div className="fixed inset-0 z-40 bg-white opacity-40" />
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="bg-black rounded-sm p-4 relative">
+          <div className="fixed inset-0 z-[998] bg-black/50" />
+          <div className="fixed inset-0 z-[999] flex items-center justify-center px-4">
+            <div
+              className="relative rounded-[10px] overflow-hidden"
+              style={{ backgroundColor: "#142036", border: "1px solid #1E2C44" }}
+            >
               <div className="relative w-full max-w-md">
                 <Image
                   loader={ImageKitLoader}
@@ -269,10 +364,10 @@ export default function Rank() {
                   className="w-full h-auto object-contain"
                 />
                 <button
-                  className="absolute top-2 right-2 bg-red-400 rounded-full w-7 h-7 flex items-center justify-center font-bold"
+                  className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center bg-black/50 rounded-full hover:bg-black/70 transition-colors"
                   onClick={() => dispatch(uiActions.closeImageModal())}
                 >
-                  X
+                  <X size={14} className="text-white" />
                 </button>
               </div>
             </div>

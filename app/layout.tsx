@@ -4,8 +4,8 @@ import { Toaster } from "sonner";
 
 import "./globals.css";
 import Head from "./head";
-import Link from "next/link";
 import RouteChangeHandler from "./RouteChangeHandler";
+import AuthModal from "./components/authModal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,19 +26,14 @@ export default function RootLayout({
     <html lang="en">
       <Head />
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased mt-14 sm:mt-2`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Toaster position="top-right" expand richColors />
         <StoreProvider>
           <RouteChangeHandler />
+          <AuthModal />
           {children}
         </StoreProvider>
-        <Link
-          href="/"
-          className="px-4 py-2 pt-4 sm:pt-6 font-bold text-3xl absolute top-0 left-0"
-        >
-          Rankr
-        </Link>
       </body>
     </html>
   );

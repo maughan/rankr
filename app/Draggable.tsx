@@ -7,7 +7,7 @@ import { uiActions } from "@/lib/store/uiSlice";
 
 const DOUBLE_TAP_DELAY = 300;
 
-export default function Draggable({ id, children, url }: any) {
+export default function Draggable({ id, children, url }: { id: number; children: React.ReactNode; url?: string }) {
   const dispatch = useAppDispatch();
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
 
@@ -20,16 +20,13 @@ export default function Draggable({ id, children, url }: any) {
 
   const lastTap = useRef(0);
 
-  const handleDoubleTap = () => {
-    dispatch(uiActions.openImageModal(url));
-  };
-
   const handlePointerUp = () => {
+    if (!url) return;
     const now = Date.now();
     if (now - lastTap.current < DOUBLE_TAP_DELAY) {
       lastTap.current = 0;
       navigator.vibrate?.(20);
-      handleDoubleTap();
+      dispatch(uiActions.openImageModal(url));
     } else {
       lastTap.current = now;
     }

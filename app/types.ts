@@ -1,3 +1,30 @@
+export interface TopTierItem {
+  id: number;
+  name: string | null;
+  short_label: string | null;
+  color: string | null;
+  tier: string;
+}
+
+export interface ListPreview {
+  id: number;
+  title: string;
+  description: string;
+  img: string | null;
+  hidden: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: { id: number; username: string };
+  tags: string[];
+  category_icon: string;
+  category_color: string;
+  item_count: number;
+  ranker_count: number;
+  last_activity_at: string;
+  pinned: boolean;
+  top_tier_items: TopTierItem[];
+}
+
 export interface TierList {
   id: number;
   title: string;
@@ -11,6 +38,8 @@ export interface TierList {
     username: string;
   };
   tags: Array<string>;
+  category_icon: string;
+  category_color: string;
   tiers: Array<Tier>;
   items: Array<TierItem>;
 }
@@ -25,9 +54,10 @@ export interface Tier {
 
 export interface TierItem {
   id: number;
-  title: string;
-  description: string;
-  img: string;
+  img?: string;
+  name?: string;
+  color?: string;
+  short_label?: string;
   createdAt: string;
   updatedAt: string;
   createdBy: string;

@@ -3,9 +3,9 @@ import { Tier, TierItem, TierList, User } from "@/app/types";
 import {
   fetchUserRankings,
   filterListResponseData,
+  getUserFromToken,
   handleDropReorder,
 } from "@/lib/helpers";
-import { jwtDecode } from "jwt-decode";
 
 interface UIState {
   modals: {
@@ -15,9 +15,10 @@ interface UIState {
     editUser: boolean;
     tierItems: boolean;
     imageModal: boolean;
+    auth: boolean;
   };
-  editItem: Pick<TierItem, "title" | "img" | "description">;
-  editList: Pick<TierList, "title" | "description" | "img" | "hidden">;
+  editItem: Pick<TierItem, "name">;
+  editList: Pick<TierList, "title" | "description" | "img" | "hidden" | "category_icon" | "category_color">;
   editUser: Pick<User, "email" | "username">;
   rankings: Tier[];
   filteredListRankings: Tier[];
@@ -35,9 +36,10 @@ const initialState: UIState = {
     editUser: false,
     tierItems: false,
     imageModal: false,
+    auth: false,
   },
-  editItem: { title: "", img: "", description: "" },
-  editList: { title: "", img: "", description: "", hidden: true },
+  editItem: { name: "" },
+  editList: { title: "", img: "", description: "", hidden: true, category_icon: "ti-stack-2", category_color: "blue" },
   editUser: { email: "", username: "" },
   rankings: [],
   filteredListRankings: [],
@@ -101,7 +103,16 @@ export const uiSlice = createSlice({
     },
     closeCreateListModal: (s) => {
       s.modals.createList = false;
-      s.editList = { title: "", img: "", description: "", hidden: true };
+      s.editList = { title: "", img: "", description: "", hidden: true, category_icon: "ti-stack-2", category_color: "blue" };
+    },
+    setUserFilter: (s, a: PayloadAction<number>) => {
+      s.userfilter = a.payload;
+    },
+    openAuthModal: (s) => {
+      s.modals.auth = true;
+    },
+    closeAuthModal: (s) => {
+      s.modals.auth = false;
     },
     filterRankingsByUser: (
       s,
@@ -123,19 +134,7 @@ export const uiSlice = createSlice({
       const list = action.payload as TierList;
       if (!list) return;
 
-      const token = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("auth_token="))
-        ?.split("=")[1];
-
-      let username = "";
-      let id = 0;
-
-      if (token) {
-        const decoded = jwtDecode<{ sub: number; username: string }>(token);
-        username = decoded.username;
-        id = decoded.sub;
-      }
+      const { id, username } = getUserFromToken();
 
       if (!username.length) return;
       if (id === 0) return;

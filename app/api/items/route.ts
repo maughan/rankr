@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { nameToColor, deriveShortLabel } from "@/lib/itemColor";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
@@ -46,10 +47,14 @@ export async function POST(req: Request) {
       throw new Error("Token invalid");
     }
 
-    const itemPromises = body.urls.map((url: string) =>
+    const names: string[] = body.names;
+
+    const itemPromises = names.map((name: string) =>
       prisma.item.create({
         data: {
-          img: url,
+          name,
+          color: nameToColor(name),
+          short_label: deriveShortLabel(name),
           createdById: decoded.sub,
           lists: {
             connect: [{ id: body.listId }],

@@ -18,7 +18,10 @@ model Tier {
 
 model Item {
   id          Int       @id @default(autoincrement())
-  img         String
+  img         String?
+  name        String?
+  color       String?
+  short_label String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
   createdById Int
@@ -36,6 +39,7 @@ model User {
   lists     List[]
   rankings  Ranking[]
   items     Item[]
+  pins      UserListPin[]
 }
 
 model List {
@@ -49,9 +53,24 @@ model List {
   createdById Int
   createdBy   User     @relation(fields: [createdById], references: [id])
 
-  tags        String[]
+  tags           String[]
+  category_icon  String  @default("ti-stack-2")
+  category_color String  @default("blue")
   items       Item[]   @relation("ItemToList")
   tiers       Tier[]   @relation("ListToTier")
+  pins        UserListPin[]
+}
+
+model UserListPin {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  listId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  list List @relation(fields: [listId], references: [id])
+
+  @@unique([userId, listId])
 }
 
 model Ranking {

@@ -1,4 +1,4 @@
-import { ItemRanking, Tier, TierItem, TierList } from "@/app/types";
+import { Tier, TierList } from "@/app/types";
 import { jwtDecode } from "jwt-decode";
 
 export const ImageKitLoader = ({
@@ -16,14 +16,18 @@ export const createNewList = ({
   description,
   img,
   hidden,
-}: Pick<TierList, "title" | "description" | "img" | "hidden">): Pick<
+  category_icon,
+  category_color,
+}: Pick<TierList, "title" | "description" | "img" | "hidden" | "category_icon" | "category_color">): Pick<
   TierList,
-  "title" | "description" | "tags" | "hidden" | "img"
+  "title" | "description" | "tags" | "hidden" | "img" | "category_icon" | "category_color"
 > => ({
   title,
   description,
   img,
   hidden,
+  category_icon,
+  category_color,
   tags: [],
 });
 
@@ -39,15 +43,6 @@ export const createNewTier = ({
   items: [],
 });
 
-export const createNewItem = ({
-  title,
-  description,
-  img,
-}: Pick<TierItem, "title" | "description" | "img">) => ({
-  title,
-  description,
-  img,
-});
 
 export const handleDropReorder = (
   end: number,
@@ -84,7 +79,7 @@ export const processRankingData = (
     value: number;
     listId: number;
   }[] = [];
-  userRankings.map((tier) =>
+  userRankings.forEach((tier) =>
     tier.items.forEach((item) =>
       userRankingData.push({
         itemId: item,
@@ -100,7 +95,8 @@ export const processRankingData = (
 
 export const processResponseData = (lists: TierList[]): TierList[] => {
   return lists.map((list) => {
-    list.items.map((item) => {
+    const tiers = list.tiers.map((tier) => ({ ...tier, items: [] as number[] }));
+    list.items.forEach((item) => {
       if (!item.rankings.length) return;
       const filteredRankings = item.rankings.filter(
         (ranking) => ranking.value !== 0
@@ -109,14 +105,9 @@ export const processResponseData = (lists: TierList[]): TierList[] => {
         filteredRankings.map((rank) => rank.value).reduce((a, b) => a + b, 0) /
           filteredRankings.length
       );
-
-      const correspondingTier = list.tiers.find(
-        (tier) => tier.value === aggVal
-      );
-
-      correspondingTier?.items.push(item.id);
+      tiers.find((tier) => tier.value === aggVal)?.items.push(item.id);
     });
-    return list;
+    return { ...list, tiers };
   });
 };
 
@@ -129,7 +120,7 @@ export const filterListResponseData = (
     items: [] as number[],
   }));
 
-  list.items.map((item) => {
+  list.items.forEach((item) => {
     if (!item.rankings.length) return;
 
     const ranking = item.rankings.find((ranking) => ranking.user.id === user);
