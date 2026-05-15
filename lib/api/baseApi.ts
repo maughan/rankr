@@ -3,7 +3,7 @@ import { User } from "@/app/types";
 
 export const baseApi = createApi({
   reducerPath: "api",
-  tagTypes: ["Lists", "List"],
+  tagTypes: ["Lists", "List", "SharedList"],
   baseQuery: fetchBaseQuery({
     baseUrl: "/api",
     prepareHeaders: (headers) => {

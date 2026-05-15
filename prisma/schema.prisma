@@ -31,15 +31,15 @@ model Item {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique
-  password  String
-  email     String?   @unique
-  tokenVersion  Int @default(0)
-  lists     List[]
-  rankings  Ranking[]
-  items     Item[]
-  pins      UserListPin[]
+  id           Int           @id @default(autoincrement())
+  username     String        @unique
+  password     String
+  email        String?       @unique
+  tokenVersion Int           @default(0)
+  lists        List[]
+  rankings     Ranking[]
+  items        Item[]
+  pins         UserListPin[]
 }
 
 model List {
@@ -48,17 +48,25 @@ model List {
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
-  hidden      Boolean @default(true)
+  hidden      Boolean  @default(true)
   img         String?
   createdById Int
   createdBy   User     @relation(fields: [createdById], references: [id])
 
   tags           String[]
-  category_icon  String  @default("ti-stack-2")
-  category_color String  @default("blue")
-  items       Item[]   @relation("ItemToList")
-  tiers       Tier[]   @relation("ListToTier")
-  pins        UserListPin[]
+  category_icon  String   @default("ti-stack-2")
+  category_color String   @default("blue")
+
+  // Shareable-link fields
+  is_shareable               Boolean   @default(false)
+  share_token                String?   @unique
+  share_token_created_at     DateTime?
+  anonymous_rankings_enabled Boolean   @default(true)
+
+  items    Item[]        @relation("ItemToList")
+  tiers    Tier[]        @relation("ListToTier")
+  pins     UserListPin[]
+  rankings Ranking[]
 }
 
 model UserListPin {
@@ -76,11 +84,20 @@ model UserListPin {
 model Ranking {
   id        Int      @id @default(autoincrement())
   itemId    Int
-  userId    Int
+  userId    Int?
   value     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  item Item @relation(fields: [itemId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  // Anonymous-ranking fields
+  listId                  Int?
+  is_anonymous            Boolean @default(false)
+  anonymous_session_token String?
+  submitter_ip_hash       String?
+
+  item Item  @relation(fields: [itemId], references: [id])
+  user User? @relation(fields: [userId], references: [id])
+  list List? @relation(fields: [listId], references: [id])
+
+  @@index([listId, anonymous_session_token])
 }

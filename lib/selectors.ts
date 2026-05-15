@@ -12,6 +12,7 @@ export const selectRankersByListId = (id: number) =>
 
       list.items.forEach((item: any) => {
         item.rankings?.forEach((ranking: any) => {
+          if (!ranking.user) return;
           usersMap.set(ranking.user.id, ranking.user.username);
         });
       });

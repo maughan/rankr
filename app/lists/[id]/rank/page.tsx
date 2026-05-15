@@ -9,6 +9,8 @@ import Image from "next/image";
 import { X, Pencil } from "lucide-react";
 
 import { useGetListQuery, useSubmitRankingsMutation } from "@/lib/api/listsApi";
+import Skeleton from "@/app/components/Skeleton";
+import { TierRowSkeleton } from "../skeletons";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import Draggable from "@/app/Draggable";
@@ -131,8 +133,46 @@ export default function Rank() {
 
   if (isLoading || !list) {
     return (
-      <div className="fixed inset-0 z-10 bg-rk-page flex items-center justify-center">
-        <p className="text-rk-muted text-[15px]">Loading…</p>
+      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+        {/* Top bar — real chrome */}
+        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+              TierStack.io
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/lists/${id}`}
+              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+            >
+              Back
+            </Link>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-rk-accent/30">
+              <Skeleton width={12} height={12} />
+              <Skeleton width={44} height={11} />
+            </div>
+          </div>
+        </div>
+
+        <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl">
+          {/* Header skeleton */}
+          <div className="flex flex-col gap-2">
+            <Skeleton height={20} width="50%" />
+            <Skeleton height={11} width="36%" />
+          </div>
+
+          {/* Tier rows skeleton */}
+          <div className="flex flex-col gap-[6px]">
+            <TierRowSkeleton tier="S" count={2} />
+            <TierRowSkeleton tier="A" count={3} />
+            <TierRowSkeleton tier="B" count={4} />
+            <TierRowSkeleton tier="C" count={3} />
+            <TierRowSkeleton tier="D" count={2} />
+            <TierRowSkeleton tier="F" count={1} />
+          </div>
+        </div>
       </div>
     );
   }
@@ -161,7 +201,11 @@ export default function Rank() {
               disabled={isSubmitting}
               className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50"
             >
-              <Pencil size={12} strokeWidth={2.5} />
+              {isSubmitting ? (
+                <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
+              ) : (
+                <Pencil size={12} strokeWidth={2.5} />
+              )}
               Submit
             </button>
           </div>

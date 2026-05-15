@@ -143,9 +143,12 @@ export default function AuthModal() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-1 px-4 py-2.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+              className="mt-1 px-4 py-2.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
-              {loading ? "Logging in…" : "Log in"}
+              {loading && (
+                <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
+              )}
+              Log in
             </button>
           </form>
         ) : (
@@ -198,9 +201,12 @@ export default function AuthModal() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-1 px-4 py-2.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+              className="mt-1 px-4 py-2.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
-              {loading ? "Creating account…" : "Create account"}
+              {loading && (
+                <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
+              )}
+              Create account
             </button>
           </form>
         )}

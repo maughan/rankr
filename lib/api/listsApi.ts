@@ -2,6 +2,48 @@ import { baseApi } from "./baseApi";
 import { ListPreview, TierList, TierItem } from "@/app/types";
 import { createNewList, processResponseData } from "@/lib/helpers";
 
+export interface SharedListItem {
+  id: number;
+  img: string | null;
+  name: string | null;
+  color: string | null;
+  short_label: string | null;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: { id: number; username: string };
+}
+
+export interface SharedList {
+  id: number;
+  title: string;
+  description: string;
+  img: string | null;
+  is_shareable: boolean;
+  anonymous_rankings_enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: { id: number; username: string };
+  tiers: Array<{ id: number; title: string; color: string; value: number; items: number[] }>;
+  items: SharedListItem[];
+  ranker_count: number;
+}
+
+export interface ShareStats {
+  is_shareable: boolean;
+  share_token: string | null;
+  share_token_created_at: string | null;
+  anonymous_rankings_enabled: boolean;
+  share_url: string | null;
+  ranker_count: number;
+  authed_ranker_count: number;
+  anon_ranker_count: number;
+}
+
+export interface ShareResponse {
+  share_token: string;
+  share_url: string;
+}
+
 export const listsApi = baseApi.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
@@ -84,6 +126,58 @@ export const listsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Lists"],
     }),
+
+    enableShare: builder.mutation<ShareResponse, number>({
+      query: (listId) => ({
+        url: `/lists/${listId}/share`,
+        method: "POST",
+      }),
+      invalidatesTags: (_r, _e, listId) => [{ type: "List", id: listId }],
+    }),
+
+    disableShare: builder.mutation<void, number>({
+      query: (listId) => ({
+        url: `/lists/${listId}/share`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, listId) => [{ type: "List", id: listId }],
+    }),
+
+    updateShare: builder.mutation<
+      Partial<ShareResponse & { anonymous_rankings_enabled: boolean }>,
+      { listId: number; rotate?: boolean; anonymous_rankings_enabled?: boolean }
+    >({
+      query: ({ listId, ...body }) => ({
+        url: `/lists/${listId}/share`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_r, _e, { listId }) => [{ type: "List", id: listId }],
+    }),
+
+    getShareStats: builder.query<ShareStats, number>({
+      query: (listId) => `/lists/${listId}/share/stats`,
+      providesTags: (_r, _e, listId) => [{ type: "List", id: listId }],
+    }),
+
+    getSharedList: builder.query<SharedList, string>({
+      query: (token) => `/r/${token}`,
+      providesTags: (_r, _e, token) => [{ type: "SharedList" as const, id: token }],
+    }),
+
+    getMyRanking: builder.query<
+      { tiers: Array<{ id: number; title: string; color: string; value: number; items: number[] }> } | null,
+      string
+    >({
+      query: (token) => `/r/${token}/my-ranking`,
+    }),
+
+    getCreatorRanking: builder.query<
+      { tiers: Array<{ id: number; title: string; color: string; value: number; items: number[] }> } | null,
+      string
+    >({
+      query: (token) => `/r/${token}/creator-ranking`,
+    }),
   }),
 });
 
@@ -97,4 +191,11 @@ export const {
   useCreateItemsMutation,
   useSubmitRankingsMutation,
   useTogglePinMutation,
+  useEnableShareMutation,
+  useDisableShareMutation,
+  useUpdateShareMutation,
+  useGetShareStatsQuery,
+  useGetSharedListQuery,
+  useGetMyRankingQuery,
+  useGetCreatorRankingQuery,
 } = listsApi;
