@@ -246,7 +246,7 @@ export default function TierComparison({
       <div className="overflow-x-auto">
         <div className="inline-flex flex-col md:gap-1">
           {/* Their rank axis label */}
-          <p className="text-xs text-gray-400 ml-16 mb-1">Their rank →</p>
+          <p className="text-xs text-gray-400 ml-16 mb-1">Their stack →</p>
 
           <div className="flex md:gap-1">
             {/* Your rank axis label (rotated) */}
@@ -258,7 +258,7 @@ export default function TierComparison({
                 className="text-xs text-gray-400 whitespace-nowrap"
                 style={{ writingMode: "vertical-lr" }}
               >
-                Your rank
+                Your stack
               </span>
             </div>
 
@@ -352,7 +352,7 @@ export default function TierComparison({
           {selectedCell && (
             <button
               onClick={() => setSelectedCell(null)}
-              className="px-3 py-1 bg-gray-700 rounded-sm text-xs"
+              className="px-3 py-1 bg-gray-700 rounded-sm text-xs cursor-pointer"
             >
               Clear
             </button>
@@ -395,13 +395,13 @@ export default function TierComparison({
           {missingFromMe > 0 && (
             <p>
               {missingFromMe} item{missingFromMe !== 1 ? "s" : ""} not yet
-              ranked by you
+              stacked by you
             </p>
           )}
           {missingFromThem > 0 && (
             <p>
               {missingFromThem} item{missingFromThem !== 1 ? "s" : ""} not yet
-              ranked by @{compareUsername}
+              stacked by @{compareUsername}
             </p>
           )}
         </div>

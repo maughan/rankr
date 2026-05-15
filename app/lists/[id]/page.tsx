@@ -191,7 +191,7 @@ export default function List() {
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
           <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-            Rankr
+            TierStack.io
           </span>
         </div>
 
@@ -209,7 +209,7 @@ export default function List() {
               className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
             >
               <Pencil size={12} strokeWidth={2.5} />
-              Rank it
+              Stack it
             </Link>
           )}
         </div>
@@ -250,7 +250,7 @@ export default function List() {
                 <>
                   <Dot />
                   <span className="text-[11px] text-rk-tertiary">
-                    {rankerCount} ranker{rankerCount !== 1 ? "s" : ""}
+                    {rankerCount} stacker{rankerCount !== 1 ? "s" : ""}
                   </span>
                 </>
               )}
@@ -300,7 +300,7 @@ export default function List() {
                 {userfilter && (
                   <button
                     onClick={() => handleFilterByUser(null)}
-                    className="px-2.5 py-1.5 rounded-[8px] text-[12px] text-rk-muted hover:text-rk-secondary transition-colors"
+                    className="px-2.5 py-1.5 rounded-[8px] text-[12px] text-rk-muted hover:text-rk-secondary transition-colors cursor-pointer"
                     style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
                   >
                     Clear
@@ -315,7 +315,7 @@ export default function List() {
               >
                 <Lock size={12} className="flex-shrink-0" />
                 Log in or sign up to see what {users.length} other
-                {users.length !== 1 ? "s" : ""} ranked
+                {users.length !== 1 ? "s" : ""} stacked
               </button>
             )}
           </div>
@@ -390,7 +390,7 @@ export default function List() {
             {isLoggedIn && unranked.length > 0 && (
               <div>
                 <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
-                  Unranked
+                  Unstacked
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {unranked.map((item: TierItem) => (

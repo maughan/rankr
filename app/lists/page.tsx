@@ -36,34 +36,50 @@ import { uiActions } from "@/lib/store/uiSlice";
 import { ImageKitLoader, getUserFromToken } from "@/lib/helpers";
 import Modal from "../components/modal";
 import { TopTierItem } from "@/app/types";
-import { ICON_NAMES, COLOR_NAMES, COLOR_HEX, CategoryIcon, CategoryColor } from "@/lib/categoryIcons";
+import {
+  ICON_NAMES,
+  COLOR_NAMES,
+  COLOR_HEX,
+  CategoryIcon,
+  CategoryColor,
+} from "@/lib/categoryIcons";
+import { nameToColor } from "@/lib/itemColor";
 
 // ── Icon registry ─────────────────────────────────────────────────────────────
 
-const ICON_COMPONENTS: Record<CategoryIcon, React.ComponentType<{ size?: number }>> = {
-  "ti-stack-2":   IconStack2,
-  "ti-burger":    IconBurger,
-  "ti-cookie":    IconCookie,
-  "ti-candy":     IconCandy,
-  "ti-pizza":     IconPizza,
-  "ti-robot":     IconRobot,
-  "ti-brain":     IconBrain,
-  "ti-rocket":    IconRocket,
-  "ti-heart":     IconHeart,
-  "ti-star":      IconStar,
-  "ti-leaf":      IconLeaf,
-  "ti-tree":      IconTree,
-  "ti-sun":       IconSun,
-  "ti-mountain":  IconMountain,
-  "ti-moon":      IconMoon,
+const ICON_COMPONENTS: Record<
+  CategoryIcon,
+  React.ComponentType<{ size?: number }>
+> = {
+  "ti-stack-2": IconStack2,
+  "ti-burger": IconBurger,
+  "ti-cookie": IconCookie,
+  "ti-candy": IconCandy,
+  "ti-pizza": IconPizza,
+  "ti-robot": IconRobot,
+  "ti-brain": IconBrain,
+  "ti-rocket": IconRocket,
+  "ti-heart": IconHeart,
+  "ti-star": IconStar,
+  "ti-leaf": IconLeaf,
+  "ti-tree": IconTree,
+  "ti-sun": IconSun,
+  "ti-mountain": IconMountain,
+  "ti-moon": IconMoon,
   "ti-mood-happy": IconMoodHappy,
-  "ti-music":     IconMusic,
-  "ti-movie":     IconMovie,
-  "ti-camera":    IconCamera,
-  "ti-user":      IconUser,
+  "ti-music": IconMusic,
+  "ti-movie": IconMovie,
+  "ti-camera": IconCamera,
+  "ti-user": IconUser,
 };
 
-function CategoryIconDisplay({ name, size = 16 }: { name: string; size?: number }) {
+function CategoryIconDisplay({
+  name,
+  size = 16,
+}: {
+  name: string;
+  size?: number;
+}) {
   const Comp = ICON_COMPONENTS[name as CategoryIcon];
   return Comp ? <Comp size={size} /> : null;
 }
@@ -140,9 +156,20 @@ export default function Lists() {
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
           <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-            Rankr
+            TierStack.io
           </span>
         </div>
+
+        {isLoggedIn ? (
+          <div
+            className="w-7 h-7 rounded-full flex items-center justify-center bg-rk-accent text-[13px] font-[500] text-white cursor-pointer"
+            style={{
+              backgroundColor: nameToColor(getUserFromToken().username),
+            }}
+          >
+            <p>R</p>
+          </div>
+        ) : null}
 
         {isLoggedIn ? (
           <button
@@ -247,9 +274,12 @@ export default function Lists() {
                       </span>
                       {list.ranker_count > 0 && (
                         <>
-                          <span className="text-rk-tertiary text-[11px]">·</span>
+                          <span className="text-rk-tertiary text-[11px]">
+                            ·
+                          </span>
                           <span className="text-[11px] text-rk-tertiary">
-                            {list.ranker_count} ranker{list.ranker_count !== 1 ? "s" : ""}
+                            {list.ranker_count} stacker
+                            {list.ranker_count !== 1 ? "s" : ""}
                           </span>
                         </>
                       )}
@@ -304,7 +334,9 @@ export default function Lists() {
                     key={name}
                     type="button"
                     onClick={() =>
-                      dispatch(uiActions.updateListMeta({ category_icon: name }))
+                      dispatch(
+                        uiActions.updateListMeta({ category_icon: name })
+                      )
                     }
                     className={`aspect-square flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer ${
                       isSelected
@@ -332,7 +364,9 @@ export default function Lists() {
                     key={name}
                     type="button"
                     onClick={() =>
-                      dispatch(uiActions.updateListMeta({ category_color: name }))
+                      dispatch(
+                        uiActions.updateListMeta({ category_color: name })
+                      )
                     }
                     title={name}
                     className={`w-7 h-7 rounded-full transition-all cursor-pointer ${
@@ -340,7 +374,9 @@ export default function Lists() {
                         ? "ring-2 ring-offset-2 ring-rk-accent ring-offset-rk-surface scale-110"
                         : "hover:scale-110"
                     }`}
-                    style={{ backgroundColor: COLOR_HEX[name as CategoryColor] }}
+                    style={{
+                      backgroundColor: COLOR_HEX[name as CategoryColor],
+                    }}
                   />
                 );
               })}

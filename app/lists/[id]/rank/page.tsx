@@ -8,10 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { X, Pencil } from "lucide-react";
 
-import {
-  useGetListQuery,
-  useSubmitRankingsMutation,
-} from "@/lib/api/listsApi";
+import { useGetListQuery, useSubmitRankingsMutation } from "@/lib/api/listsApi";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import Draggable from "@/app/Draggable";
@@ -128,7 +125,7 @@ export default function Rank() {
       dispatch(uiActions.clearRankings());
     } catch (e) {
       console.error(e);
-      toast.error("Error saving rankings.");
+      toast.error("Error saving stacks.");
     }
   };
 
@@ -148,7 +145,7 @@ export default function Rank() {
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
             <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-              Rankr
+              TierStack.io
             </span>
           </div>
 
@@ -275,7 +272,10 @@ export default function Rank() {
           <div className="fixed inset-0 z-[999] flex items-center justify-center px-4">
             <div
               className="max-h-[90%] w-full sm:w-[480px] overflow-auto relative rounded-[10px]"
-              style={{ backgroundColor: "#142036", border: "1px solid #1E2C44" }}
+              style={{
+                backgroundColor: "#142036",
+                border: "1px solid #1E2C44",
+              }}
             >
               <div className="p-6 flex flex-col gap-4">
                 {/* Header */}
@@ -352,7 +352,10 @@ export default function Rank() {
           <div className="fixed inset-0 z-[999] flex items-center justify-center px-4">
             <div
               className="relative rounded-[10px] overflow-hidden"
-              style={{ backgroundColor: "#142036", border: "1px solid #1E2C44" }}
+              style={{
+                backgroundColor: "#142036",
+                border: "1px solid #1E2C44",
+              }}
             >
               <div className="relative w-full max-w-md">
                 <Image
