@@ -348,7 +348,7 @@ export default function AnonRankPage() {
               className="flex flex-wrap gap-2 min-h-[76px] content-start"
             >
               {unranked.map((item) => (
-                <Draggable key={item.id} id={item.id} url={item.img}>
+                <Draggable key={item.id} id={item.id} url={item?.img || ""}>
                   <ItemCard item={item} />
                 </Draggable>
               ))}
