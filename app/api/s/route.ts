@@ -34,7 +34,6 @@ export async function GET() {
 
     // `pins` requires `prisma generate` after the UserListPin migration
     const lists: any[] = await prisma.list.findMany({
-      where: { hidden: false },
       orderBy: { updatedAt: "desc" },
       include: {
         createdBy: { select: { id: true, username: true } },
@@ -59,7 +58,11 @@ export async function GET() {
       } as any,
     });
 
-    const result = lists.map((list) => {
+    const filteredLists: any[] = lists.filter(
+      (list) => !list.hidden || list.createdBy.id === viewerId
+    );
+
+    const result = filteredLists.map((list) => {
       const creatorRankMap = new Map<number, number>(); // itemId → tier value
       let lastActivity: Date | null = null;
       const rankerSet = new Set<number>();
@@ -216,19 +219,21 @@ export async function PATCH(req: Request) {
     }
 
     // category_icon/category_color require `prisma generate` after the migration
-    await (prisma.list.update as any)({
+    await prisma.list.update({
       where: { id: data.id, createdById: user.id },
       data: {
         title: data.title,
         description: data.description,
         img: data.img,
         hidden: data.hidden,
-        ...(data.category_icon && ICON_NAMES_SET.has(data.category_icon) && {
-          category_icon: data.category_icon,
-        }),
-        ...(data.category_color && COLOR_NAMES_SET.has(data.category_color) && {
-          category_color: data.category_color,
-        }),
+        ...(data.category_icon &&
+          ICON_NAMES_SET.has(data.category_icon) && {
+            category_icon: data.category_icon,
+          }),
+        ...(data.category_color &&
+          COLOR_NAMES_SET.has(data.category_color) && {
+            category_color: data.category_color,
+          }),
       },
     });
 

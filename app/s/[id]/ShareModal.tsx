@@ -75,8 +75,8 @@ export default function ShareModal({ listId, open, onClose }: Props) {
 
   return (
     <Modal open={open} handleClose={onClose}>
-      <div className="p-6 pt-8 flex flex-col gap-5 w-[360px] md:w-full">
-        <p className="text-rk-primary text-[17px] font-[500]">Share list</p>
+      <div className="p-6 pt-8 flex flex-col gap-5 w-full">
+        <p className="text-rk-primary text-[17px] font-[500]">Share stack</p>
 
         {isLoading ? (
           <div className="flex justify-center py-6">
@@ -107,8 +107,9 @@ export default function ShareModal({ listId, open, onClose }: Props) {
               <div className="flex items-center gap-1.5 text-[12px] text-rk-muted">
                 <Users size={13} className="flex-shrink-0" />
                 <span>
-                  {stats.ranker_count} person
-                  {stats.ranker_count !== 1 ? "s" : ""} ranked via this link
+                  {stats.ranker_count}
+                  {stats.ranker_count !== 1 ? "people" : "person"} stacked via
+                  this link
                   {stats.anon_ranker_count > 0 &&
                     ` · ${stats.anon_ranker_count} anonymous`}
                 </span>

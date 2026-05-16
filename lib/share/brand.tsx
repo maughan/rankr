@@ -26,7 +26,7 @@ export function Brand({ scale = 1 }: { scale?: number }) {
           lineHeight: 1,
         }}
       >
-        TierStack.io
+        tierstack.dev
       </span>
     </div>
   );
@@ -36,23 +36,51 @@ export function Brand({ scale = 1 }: { scale?: number }) {
 
 export function ShareFoot({ url, scale = 1 }: { url: string; scale?: number }) {
   return (
-    <span
+    <div
       style={{
-        fontSize: 13 * scale,
-        color: COLORS.tertiary,
-        letterSpacing: "0.04em",
-        lineHeight: 1,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
       }}
     >
-      {url}
-    </span>
+      <span
+        style={{
+          fontSize: 13 * scale,
+          color: COLORS.primary,
+          letterSpacing: "0.04em",
+          lineHeight: 1,
+          fontWeight: "bold",
+        }}
+      >
+        How do you stack up?
+      </span>
+      <span
+        style={{
+          fontSize: 13 * scale,
+          color: COLORS.tertiary,
+          letterSpacing: "0.04em",
+          lineHeight: 1,
+        }}
+      >
+        {url}
+      </span>
+    </div>
   );
 }
 
 // ── Tier badge ────────────────────────────────────────────────────────────────
 
-export function TierBadge({ tier, size = 40 }: { tier: string; size?: number }) {
-  const colors = TIER_COLORS[tier.toUpperCase()] ?? { bg: "#334155", text: "#ffffff" };
+export function TierBadge({
+  tier,
+  size = 40,
+}: {
+  tier: string;
+  size?: number;
+}) {
+  const colors = TIER_COLORS[tier.toUpperCase()] ?? {
+    bg: "#334155",
+    text: "#ffffff",
+  };
   return (
     <div
       style={{
@@ -68,7 +96,7 @@ export function TierBadge({ tier, size = 40 }: { tier: string; size?: number }) 
     >
       <span
         style={{
-          fontSize: Math.round(size * 0.45),
+          fontSize: Math.round(size * 0.52),
           fontWeight: 700,
           color: colors.text,
           lineHeight: 1,

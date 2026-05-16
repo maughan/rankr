@@ -40,6 +40,9 @@ export interface TierList {
   tags: Array<string>;
   category_icon: string;
   category_color: string;
+  is_shareable: boolean;
+  share_token: string | null;
+  anonymous_rankings_enabled: boolean;
   tiers: Array<Tier>;
   items: Array<TierItem>;
 }

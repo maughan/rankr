@@ -1,13 +1,404 @@
-// Hot-takes share card template.
-// Phase 4 replaces the stub body with real data fetching + layout.
+// Hot-takes share card — your most contrarian picks vs the community average.
+// Data fetching lives here so adding a new template is one file.
 
-import { Brand, ShareFoot } from "@/lib/share/brand";
+import { prisma } from "@/lib/prisma";
+import { Brand, ShareFoot, TierBadge } from "@/lib/share/brand";
+import { ShareCardError } from "@/lib/share/errors";
 import { COLORS } from "@/lib/share/tokens";
-import { Format, FORMATS, TemplateModule } from "@/lib/share/types";
+import {
+  Format,
+  FORMATS,
+  HotTakesData,
+  TemplateModule,
+} from "@/lib/share/types";
+import { Flame } from "lucide-react";
 
-function Stub({ format }: { format: Format }) {
+// ── Data fetching ─────────────────────────────────────────────────────────────
+
+function closestTierIdx(
+  avgValue: number,
+  sortedTiers: { value: number; title: string }[]
+): number {
+  let best = 0;
+  let bestDist = Infinity;
+  for (let i = 0; i < sortedTiers.length; i++) {
+    const d = Math.abs(sortedTiers[i].value - avgValue);
+    if (d < bestDist) {
+      bestDist = d;
+      best = i;
+    }
+  }
+  return best;
+}
+
+async function fetchData(params: URLSearchParams): Promise<HotTakesData> {
+  const token = params.get("token");
+  const userIdRaw = params.get("userId");
+  const anonSession = params.get("anonSession");
+
+  if (!token) throw new ShareCardError(400, "Missing token");
+
+  const list = await (prisma.list as any).findUnique({
+    where: { share_token: token },
+    select: {
+      id: true,
+      title: true,
+      is_shareable: true,
+      tiers: { select: { id: true, title: true, value: true } },
+      items: { select: { id: true, name: true } },
+    },
+  });
+
+  if (!list || !list.is_shareable)
+    throw new ShareCardError(404, "List not found");
+
+  const itemIds = (list.items as { id: number }[]).map((i) => i.id);
+  const sortedTiers = [...(list.tiers as { title: string; value: number }[])]
+    .filter((t) => t.value !== 0)
+    .sort((a, b) => b.value - a.value);
+
+  const userId = userIdRaw ? Number(userIdRaw) : null;
+
+  const [viewerRaw, grouped, authedCountRaw, anonCountRaw] = await Promise.all([
+    userId
+      ? prisma.ranking.findMany({
+          where: { itemId: { in: itemIds }, userId },
+          select: { itemId: true, value: true },
+        })
+      : anonSession
+      ? (prisma.ranking as any).findMany({
+          where: {
+            itemId: { in: itemIds },
+            anonymous_session_token: anonSession,
+          },
+          select: { itemId: true, value: true },
+        })
+      : Promise.resolve([]),
+    (prisma.ranking as any).groupBy({
+      by: ["itemId"],
+      where: { itemId: { in: itemIds }, value: { not: 0 } },
+      _avg: { value: true },
+    }),
+    (prisma.ranking as any).findMany({
+      where: { itemId: { in: itemIds }, userId: { not: null } },
+      select: { userId: true },
+      distinct: ["userId"],
+    }),
+    (prisma.ranking as any).findMany({
+      where: {
+        itemId: { in: itemIds },
+        anonymous_session_token: { not: null },
+      },
+      select: { anonymous_session_token: true },
+      distinct: ["anonymous_session_token"],
+    }),
+  ]);
+
+  const viewerRankings = viewerRaw as { itemId: number; value: number }[];
+  if (!viewerRankings.length)
+    throw new ShareCardError(400, "Viewer has not ranked this list");
+
+  const avgByItemId = new Map<number, number>(
+    (grouped as { itemId: number; _avg: { value: number | null } }[]).map(
+      (r) => [r.itemId, r._avg.value ?? 0]
+    )
+  );
+
+  const rankerCount =
+    (authedCountRaw as { userId: number }[]).length +
+    (anonCountRaw as { anonymous_session_token: string }[]).length;
+
+  const viewerMap = new Map<number, number>();
+  for (const r of viewerRankings) {
+    if (r.value === 0) continue;
+    const idx = sortedTiers.findIndex((t) => t.value === r.value);
+    if (idx !== -1) viewerMap.set(r.itemId, idx);
+  }
+
+  const itemById = new Map(
+    (list.items as { id: number; name: string | null }[]).map((i) => [i.id, i])
+  );
+
+  const takes: Array<{
+    itemName: string;
+    yourTier: string;
+    crowdTier: string;
+    delta: number;
+    absDelta: number;
+  }> = [];
+
+  for (const [itemId, viewerIdx] of viewerMap) {
+    const avgVal = avgByItemId.get(itemId);
+    if (avgVal === undefined) continue;
+
+    const crowdIdx = closestTierIdx(avgVal, sortedTiers);
+    const delta = crowdIdx - viewerIdx;
+    const absDelta = Math.abs(delta);
+    if (absDelta === 0) continue;
+
+    const item = itemById.get(itemId);
+    takes.push({
+      itemName: item?.name ?? "Unknown",
+      yourTier: sortedTiers[viewerIdx].title,
+      crowdTier: sortedTiers[crowdIdx].title,
+      delta,
+      absDelta,
+    });
+  }
+
+  takes.sort((a, b) => b.absDelta - a.absDelta);
+
+  const topTakes = takes.slice(0, 3).map(({ absDelta: _, ...rest }) => rest);
+
+  if (!topTakes.length)
+    throw new ShareCardError(400, "No contrarian picks found");
+
+  return {
+    listName: list.title,
+    rankerCount,
+    takes: topTakes,
+    shareUrl: `tierstack.dev/r/${token}`,
+  };
+}
+
+// ── Typography tokens — all values are absolute px on the final canvas ─────────
+
+type T = {
+  pad: number;
+  brandScale: number; // Brand component scale (text = 17 * brandScale)
+  footScale: number; // ShareFoot component scale (text = 13 * footScale)
+  pillFont: number; // "HOT TAKES" pill text
+  pillPadH: number;
+  pillPadV: number;
+  pillRadius: number;
+  titleFont: number; // list name
+  thinFont: number; // thin-aggregate note
+  itemFont: number; // item name inside each take row
+  badge: number; // tier badge box size (letter = badge * 0.52)
+  vsFont: number; // "vs" separator
+  deltaFont: number; // delta pill text
+  deltaPadH: number;
+  deltaPadV: number;
+  deltaRadius: number;
+  rowPadH: number;
+  rowPadV: number;
+  rowGap: number;
+  rowRadius: number;
+  sectionGap: number; // between title block and takes block
+  titleCut: number; // max chars before truncation in title
+  itemCut: number; // max chars before truncation in item name
+};
+
+const TOKENS: Record<Format, T> = {
+  square: {
+    pad: 72,
+    brandScale: 1.75, // → 30px text, 21px square
+    footScale: 2.08, // → 27px
+    pillFont: 27,
+    pillPadH: 18,
+    pillPadV: 10,
+    pillRadius: 8,
+    titleFont: 56,
+    thinFont: 24,
+    itemFont: 48,
+    badge: 72,
+    vsFont: 32,
+    deltaFont: 30,
+    deltaPadH: 16,
+    deltaPadV: 6,
+    deltaRadius: 6,
+    rowPadH: 36,
+    rowPadV: 32,
+    rowGap: 22,
+    rowRadius: 14,
+    sectionGap: 52,
+    titleCut: 30,
+    itemCut: 22,
+  },
+  wide: {
+    pad: 60,
+    brandScale: 1.3, // → 22px text
+    footScale: 1.62, // → 21px
+    pillFont: 21,
+    pillPadH: 14,
+    pillPadV: 8,
+    pillRadius: 7,
+    titleFont: 40,
+    thinFont: 17,
+    itemFont: 33,
+    badge: 52,
+    vsFont: 24,
+    deltaFont: 22,
+    deltaPadH: 12,
+    deltaPadV: 5,
+    deltaRadius: 5,
+    rowPadH: 22,
+    rowPadV: 20,
+    rowGap: 10,
+    rowRadius: 10,
+    sectionGap: 28,
+    titleCut: 28,
+    itemCut: 20,
+  },
+  story: {
+    pad: 90,
+    brandScale: 2.2, // → 37px text
+    footScale: 2.54, // → 33px
+    pillFont: 34,
+    pillPadH: 22,
+    pillPadV: 12,
+    pillRadius: 10,
+    titleFont: 68,
+    thinFont: 30,
+    itemFont: 58,
+    badge: 88,
+    vsFont: 40,
+    deltaFont: 38,
+    deltaPadH: 20,
+    deltaPadV: 9,
+    deltaRadius: 8,
+    rowPadH: 44,
+    rowPadV: 38,
+    rowGap: 28,
+    rowRadius: 18,
+    sectionGap: 64,
+    titleCut: 34,
+    itemCut: 26,
+  },
+};
+
+// ── Card rendering ────────────────────────────────────────────────────────────
+
+function HotTakesPill({ t }: { t: T }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        backgroundColor: "rgba(127, 29, 29, 0.5)",
+        border: "1px solid rgba(196, 69, 69, 0.4)",
+        borderRadius: t.pillRadius,
+        padding: `${t.pillPadV}px ${t.pillPadH}px`,
+      }}
+    >
+      <span
+        style={{
+          fontSize: t.pillFont,
+          fontWeight: 700,
+          color: "#FCA5A5",
+          letterSpacing: "0.08em",
+          lineHeight: 1,
+        }}
+      >
+        <Flame size={t.pillFont} />
+        HOT TAKES
+      </span>
+    </div>
+  );
+}
+
+function DeltaPill({ delta, t }: { delta: number; t: T }) {
+  const positive = delta > 0;
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        backgroundColor: positive
+          ? "rgba(74, 138, 232, 0.18)"
+          : "rgba(127, 29, 29, 0.30)",
+        borderRadius: t.deltaRadius,
+        padding: `${t.deltaPadV}px ${t.deltaPadH}px`,
+        flexShrink: 0,
+      }}
+    >
+      <span
+        style={{
+          fontSize: t.deltaFont,
+          fontWeight: 700,
+          color: positive ? COLORS.accent : "#FCA5A5",
+          lineHeight: 1,
+        }}
+      >
+        {positive ? "+" : ""}
+        {delta}
+      </span>
+    </div>
+  );
+}
+
+function TakeRow({ take, t }: { take: HotTakesData["takes"][number]; t: T }) {
+  const name =
+    take.itemName.length > t.itemCut
+      ? take.itemName.slice(0, t.itemCut - 1) + "…"
+      : take.itemName;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        backgroundColor: COLORS.surface,
+        border: `1px solid ${COLORS.stroke}`,
+        borderRadius: t.rowRadius,
+        padding: `${t.rowPadV}px ${t.rowPadH}px`,
+        gap: t.rowPadH,
+      }}
+    >
+      <span
+        style={{
+          fontSize: t.itemFont,
+          fontWeight: 500,
+          color: COLORS.primary,
+          flex: 1,
+          lineHeight: 1.15,
+        }}
+      >
+        {name}
+      </span>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: Math.round(t.badge * 0.18),
+          flexShrink: 0,
+        }}
+      >
+        <TierBadge tier={take.yourTier} size={t.badge} />
+        <span
+          style={{
+            fontSize: t.vsFont,
+            color: COLORS.tertiary,
+            lineHeight: 1,
+          }}
+        >
+          vs
+        </span>
+        <TierBadge tier={take.crowdTier} size={t.badge} />
+        <DeltaPill delta={take.delta} t={t} />
+      </div>
+    </div>
+  );
+}
+
+// ── Format-specific Card layouts ──────────────────────────────────────────────
+
+function SquareOrStoryCard({
+  data,
+  format,
+}: {
+  data: HotTakesData;
+  format: "square" | "story";
+}) {
+  const t = TOKENS[format];
   const { width, height } = FORMATS[format];
-  const isStory = format === "story";
+  const thinAggregate = data.rankerCount < 5;
+  const title =
+    data.listName.length > t.titleCut
+      ? data.listName.slice(0, t.titleCut - 1) + "…"
+      : data.listName;
+
   return (
     <div
       style={{
@@ -16,10 +407,11 @@ function Stub({ format }: { format: Format }) {
         width,
         height,
         backgroundColor: COLORS.page,
-        padding: isStory ? 80 : 60,
-        justifyContent: "space-between",
+        padding: t.pad,
+        fontFamily: "Geist",
       }}
     >
+      {/* Zone A — brand row */}
       <div
         style={{
           display: "flex",
@@ -27,56 +419,177 @@ function Stub({ format }: { format: Format }) {
           alignItems: "center",
         }}
       >
-        <Brand scale={isStory ? 2 : 1.4} />
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            backgroundColor: "#7F1D1D",
-            borderRadius: 6,
-            padding: "6px 12px",
-          }}
-        >
-          <span
-            style={{
-              fontSize: isStory ? 18 : 13,
-              fontWeight: 700,
-              color: "#FCA5A5",
-              letterSpacing: "0.08em",
-            }}
-          >
-            HOT TAKES
-          </span>
-        </div>
+        <Brand scale={t.brandScale} />
+        <HotTakesPill t={t} />
       </div>
 
+      {/* Zone B — title + takes, vertically centered in remaining space */}
       <div
         style={{
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
           flex: 1,
-          gap: 16,
+          justifyContent: "center",
+          gap: t.sectionGap,
         }}
       >
-        <span
+        {/* Title block */}
+        <div
           style={{
-            fontSize: isStory ? 20 : 15,
-            color: COLORS.tertiary,
+            display: "flex",
+            flexDirection: "column",
+            gap: Math.round(t.titleFont * 0.2),
           }}
         >
-          {format} · {width}×{height}
-        </span>
+          <span
+            style={{
+              fontSize: t.titleFont,
+              fontWeight: 700,
+              color: COLORS.primary,
+              lineHeight: 1.15,
+            }}
+          >
+            {title}
+          </span>
+          {thinAggregate && (
+            <span
+              style={{
+                fontSize: t.thinFont,
+                color: COLORS.muted,
+                lineHeight: 1,
+              }}
+            >
+              based on {data.rankerCount} stacker
+              {data.rankerCount === 1 ? "" : "s"} — results may shift
+            </span>
+          )}
+        </div>
+
+        {/* Take rows */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: t.rowGap,
+          }}
+        >
+          {data.takes.map((take, i) => (
+            <TakeRow key={i} take={take} t={t} />
+          ))}
+        </div>
       </div>
 
-      <ShareFoot url="tierstack.io" scale={isStory ? 1.4 : 1} />
+      {/* Zone C — footer */}
+      <ShareFoot url={data.shareUrl} scale={t.footScale} />
     </div>
   );
 }
 
+function WideCard({ data }: { data: HotTakesData }) {
+  const t = TOKENS.wide;
+  const { width, height } = FORMATS.wide;
+  const thinAggregate = data.rankerCount < 5;
+  const title =
+    data.listName.length > t.titleCut
+      ? data.listName.slice(0, t.titleCut - 1) + "…"
+      : data.listName;
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width,
+        height,
+        backgroundColor: COLORS.page,
+        padding: t.pad,
+        fontFamily: "Geist",
+      }}
+    >
+      {/* Zone A — brand row */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <Brand scale={t.brandScale} />
+        <HotTakesPill t={t} />
+      </div>
+
+      {/* Zone B — two columns */}
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          gap: 48,
+          marginTop: 28,
+        }}
+      >
+        {/* Left: title */}
+        <div
+          style={{
+            display: "flex",
+            flex: 1,
+            flexDirection: "column",
+            justifyContent: "center",
+            gap: Math.round(t.titleFont * 0.2),
+          }}
+        >
+          <span
+            style={{
+              fontSize: t.titleFont,
+              fontWeight: 700,
+              color: COLORS.primary,
+              lineHeight: 1.2,
+            }}
+          >
+            {title}
+          </span>
+          {thinAggregate && (
+            <span
+              style={{
+                fontSize: t.thinFont,
+                color: COLORS.muted,
+                lineHeight: 1,
+              }}
+            >
+              based on {data.rankerCount} stacker
+              {data.rankerCount === 1 ? "" : "s"}
+            </span>
+          )}
+        </div>
+
+        {/* Right: take rows — distribute evenly */}
+        <div
+          style={{
+            display: "flex",
+            flex: 1.3,
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
+          {data.takes.map((take, i) => (
+            <TakeRow key={i} take={take} t={t} />
+          ))}
+        </div>
+      </div>
+
+      {/* Zone C — footer */}
+      <div style={{ display: "flex", marginTop: 20 }}>
+        <ShareFoot url={data.shareUrl} scale={t.footScale} />
+      </div>
+    </div>
+  );
+}
+
+// ── Export ────────────────────────────────────────────────────────────────────
+
 export const hotTakes: TemplateModule = {
-  async handler(_params: URLSearchParams, format: Format) {
-    return <Stub format={format} />;
+  async handler(params: URLSearchParams, format: Format) {
+    const data = await fetchData(params);
+    if (format === "wide") return <WideCard data={data} />;
+    return <SquareOrStoryCard data={data} format={format} />;
   },
 };

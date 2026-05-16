@@ -10,7 +10,7 @@ export async function GET(
     const listId = Number(id);
 
     const list = await prisma.list.findUnique({
-      where: { id: listId, hidden: false },
+      where: { id: listId },
       include: {
         items: {
           include: {

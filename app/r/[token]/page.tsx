@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { Users } from "lucide-react";
 
 import { useState } from "react";
+import { ImageIcon } from "lucide-react";
 import {
   useGetSharedListQuery,
   useGetMyRankingQuery,
@@ -15,6 +16,7 @@ import {
 import Skeleton from "@/app/components/Skeleton";
 import { TierRowSkeleton } from "@/app/s/[id]/skeletons";
 import AnonComparison from "@/app/components/anonComparison";
+import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
 import { ImageKitLoader } from "@/lib/helpers";
 
 const TIER_STYLE: Record<string, { bg: string; text: string }> = {
@@ -88,6 +90,9 @@ export default function SharedListPage() {
     refetchOnMountOrArgChange: true,
   });
   const [viewMode, setViewMode] = useState<"community" | "mine">("community");
+  const [shareCardTemplate, setShareCardTemplate] = useState<
+    "head-to-head" | "hot-takes" | null
+  >(null);
 
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading || isFetching) {
@@ -213,10 +218,10 @@ export default function SharedListPage() {
             </Link>
             {list.anonymous_rankings_enabled && (
               <Link
-                href={`/r/${token}/rank`}
+                href={`/r/${token}/s`}
                 className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
               >
-                Rank this list
+                Stack this list
               </Link>
             )}
           </div>
@@ -230,10 +235,10 @@ export default function SharedListPage() {
           </Link>
           {list.anonymous_rankings_enabled && (
             <Link
-              href={`/r/${token}/rank`}
+              href={`/r/${token}/s`}
               className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
             >
-              Rank this list
+              Stack this list
             </Link>
           )}
         </div>
@@ -261,7 +266,7 @@ export default function SharedListPage() {
             {list.ranker_count > 0 && (
               <span className="flex items-center gap-1 text-[11px] text-rk-tertiary">
                 <Users size={11} />
-                {list.ranker_count} ranking
+                {list.ranker_count} stacker
                 {list.ranker_count !== 1 ? "s" : ""}
               </span>
             )}
@@ -361,21 +366,39 @@ export default function SharedListPage() {
           >
             <p className="text-[13px] text-rk-muted">
               {hasMyRanking
-                ? "Want to update your ranking?"
+                ? "Want to update your stack?"
                 : "Where would you put them?"}
             </p>
             <Link
-              href={`/r/${token}/rank`}
+              href={`/r/${token}/s`}
               className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity flex-shrink-0"
             >
-              {hasMyRanking ? "Re-rank" : "Rank this list"}
+              {hasMyRanking ? "Re-stack" : "Stack this list"}
             </Link>
           </div>
         )}
 
         {/* Comparison matrix — shown once the user has submitted rankings */}
         {hasMyRanking && myRanking && (
-          <div className="pt-2 border-t border-rk-stroke">
+          <div className="pt-2 border-t border-rk-stroke flex flex-col gap-4">
+            {/* Share card buttons */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                onClick={() => setShareCardTemplate("head-to-head")}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+              >
+                <ImageIcon size={13} />
+                Share your results
+              </button>
+              <button
+                onClick={() => setShareCardTemplate("hot-takes")}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+              >
+                <ImageIcon size={13} />
+                Share hot takes
+              </button>
+            </div>
+
             <AnonComparison
               items={list.items}
               myTiers={myRanking.tiers}
@@ -386,6 +409,15 @@ export default function SharedListPage() {
           </div>
         )}
       </div>
+
+      {shareCardTemplate && (
+        <ShareCardModal
+          token={token}
+          template={shareCardTemplate}
+          open={shareCardTemplate !== null}
+          onClose={() => setShareCardTemplate(null)}
+        />
+      )}
     </div>
   );
 }

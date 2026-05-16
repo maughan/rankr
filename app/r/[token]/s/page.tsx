@@ -259,7 +259,7 @@ export default function AnonRankPage() {
                 tierstack.dev
               </span>
             </div>
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden sm:flex justify-between items-center gap-2">
               <Link
                 href={`/r/${token}`}
                 className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
@@ -280,7 +280,7 @@ export default function AnonRankPage() {
               </button>
             </div>
           </div>
-          <div className="flex sm:hidden items-center gap-2 pb-3">
+          <div className="flex sm:hidden items-center justify-between gap-2 pb-3">
             <Link
               href={`/r/${token}`}
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"

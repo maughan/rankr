@@ -1,15 +1,52 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import { formatDistanceStrict } from "date-fns";
 import { toast } from "sonner";
 import Image from "next/image";
-import { Pencil, LayoutGrid, Lock, Share2 } from "lucide-react";
+import {
+  Pencil,
+  LayoutGrid,
+  Lock,
+  Share2,
+  EyeOff,
+  Eye,
+  LockOpen,
+  SquarePen,
+  Undo2,
+  ImageIcon,
+} from "lucide-react";
+import {
+  IconStack2,
+  IconBurger,
+  IconCookie,
+  IconCandy,
+  IconPizza,
+  IconRobot,
+  IconBrain,
+  IconRocket,
+  IconHeart,
+  IconStar,
+  IconLeaf,
+  IconTree,
+  IconSun,
+  IconMountain,
+  IconMoon,
+  IconMoodHappy,
+  IconMusic,
+  IconMovie,
+  IconCamera,
+  IconUser,
+} from "@tabler/icons-react";
 
 import { useParams } from "next/navigation";
 
-import { useGetListQuery, useCreateItemsMutation } from "@/lib/api/listsApi";
+import {
+  useGetListQuery,
+  useCreateItemsMutation,
+  useUpdateListMutation,
+} from "@/lib/api/listsApi";
 import Skeleton from "@/app/components/Skeleton";
 import {
   TierRowSkeleton,
@@ -21,11 +58,20 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import Modal from "../../components/modal";
 import ShareModal from "./ShareModal";
+import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
 import { ImageKitLoader, getUserFromToken } from "@/lib/helpers";
 import { selectRankersByListId } from "@/lib/selectors";
 import { Tier, TierItem } from "@/app/types";
 import TierComparison from "../../components/tierComparison";
 import { nameToColor } from "@/lib/itemColor";
+import {
+  ICON_NAMES,
+  COLOR_NAMES,
+  COLOR_HEX,
+  CategoryIcon,
+  CategoryColor,
+} from "@/lib/categoryIcons";
+import ImageKit from "imagekit-javascript";
 
 // ── Tier label colours from spec ────────────────────────────────────────────
 
@@ -37,6 +83,43 @@ const TIER_STYLE: Record<string, { bg: string; text: string }> = {
   D: { bg: "#85B7EB", text: "#042C53" },
   F: { bg: "#AFA9EC", text: "#26215C" },
 };
+
+const ICON_COMPONENTS: Record<
+  CategoryIcon,
+  React.ComponentType<{ size?: number }>
+> = {
+  "ti-stack-2": IconStack2,
+  "ti-burger": IconBurger,
+  "ti-cookie": IconCookie,
+  "ti-candy": IconCandy,
+  "ti-pizza": IconPizza,
+  "ti-robot": IconRobot,
+  "ti-brain": IconBrain,
+  "ti-rocket": IconRocket,
+  "ti-heart": IconHeart,
+  "ti-star": IconStar,
+  "ti-leaf": IconLeaf,
+  "ti-tree": IconTree,
+  "ti-sun": IconSun,
+  "ti-mountain": IconMountain,
+  "ti-moon": IconMoon,
+  "ti-mood-happy": IconMoodHappy,
+  "ti-music": IconMusic,
+  "ti-movie": IconMovie,
+  "ti-camera": IconCamera,
+  "ti-user": IconUser,
+};
+
+function CategoryIconDisplay({
+  name,
+  size = 16,
+}: {
+  name: string;
+  size?: number;
+}) {
+  const Comp = ICON_COMPONENTS[name as CategoryIcon];
+  return Comp ? <Comp size={size} /> : null;
+}
 
 // ── Item card ────────────────────────────────────────────────────────────────
 
@@ -100,19 +183,24 @@ function Dot() {
 export default function List() {
   const { id } = useParams<{ id: string }>();
   const listId = Number(id);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const dispatch = useAppDispatch();
 
   const { data: list, isLoading, isError, refetch } = useGetListQuery(listId);
   const [createItems, { isLoading: isCreating }] = useCreateItemsMutation();
+  const [saveList, { isLoading: isSaving }] = useUpdateListMutation();
 
-  const { modals, imageModalUrl, filteredListRankings, userfilter } =
+  const { modals, imageModalUrl, filteredListRankings, userfilter, editList } =
     useAppSelector((state) => state.ui);
 
   const users = useAppSelector(selectRankersByListId(listId));
 
   const [addItemsOpen, setAddItemsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [shareCardTemplate, setShareCardTemplate] = useState<
+    "head-to-head" | "hot-takes" | null
+  >(null);
   const [itemsText, setItemsText] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(0);
@@ -120,6 +208,7 @@ export default function List() {
     { id: number; name: string }[]
   >([]);
   const [fadingItemIds, setFadingItemIds] = useState(new Set<number>());
+  const isListOwner = list?.createdBy.id === currentUserId;
 
   useEffect(() => {
     if (!modals.auth) {
@@ -138,6 +227,63 @@ export default function List() {
   const handleFilterByUser = (userId: number | null) => {
     if (!list) return;
     dispatch(uiActions.filterRankingsByUser({ user: userId, list }));
+  };
+
+  const imagekit = new ImageKit({
+    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+    authenticationEndpoint: "/api/imagekit-auth",
+  } as any);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const res = await fetch("/api/imagekit-auth");
+      const { token, expire, signature } = await res.json();
+
+      const result = await imagekit.upload({
+        file,
+        fileName: `${Date.now()}-${file.name}`,
+        folder: "/s",
+        token,
+        expire,
+        signature,
+      } as any);
+
+      dispatch(uiActions.updateListMeta({ img: result.url }));
+      toast.success("Image uploaded");
+    } catch (err) {
+      console.error(err);
+      toast.error("Image upload failed");
+    }
+  };
+
+  const handleEditList = () => {
+    dispatch(
+      uiActions.openEditListModal({
+        title: list?.title ?? "",
+        img: list?.img ?? "",
+        description: list?.description ?? "",
+        hidden: list?.hidden ?? true,
+        category_icon: list?.category_icon ?? "ti-stack-2",
+        category_color: list?.category_color ?? "blue",
+      })
+    );
+  };
+
+  const handleSaveList = async () => {
+    if (!editList.title || !editList.description) return;
+
+    try {
+      await saveList({ id: listId, data: editList }).unwrap();
+      dispatch(uiActions.closeEditListModal());
+      toast.success("Stack updated");
+    } catch (e) {
+      console.error(e);
+      toast.error("Failed to update stack");
+    }
   };
 
   const handleAddItems = async () => {
@@ -350,7 +496,7 @@ export default function List() {
                     </button>
                   )}
                   <Link
-                    href={`/s/${id}/rank`}
+                    href={`/s/${id}/s`}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
                   >
                     <Pencil size={12} strokeWidth={2.5} />
@@ -375,8 +521,9 @@ export default function List() {
           <div>
             <Link
               href="/s"
-              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+              className="px-3 gap-1.5 flex items-center py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
             >
+              <Undo2 size={13} />
               Back
             </Link>
           </div>
@@ -401,7 +548,7 @@ export default function List() {
             )}
             {isLoggedIn && (
               <Link
-                href={`/s/${id}/rank`}
+                href={`/s/${id}/s`}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
               >
                 <Pencil size={12} strokeWidth={2.5} />
@@ -414,17 +561,39 @@ export default function List() {
 
       {/* ── Content ───────────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
-        <Link
-          href="/s"
-          className="px-3 hidden sm:block py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
-        >
-          Back
-        </Link>
+        <div className="flex items-center justify-end sm:justify-between">
+          <Link
+            href="/s"
+            className="px-3 hidden sm:flex items-center gap-1.5 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
+          >
+            <Undo2 size={13} />
+            Back
+          </Link>
+
+          {isListOwner && (
+            <p
+              className="px-3 items-center gap-1.5 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke cursor-pointer rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
+              onClick={handleEditList}
+            >
+              <SquarePen size={13} />
+              Edit stack
+            </p>
+          )}
+        </div>
         {/* ── Header block ──────────────────────────────────────────────── */}
         <div className="flex items-start gap-3">
           {/* Category icon tile */}
-          <div className="w-11 h-11 rounded-[10px] bg-rk-surface border border-rk-stroke flex-shrink-0 flex items-center justify-center">
-            <LayoutGrid size={20} className="text-rk-muted" />
+          <div
+            className={`w-11 h-11 rounded-[10px] border flex-shrink-0 flex items-center justify-center`}
+            style={{
+              backgroundColor: `${
+                COLOR_HEX[list.category_color as CategoryColor]
+              }40`,
+              borderColor: COLOR_HEX[list.category_color as CategoryColor],
+              color: COLOR_HEX[list.category_color as CategoryColor],
+            }}
+          >
+            <CategoryIconDisplay name={list.category_icon} size={20} />
           </div>
 
           <div className="min-w-0">
@@ -441,7 +610,7 @@ export default function List() {
             )}
             <div className="flex items-center flex-wrap mt-1.5">
               <span className="text-[11px] text-rk-tertiary">
-                by {list.createdBy.username}
+                by {isListOwner ? "You" : list.createdBy.username}
               </span>
               <Dot />
               <span className="text-[11px] text-rk-tertiary">{timeAgo}</span>
@@ -457,6 +626,30 @@ export default function List() {
                   </span>
                 </>
               )}
+              <Dot />
+              <div className="flex gap-1 items-center">
+                {list.hidden ? (
+                  <EyeOff size={11} className="text-rk-tertiary" />
+                ) : (
+                  <Eye size={11} className="text-rk-tertiary" />
+                )}
+
+                <p className="text-[11px] text-rk-tertiary">
+                  {list.hidden ? "Hidden" : "Visible"}
+                </p>
+              </div>
+              <Dot />
+              <div className="flex gap-1 items-center">
+                {list.hidden ? (
+                  <Lock size={11} className="text-rk-tertiary" />
+                ) : (
+                  <LockOpen size={11} className="text-rk-tertiary" />
+                )}
+
+                <p className="text-[11px] text-rk-tertiary">
+                  {list.hidden ? "Edits locked" : "Editable"}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -639,8 +832,30 @@ export default function List() {
           </div>
         )}
 
+        {/* ── Share card buttons ──────────────────────────────────────── */}
+        {hasMyRankings && list.is_shareable && list.share_token && (
+          <div className="pt-2 border-t border-rk-stroke flex items-center gap-2 flex-wrap">
+            {!isListOwner && (
+              <button
+                onClick={() => setShareCardTemplate("head-to-head")}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+              >
+                <ImageIcon size={13} />
+                Share your results
+              </button>
+            )}
+            <button
+              onClick={() => setShareCardTemplate("hot-takes")}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+            >
+              <ImageIcon size={13} />
+              Share hot takes
+            </button>
+          </div>
+        )}
+
         {/* ── Add items ────────────────────────────────────────────────── */}
-        {isLoggedIn && (
+        {isLoggedIn && isListOwner && (
           <button
             onClick={() => setAddItemsOpen(true)}
             className="self-start px-4 py-2 text-[13px] cursor-pointer font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
@@ -701,6 +916,16 @@ export default function List() {
         onClose={() => setShareOpen(false)}
       />
 
+      {/* ── Share card modal ─────────────────────────────────────────────── */}
+      {shareCardTemplate && list.share_token && (
+        <ShareCardModal
+          token={list.share_token}
+          template={shareCardTemplate}
+          open={shareCardTemplate !== null}
+          onClose={() => setShareCardTemplate(null)}
+        />
+      )}
+
       {/* ── Legacy image zoom modal ──────────────────────────────────────── */}
       <Modal
         open={modals.imageModal}
@@ -716,6 +941,165 @@ export default function List() {
             className="w-full h-auto object-contain"
             priority
           />
+        </div>
+      </Modal>
+
+      <Modal
+        open={modals.editList}
+        handleClose={() => dispatch(uiActions.closeEditListModal())}
+      >
+        <div className="p-6 flex flex-col gap-4">
+          <p className="text-rk-primary text-[17px] font-[500]">Edit list</p>
+
+          <input
+            className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-[13px] outline-none placeholder:text-rk-tertiary"
+            placeholder="List name"
+            value={editList.title}
+            onChange={(e) =>
+              dispatch(uiActions.updateListMeta({ title: e.target.value }))
+            }
+            autoFocus
+          />
+
+          <input
+            className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-[13px] outline-none placeholder:text-rk-tertiary"
+            placeholder="Description"
+            value={editList.description}
+            onChange={(e) =>
+              dispatch(
+                uiActions.updateListMeta({ description: e.target.value })
+              )
+            }
+          />
+
+          {/* ── Icon picker ─────────────────────────────────────────────── */}
+          <div>
+            <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
+              Icon
+            </p>
+            <div className="grid grid-cols-5 gap-1.5">
+              {ICON_NAMES.map((name) => {
+                const isSelected = editList.category_icon === name;
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() =>
+                      dispatch(
+                        uiActions.updateListMeta({ category_icon: name })
+                      )
+                    }
+                    className={`aspect-square flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer ${
+                      isSelected
+                        ? "border-rk-accent bg-rk-accent/10 text-rk-accent"
+                        : "border-rk-stroke bg-rk-row text-rk-muted hover:border-rk-muted hover:text-rk-secondary"
+                    }`}
+                  >
+                    <CategoryIconDisplay name={name} size={18} />
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Color picker ────────────────────────────────────────────── */}
+          <div>
+            <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
+              Color
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {COLOR_NAMES.map((name) => {
+                const isSelected = editList.category_color === name;
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() =>
+                      dispatch(
+                        uiActions.updateListMeta({ category_color: name })
+                      )
+                    }
+                    title={name}
+                    className={`w-7 h-7 rounded-full transition-all cursor-pointer ${
+                      isSelected
+                        ? "ring-2 ring-offset-2 ring-rk-accent ring-offset-rk-surface scale-110"
+                        : "hover:scale-110"
+                    }`}
+                    style={{
+                      backgroundColor: COLOR_HEX[name as CategoryColor],
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── Cover image ─────────────────────────────────────────────── */}
+          {editList.img ? (
+            <div className="flex items-center gap-3">
+              <div className="relative w-16 h-16 rounded-[6px] overflow-hidden">
+                <Image
+                  loader={ImageKitLoader}
+                  src={editList.img}
+                  alt=""
+                  fill
+                  style={{ objectFit: "cover" }}
+                />
+              </div>
+              <button
+                onClick={() => dispatch(uiActions.updateListMeta({ img: "" }))}
+                className="text-[12px] text-rk-muted hover:text-rk-secondary transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+            >
+              Upload cover image (optional)
+            </button>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
+
+          <label className="flex items-center justify-between">
+            <span className="text-[13px] text-rk-secondary">Hide list</span>
+            <input
+              type="checkbox"
+              checked={editList.hidden}
+              onChange={(e) =>
+                dispatch(uiActions.updateListMeta({ hidden: e.target.checked }))
+              }
+              className="accent-rk-accent"
+            />
+          </label>
+
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => dispatch(uiActions.closeCreateListModal())}
+              className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveList}
+              disabled={isSaving}
+              className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+            >
+              {isSaving && (
+                <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
+              )}
+              Save
+            </button>
+          </div>
         </div>
       </Modal>
     </div>
