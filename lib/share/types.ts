@@ -35,8 +35,11 @@ export interface HeadToHeadData {
   alignmentPct: number;
   creatorHandle: string | null; // null → show "the creator"
   listName: string;
-  // null when list has <5 items or alignment is perfect
+  // null when max distance < 2, or when alignment is perfect
   biggestGap: { itemName: string; yourTier: string; theirTier: string } | null;
+  // for the fallback callout when biggestGap is null
+  perfectMatches: number;
+  totalRanked: number;
   shareUrl: string;
 }
 

@@ -1,6 +1,9 @@
 import { createHash } from "crypto";
+import jwt from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
 import { renderCard } from "@/lib/share/renderer";
+import { ShareCardError } from "@/lib/share/errors";
+import { getClientIp, hashIp } from "@/lib/ipHash";
 import {
   FORMATS,
   KNOWN_TEMPLATES,
@@ -9,6 +12,30 @@ import {
 } from "@/lib/share/types";
 
 type Params = { params: Promise<{ template: string }> };
+
+// Per-IP rate limit: 60 req / min for share card generation.
+const RL_WINDOW_MS = 60 * 1_000;
+const RL_MAX = 60;
+const rlStore = new Map<string, { count: number; resetAt: number }>();
+
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, e] of rlStore) {
+    if (e.resetAt < now) rlStore.delete(k);
+  }
+}, 5 * 60 * 1_000).unref?.();
+
+function checkShareRateLimit(ipHash: string): boolean {
+  const now = Date.now();
+  const entry = rlStore.get(ipHash);
+  if (!entry || entry.resetAt < now) {
+    rlStore.set(ipHash, { count: 1, resetAt: now + RL_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RL_MAX) return false;
+  entry.count += 1;
+  return true;
+}
 
 export async function GET(req: NextRequest, { params }: Params) {
   const { template } = await params;
@@ -22,15 +49,54 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   if (!Object.keys(FORMATS).includes(format)) {
     return NextResponse.json(
-      { error: `Invalid format — must be one of: ${Object.keys(FORMATS).join(", ")}` },
+      {
+        error: `Invalid format — must be one of: ${Object.keys(FORMATS).join(
+          ", "
+        )}`,
+      },
       { status: 400 }
     );
   }
 
-  // Build a deterministic ETag from all inputs so the CDN can bust cache when
-  // parameters change (e.g. after a re-rank).
+  // Rate limit by IP
+  const ip = getClientIp(req);
+  if (!checkShareRateLimit(hashIp(ip))) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
+  // Resolve viewer identity from cookies (server-side — cannot be spoofed by the client).
+  // Auth user takes priority over anon session.
+  const enrichedSp = new URLSearchParams(sp);
+  const authCookie = req.cookies.get("auth_token")?.value;
+  let identitySet = false;
+
+  if (authCookie) {
+    try {
+      const payload = jwt.verify(
+        authCookie,
+        process.env.JWT_SECRET!
+      ) as unknown as { sub: number };
+      if (typeof payload.sub === "number") {
+        enrichedSp.set("userId", String(payload.sub));
+        enrichedSp.delete("anonSession");
+        identitySet = true;
+      }
+    } catch {
+      /* expired or invalid token — fall through to anon */
+    }
+  }
+
+  if (!identitySet) {
+    const anonSession = req.cookies.get("rankr_anon_session")?.value;
+    if (anonSession) enrichedSp.set("anonSession", anonSession);
+  }
+
+  // Build a deterministic ETag that includes the resolved identity so the CDN
+  // serves different images to different viewers even with the same token.
   const paramObj: Record<string, string> = { template, format };
-  sp.forEach((v, k) => { paramObj[k] = v; });
+  enrichedSp.forEach((v, k) => {
+    paramObj[k] = v;
+  });
   const etag = `"${createHash("sha256")
     .update(JSON.stringify(paramObj))
     .digest("hex")
@@ -41,17 +107,25 @@ export async function GET(req: NextRequest, { params }: Params) {
   }
 
   try {
-    const image = await renderCard(template as TemplateName, sp, format);
+    const image = await renderCard(
+      template as TemplateName,
+      enrichedSp,
+      format
+    );
 
     return new Response(image.body, {
       status: 200,
       headers: {
         "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=300, s-maxage=3600",
-        "ETag": etag,
+        // Private because the image is viewer-specific; short browser cache.
+        "Cache-Control": "private, max-age=120",
+        ETag: etag,
       },
     });
   } catch (err) {
+    if (err instanceof ShareCardError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
     console.error(`[share/${template}]`, err);
     return NextResponse.json(
       { error: "Image generation failed" },

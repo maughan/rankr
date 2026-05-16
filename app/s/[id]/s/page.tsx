@@ -213,7 +213,7 @@ export default function Rank() {
               >
                 {getUserFromToken().username[0].toUpperCase()}
               </div>
-              <div className="hidden sm:flex items-center gap-2">
+              <div className="hidden sm:flex items-center justify-between gap-2">
                 <Link
                   href={`/s/${id}`}
                   className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
@@ -235,7 +235,7 @@ export default function Rank() {
               </div>
             </div>
           </div>
-          <div className="flex sm:hidden items-center gap-2 pb-3">
+          <div className="flex sm:hidden items-center justify-between gap-2 pb-3">
             <Link
               href={`/s/${id}`}
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"

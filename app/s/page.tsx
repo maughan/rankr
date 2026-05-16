@@ -6,7 +6,7 @@ import { formatDistanceStrict } from "date-fns";
 import { toast } from "sonner";
 import ImageKit from "imagekit-javascript";
 import Image from "next/image";
-import { LayoutGrid, Bookmark } from "lucide-react";
+import { LayoutGrid, Bookmark, EyeClosed } from "lucide-react";
 import {
   IconStack2,
   IconBurger,
@@ -120,12 +120,14 @@ export default function Lists() {
   const { modals, editList } = useAppSelector((state) => state.ui);
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(0);
 
   // Re-check the cookie whenever the auth modal closes (catches post-login state)
   useEffect(() => {
     if (!modals.auth) {
       const { id } = getUserFromToken();
       setIsLoggedIn(id > 0);
+      setCurrentUserId(id);
     }
   }, [modals.auth]);
 
@@ -250,7 +252,7 @@ export default function Lists() {
       </div>
 
       {/* ── Content ───────────────────────────────────────────────────────── */}
-      <div className="px-4 sm:px-8 py-6">
+      <div className="px-4 sm:px-8 py-6 max-w-[750px] mx-auto">
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {([0, 1, 2, 3, 4, 5] as const).map((i) => (
@@ -372,30 +374,42 @@ export default function Lists() {
                     </Link>
 
                     {/* Pin button — floats over preview, only for logged-in users */}
-                    {isLoggedIn && (
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handlePin(list.id, list.pinned);
-                        }}
-                        title={isPinned ? "Unpin" : "Pin"}
-                        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-[6px] cursor-pointer transition-colors hover:bg-rk-surface/90"
-                        style={{ backgroundColor: "rgba(10,18,32,0.72)" }}
-                      >
-                        {isPinning ? (
-                          <div className="w-[22px] h-[22px] rounded-full border-[1.5px] border-rk-stroke border-t-rk-accent animate-spin" />
-                        ) : (
-                          <Bookmark
-                            size={14}
-                            className={
-                              isPinned ? "text-rk-accent" : "text-rk-muted"
-                            }
-                            fill={isPinned ? "currentColor" : "none"}
-                          />
-                        )}
-                      </button>
-                    )}
+                    <div className="absolute top-2 right-2 h-8 flex items-center gap-2">
+                      {list.createdBy.id === currentUserId && list.hidden && (
+                        <button
+                          onClick={() => null}
+                          title="Hidden"
+                          className="w-8 h-8 flex items-center justify-center rounded-[6px] transition-colors hover:bg-rk-surface/90"
+                          style={{ backgroundColor: "rgba(10,18,32,0.72)" }}
+                        >
+                          <EyeClosed size={14} className="text-rk-accent" />
+                        </button>
+                      )}
+                      {isLoggedIn && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handlePin(list.id, list.pinned);
+                          }}
+                          title={isPinned ? "Unpin" : "Pin"}
+                          className="w-8 h-8 flex items-center justify-center rounded-[6px] cursor-pointer transition-colors hover:bg-rk-surface/90"
+                          style={{ backgroundColor: "rgba(10,18,32,0.72)" }}
+                        >
+                          {isPinning ? (
+                            <div className="w-[22px] h-[22px] rounded-full border-[1.5px] border-rk-stroke border-t-rk-accent animate-spin" />
+                          ) : (
+                            <Bookmark
+                              size={14}
+                              className={
+                                isPinned ? "text-rk-accent" : "text-rk-muted"
+                              }
+                              fill={isPinned ? "currentColor" : "none"}
+                            />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}

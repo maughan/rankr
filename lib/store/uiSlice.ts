@@ -12,11 +12,11 @@ interface UIState {
     createList: boolean;
     createTier: boolean;
     createItem: boolean;
-    editUser: boolean;
     tierItems: boolean;
     imageModal: boolean;
     auth: boolean;
     password: boolean;
+    editList: boolean;
   };
   editItem: Pick<TierItem, "name">;
   editList: Pick<
@@ -28,7 +28,6 @@ interface UIState {
     | "category_icon"
     | "category_color"
   >;
-  editUser: Pick<User, "email" | "username">;
   rankings: Tier[];
   filteredListRankings: Tier[];
   userfilter: number | null;
@@ -42,11 +41,11 @@ const initialState: UIState = {
     createList: false,
     createTier: false,
     createItem: false,
-    editUser: false,
     tierItems: false,
     imageModal: false,
     auth: false,
     password: false,
+    editList: false,
   },
   editItem: { name: "" },
   editList: {
@@ -57,7 +56,6 @@ const initialState: UIState = {
     category_icon: "ti-stack-2",
     category_color: "blue",
   },
-  editUser: { email: "", username: "" },
   rankings: [],
   filteredListRankings: [],
   userfilter: null,
@@ -120,6 +118,36 @@ export const uiSlice = createSlice({
     },
     closeCreateListModal: (s) => {
       s.modals.createList = false;
+      s.editList = {
+        title: "",
+        img: "",
+        description: "",
+        hidden: true,
+        category_icon: "ti-stack-2",
+        category_color: "blue",
+      };
+    },
+    openEditListModal: (
+      s,
+      a: PayloadAction<
+        Pick<
+          TierList,
+          | "title"
+          | "description"
+          | "img"
+          | "hidden"
+          | "category_icon"
+          | "category_color"
+        >
+      >
+    ) => {
+      s.editList = {
+        ...a.payload,
+      };
+      s.modals.editList = true;
+    },
+    closeEditListModal: (s) => {
+      s.modals.editList = false;
       s.editList = {
         title: "",
         img: "",
