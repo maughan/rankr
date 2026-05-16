@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -18,6 +18,20 @@ export default function AuthModal() {
   const [tab, setTab] = useState<Tab>("login");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    function handleKeyDown(e) {
+      if (e.key === "Escape") {
+        dispatch(uiActions.closeAuthModal());
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  });
 
   const handleSuccess = () => {
     dispatch(uiActions.closeAuthModal());
@@ -75,6 +89,11 @@ export default function AuthModal() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePasswordReset = () => {
+    dispatch(uiActions.closeAuthModal());
+    dispatch(uiActions.openPasswordModal());
   };
 
   const inputCls =
@@ -139,6 +158,13 @@ export default function AuthModal() {
                 {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
+
+            <p
+              onClick={handlePasswordReset}
+              className="text-[13px] font-[600] pl-1 cursor-pointer w-fit hover:opacity-70"
+            >
+              Trouble signing in?
+            </p>
 
             <button
               type="submit"

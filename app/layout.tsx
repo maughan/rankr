@@ -6,6 +6,7 @@ import "./globals.css";
 import Head from "./head";
 import RouteChangeHandler from "./RouteChangeHandler";
 import AuthModal from "./components/authModal";
+import PasswordModal from "./components/passwordModal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({
         <StoreProvider>
           <RouteChangeHandler />
           <AuthModal />
+          <PasswordModal />
           {children}
         </StoreProvider>
       </body>
