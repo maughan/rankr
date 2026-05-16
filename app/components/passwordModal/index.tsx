@@ -33,6 +33,7 @@ export default function PasswordModal() {
   const handleSuccess = () => {
     dispatch(uiActions.closePasswordModal());
     dispatch(baseApi.util.resetApiState());
+    dispatch(uiActions.openAuthModal());
   };
 
   const handleResetPassword = async (e: FormEvent<HTMLFormElement>) => {
