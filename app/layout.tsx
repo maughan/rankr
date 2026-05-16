@@ -1,5 +1,6 @@
 import StoreProvider from "./storeProvider";
 import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 
@@ -37,6 +38,7 @@ export default function RootLayout({
           <PasswordModal />
           {children}
           <Analytics />
+          <SpeedInsights />
         </StoreProvider>
       </body>
     </html>
