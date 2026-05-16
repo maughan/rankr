@@ -321,43 +321,42 @@ export default function List() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {isLoggedIn && (
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
-                style={{
-                  backgroundColor: nameToColor(getUserFromToken().username),
-                }}
+            {isLoggedIn ? (
+              <>
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
+                  style={{ backgroundColor: nameToColor(getUserFromToken().username) }}
+                >
+                  {getUserFromToken().username[0].toUpperCase()}
+                </div>
+                {/* Desktop actions */}
+                <div className="hidden sm:flex items-center gap-2">
+                  {list && currentUserId === list.createdBy.id && (
+                    <button
+                      onClick={() => setShareOpen(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+                    >
+                      <Share2 size={13} />
+                      Share
+                    </button>
+                  )}
+                  <Link
+                    href={`/lists/${id}/rank`}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+                  >
+                    <Pencil size={12} strokeWidth={2.5} />
+                    Stack it
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() => dispatch(uiActions.openAuthModal())}
+                className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
               >
-                {getUserFromToken().username[0].toUpperCase()}
-              </div>
+                Log in / Sign up
+              </button>
             )}
-            {/* Desktop actions */}
-            <div className="hidden sm:flex items-center gap-2">
-              {/* <Link
-                href="/lists"
-                className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
-              >
-                Back
-              </Link> */}
-              {isLoggedIn && list && currentUserId === list.createdBy.id && (
-                <button
-                  onClick={() => setShareOpen(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
-                >
-                  <Share2 size={13} />
-                  Share
-                </button>
-              )}
-              {isLoggedIn && (
-                <Link
-                  href={`/lists/${id}/rank`}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-                >
-                  <Pencil size={12} strokeWidth={2.5} />
-                  Stack it
-                </Link>
-              )}
-            </div>
           </div>
         </div>
         {/* Mobile action row */}

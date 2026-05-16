@@ -208,52 +208,43 @@ export default function Lists() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {isLoggedIn && (
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
-                style={{
-                  backgroundColor: nameToColor(getUserFromToken().username),
-                }}
+            {isLoggedIn ? (
+              <>
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
+                  style={{ backgroundColor: nameToColor(getUserFromToken().username) }}
+                >
+                  {getUserFromToken().username[0].toUpperCase()}
+                </div>
+                <div className="hidden sm:flex items-center gap-2">
+                  <button
+                    onClick={() => dispatch(uiActions.openCreateListModal())}
+                    className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
+                  >
+                    + New list
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() => dispatch(uiActions.openAuthModal())}
+                className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
               >
-                {getUserFromToken().username[0].toUpperCase()}
-              </div>
+                Log in / Sign up
+              </button>
             )}
-            <div className="hidden sm:flex items-center gap-2">
-              {isLoggedIn ? (
-                <button
-                  onClick={() => dispatch(uiActions.openCreateListModal())}
-                  className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
-                >
-                  + New list
-                </button>
-              ) : (
-                <button
-                  onClick={() => dispatch(uiActions.openAuthModal())}
-                  className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
-                >
-                  Log in / Sign up
-                </button>
-              )}
-            </div>
           </div>
         </div>
-        <div className="flex sm:hidden items-center gap-2 pb-3 justify-end">
-          {isLoggedIn ? (
+        {isLoggedIn && (
+          <div className="flex sm:hidden items-center gap-2 pb-3 justify-end">
             <button
               onClick={() => dispatch(uiActions.openCreateListModal())}
               className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
             >
               + New list
             </button>
-          ) : (
-            <button
-              onClick={() => dispatch(uiActions.openAuthModal())}
-              className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
-            >
-              Log in / Sign up
-            </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* ── Content ───────────────────────────────────────────────────────── */}
