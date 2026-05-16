@@ -141,7 +141,7 @@ export default function Rank() {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-                TierStack.dev
+                tierstack.dev
               </span>
             </div>
             <div className="hidden sm:flex items-center gap-2">
@@ -201,7 +201,7 @@ export default function Rank() {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-                TierStack.dev
+                tierstack.dev
               </span>
             </div>
             <div className="flex items-center gap-2">
