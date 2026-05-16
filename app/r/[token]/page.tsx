@@ -73,7 +73,12 @@ function ItemCard({ item }: { item: SharedListItem }) {
 
 export default function SharedListPage() {
   const { token } = useParams<{ token: string }>();
-  const { data: list, isLoading, isFetching, isError } = useGetSharedListQuery(token, {
+  const {
+    data: list,
+    isLoading,
+    isFetching,
+    isError,
+  } = useGetSharedListQuery(token, {
     refetchOnMountOrArgChange: true,
   });
   const { data: myRanking } = useGetMyRankingQuery(token, {
@@ -93,7 +98,7 @@ export default function SharedListPage() {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-                TierStack
+                TierStack.dev
               </span>
             </div>
             <div className="hidden sm:flex items-center gap-2">
@@ -141,7 +146,7 @@ export default function SharedListPage() {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-                TierStack
+                TierStack.dev
               </span>
             </div>
             <div className="hidden sm:flex items-center gap-2">
@@ -196,7 +201,7 @@ export default function SharedListPage() {
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
             <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-              TierStack.io
+              TierStack.dev
             </span>
           </div>
           <div className="hidden sm:flex items-center gap-2">
@@ -355,7 +360,9 @@ export default function SharedListPage() {
             style={{ backgroundColor: "rgba(255,255,255,0.02)" }}
           >
             <p className="text-[13px] text-rk-muted">
-              {hasMyRanking ? "Want to update your ranking?" : "Where would you put them?"}
+              {hasMyRanking
+                ? "Want to update your ranking?"
+                : "Where would you put them?"}
             </p>
             <Link
               href={`/r/${token}/rank`}

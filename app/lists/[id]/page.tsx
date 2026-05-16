@@ -195,7 +195,7 @@ export default function List() {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-                TierStack.io
+                TierStack.dev
               </span>
             </div>
             <div className="hidden sm:flex items-center gap-2">
@@ -232,29 +232,36 @@ export default function List() {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-                TierStack
+                TierStack.dev
               </span>
             </div>
-            <div className="hidden sm:flex items-center gap-2">
-              <Link
-                href="/lists"
-                className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
-              >
-                Back
-              </Link>
-            </div>
           </div>
-          <div className="flex sm:hidden items-center gap-2 pb-3">
+          <div className="flex sm:hidden items-center justify-between gap-2 pb-3">
             <Link
               href="/lists"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
               Back
             </Link>
+
+            {!isLoggedIn && (
+              <button
+                onClick={() => dispatch(uiActions.openAuthModal())}
+                className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                Log in / Sign up
+              </button>
+            )}
           </div>
         </div>
 
         <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
+          <Link
+            href="/lists"
+            className="px-3 hidden sm:block py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
+          >
+            Back
+          </Link>
           {/* Header skeleton — icon tile is real chrome */}
           <div className="flex items-start gap-3">
             <div className="w-11 h-11 rounded-[10px] bg-rk-surface border border-rk-stroke flex-shrink-0" />
@@ -317,7 +324,7 @@ export default function List() {
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
             <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-              TierStack.io
+              TierStack.dev
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -325,7 +332,9 @@ export default function List() {
               <>
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
-                  style={{ backgroundColor: nameToColor(getUserFromToken().username) }}
+                  style={{
+                    backgroundColor: nameToColor(getUserFromToken().username),
+                  }}
                 >
                   {getUserFromToken().username[0].toUpperCase()}
                 </div>
@@ -350,12 +359,14 @@ export default function List() {
                 </div>
               </>
             ) : (
-              <button
-                onClick={() => dispatch(uiActions.openAuthModal())}
-                className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
-              >
-                Log in / Sign up
-              </button>
+              <div className="hidden sm:flex items-center gap-2">
+                <button
+                  onClick={() => dispatch(uiActions.openAuthModal())}
+                  className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  Log in / Sign up
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -371,6 +382,14 @@ export default function List() {
           </div>
 
           <div className="flex gap-2">
+            {!isLoggedIn && (
+              <button
+                onClick={() => dispatch(uiActions.openAuthModal())}
+                className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                Log in / Sign up
+              </button>
+            )}
             {isLoggedIn && list && currentUserId === list.createdBy.id && (
               <button
                 onClick={() => setShareOpen(true)}
@@ -395,6 +414,12 @@ export default function List() {
 
       {/* ── Content ───────────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
+        <Link
+          href="/lists"
+          className="px-3 hidden sm:block py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
+        >
+          Back
+        </Link>
         {/* ── Header block ──────────────────────────────────────────────── */}
         <div className="flex items-start gap-3">
           {/* Category icon tile */}

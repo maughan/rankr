@@ -141,7 +141,7 @@ export default function Rank() {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-                TierStack.io
+                TierStack.dev
               </span>
             </div>
             <div className="hidden sm:flex items-center gap-2">
@@ -201,13 +201,15 @@ export default function Rank() {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-                TierStack.io
+                TierStack.dev
               </span>
             </div>
             <div className="flex items-center gap-2">
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
-                style={{ backgroundColor: nameToColor(getUserFromToken().username) }}
+                style={{
+                  backgroundColor: nameToColor(getUserFromToken().username),
+                }}
               >
                 {getUserFromToken().username[0].toUpperCase()}
               </div>
