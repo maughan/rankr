@@ -324,7 +324,11 @@ export default function AnonRankPage() {
                     style={{ backgroundColor: "#0F1828" }}
                   >
                     {items.map((item) => (
-                      <Draggable key={item.id} id={item.id} url={item.img}>
+                      <Draggable
+                        key={item.id}
+                        id={item.id}
+                        url={item?.img || ""}
+                      >
                         <ItemCard item={item} />
                       </Draggable>
                     ))}

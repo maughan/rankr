@@ -273,7 +273,9 @@ export default function List() {
   const hasMyRankings =
     isLoggedIn &&
     list.items.some((item: TierItem) =>
-      item.rankings?.some((r: any) => r.user?.id === currentUserId && r.value !== 0)
+      item.rankings?.some(
+        (r: any) => r.user?.id === currentUserId && r.value !== 0
+      )
     );
 
   // Unranked items (not placed in any tier in the current view)
@@ -446,7 +448,7 @@ export default function List() {
                 style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
               >
                 <Lock size={12} className="flex-shrink-0" />
-                Log in or sign up to see what {users.length} other
+                Log in or sign up to see how {users.length} other
                 {users.length !== 1 ? "s" : ""} stacked
               </button>
             )}
