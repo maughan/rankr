@@ -243,7 +243,7 @@ export default function TierComparison({
       </div>
 
       {/* Matrix */}
-      <div className="overflow-x-auto">
+      <div className="mx-auto">
         <div className="inline-flex flex-col md:gap-1">
           {/* Their rank axis label */}
           <p className="text-xs text-gray-400 ml-16 mb-1">Their stack →</p>
@@ -364,9 +364,12 @@ export default function TierComparison({
             {selectedCell ? "No items in this cell" : "No major disagreements"}
           </p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-10">
             {detailItems.map(({ item, myTierIdx, theirTierIdx }) => (
-              <div key={item.id} className="flex items-center justify-between">
+              <div
+                key={item.id}
+                className="flex items-center justify-between sm:justify-around sm:gap-10 sm:mx-auto"
+              >
                 <ItemTile item={item} />
                 <div className="flex items-center gap-2">
                   <div

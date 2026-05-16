@@ -97,12 +97,20 @@ export default function Lists() {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: lists = [], isLoading, isFetching, isError, refetch } = useGetListsQuery();
+  const {
+    data: lists = [],
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useGetListsQuery();
   const [createList, { isLoading: isCreating }] = useCreateListMutation();
   const [togglePin] = useTogglePinMutation();
 
   const [pinningIds, setPinningIds] = useState(new Set<number>());
-  const [optimisticPins, setOptimisticPins] = useState(new Map<number, boolean>());
+  const [optimisticPins, setOptimisticPins] = useState(
+    new Map<number, boolean>()
+  );
 
   // Once the background refetch settles, let the real pinned values take over
   useEffect(() => {
@@ -191,40 +199,61 @@ export default function Lists() {
   return (
     <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-          <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-            TierStack.io
-          </span>
-        </div>
-
-        {isLoggedIn ? (
-          <div
-            className="w-7 h-7 rounded-full flex items-center justify-center bg-rk-accent text-[13px] font-[500] text-white cursor-pointer"
-            style={{
-              backgroundColor: nameToColor(getUserFromToken().username),
-            }}
-          >
-            <p>R</p>
+      <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+        <div className="flex justify-between items-center h-12">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+              TierStack.io
+            </span>
           </div>
-        ) : null}
-
-        {isLoggedIn ? (
-          <button
-            onClick={() => dispatch(uiActions.openCreateListModal())}
-            className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
-          >
-            + New list
-          </button>
-        ) : (
-          <button
-            onClick={() => dispatch(uiActions.openAuthModal())}
-            className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
-          >
-            Log in / Sign up
-          </button>
-        )}
+          <div className="flex items-center gap-2">
+            {isLoggedIn && (
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
+                style={{
+                  backgroundColor: nameToColor(getUserFromToken().username),
+                }}
+              >
+                {getUserFromToken().username[0].toUpperCase()}
+              </div>
+            )}
+            <div className="hidden sm:flex items-center gap-2">
+              {isLoggedIn ? (
+                <button
+                  onClick={() => dispatch(uiActions.openCreateListModal())}
+                  className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  + New list
+                </button>
+              ) : (
+                <button
+                  onClick={() => dispatch(uiActions.openAuthModal())}
+                  className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  Log in / Sign up
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex sm:hidden items-center gap-2 pb-3 justify-end">
+          {isLoggedIn ? (
+            <button
+              onClick={() => dispatch(uiActions.openCreateListModal())}
+              className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              + New list
+            </button>
+          ) : (
+            <button
+              onClick={() => dispatch(uiActions.openAuthModal())}
+              className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
+            >
+              Log in / Sign up
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Content ───────────────────────────────────────────────────────── */}
@@ -236,10 +265,7 @@ export default function Lists() {
             ))}
           </div>
         ) : isError ? (
-          <ErrorBanner
-            message="Couldn't load lists"
-            onRetry={refetch}
-          />
+          <ErrorBanner message="Couldn't load lists" onRetry={refetch} />
         ) : lists.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div className="w-12 h-12 rounded-[10px] bg-rk-surface border border-rk-stroke flex items-center justify-center">
@@ -303,7 +329,9 @@ export default function Lists() {
                               <div
                                 key={item.id}
                                 className="w-[22px] h-[22px] rounded-[4px] flex-shrink-0"
-                                style={{ backgroundColor: item.color ?? "#334155" }}
+                                style={{
+                                  backgroundColor: item.color ?? "#334155",
+                                }}
                               />
                             ))}
                             {list.top_tier_items.length === 0 && (
@@ -324,7 +352,9 @@ export default function Lists() {
                               {list.item_count} item
                               {list.item_count !== 1 ? "s" : ""}
                             </span>
-                            <span className="text-rk-tertiary text-[11px]">·</span>
+                            <span className="text-rk-tertiary text-[11px]">
+                              ·
+                            </span>
                             <span className="text-[11px] text-rk-tertiary">
                               {formatDistanceStrict(
                                 new Date(list.updatedAt),
@@ -334,7 +364,9 @@ export default function Lists() {
                             </span>
                             {list.ranker_count > 0 && (
                               <>
-                                <span className="text-rk-tertiary text-[11px]">·</span>
+                                <span className="text-rk-tertiary text-[11px]">
+                                  ·
+                                </span>
                                 <span className="text-[11px] text-rk-tertiary">
                                   {list.ranker_count} stacker
                                   {list.ranker_count !== 1 ? "s" : ""}
@@ -363,7 +395,9 @@ export default function Lists() {
                         ) : (
                           <Bookmark
                             size={14}
-                            className={isPinned ? "text-rk-accent" : "text-rk-muted"}
+                            className={
+                              isPinned ? "text-rk-accent" : "text-rk-muted"
+                            }
                             fill={isPinned ? "currentColor" : "none"}
                           />
                         )}

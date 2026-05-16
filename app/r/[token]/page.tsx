@@ -88,19 +88,31 @@ export default function SharedListPage() {
   if (isLoading || isFetching) {
     return (
       <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
-        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-              TierStack
-            </span>
+        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+          <div className="flex justify-between items-center h-12">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+              <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+                TierStack
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                href="/lists"
+                className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+              >
+                Browse lists
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/lists"
-            className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
-          >
-            Browse lists
-          </Link>
+          <div className="flex sm:hidden items-center gap-2 pb-3">
+            <Link
+              href="/lists"
+              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+            >
+              Browse lists
+            </Link>
+          </div>
         </div>
         <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
           <div className="flex flex-col gap-2">
@@ -124,19 +136,31 @@ export default function SharedListPage() {
   if (isError || !list) {
     return (
       <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
-        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-              TierStack
-            </span>
+        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+          <div className="flex justify-between items-center h-12">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+              <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+                TierStack
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                href="/lists"
+                className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+              >
+                Browse lists
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/lists"
-            className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
-          >
-            Browse lists
-          </Link>
+          <div className="flex sm:hidden items-center gap-2 pb-3">
+            <Link
+              href="/lists"
+              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+            >
+              Browse lists
+            </Link>
+          </div>
         </div>
         <div className="px-4 sm:px-8 py-16 max-w-3xl mx-auto flex flex-col items-center gap-3 text-center">
           <p className="text-rk-primary text-[17px] font-[500]">
@@ -167,14 +191,32 @@ export default function SharedListPage() {
   return (
     <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-          <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-            TierStack.io
-          </span>
+      <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+        <div className="flex justify-between items-center h-12">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+              TierStack.io
+            </span>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            <Link
+              href="/lists"
+              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+            >
+              Browse lists
+            </Link>
+            {list.anonymous_rankings_enabled && (
+              <Link
+                href={`/r/${token}/rank`}
+                className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+              >
+                Rank this list
+              </Link>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex sm:hidden items-center gap-2 pb-3">
           <Link
             href="/lists"
             className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"

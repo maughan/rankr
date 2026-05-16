@@ -235,7 +235,7 @@ function MatrixPanel({
       </div>
 
       {/* Matrix */}
-      <div className="overflow-x-auto">
+      <div className="mx-auto">
         <div className="inline-flex flex-col gap-1">
           <p className="text-[11px] text-rk-tertiary ml-[52px] mb-1">
             {compareLabel} →
@@ -341,26 +341,26 @@ function MatrixPanel({
             {selectedCell ? "No items in this cell" : "No major disagreements"}
           </p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {detailItems.map(({ item, myTierIdx, theirTierIdx }) => (
-              <div key={item.id} className="flex items-center justify-between gap-3 py-1">
-                <div className="flex items-center gap-2 min-w-0">
-                  <ItemTile item={item} />
-                  <span className="text-[12px] text-rk-secondary truncate">{item.name}</span>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <div
-                    className="w-8 h-8 flex items-center justify-center rounded-sm text-xs font-bold text-black"
-                    style={{ backgroundColor: sortedTiers[myTierIdx].color }}
-                  >
-                    {sortedTiers[myTierIdx].title}
-                  </div>
-                  <span className="text-rk-tertiary text-sm">→</span>
-                  <div
-                    className="w-8 h-8 flex items-center justify-center rounded-sm text-xs font-bold text-black"
-                    style={{ backgroundColor: sortedTiers[theirTierIdx].color }}
-                  >
-                    {sortedTiers[theirTierIdx].title}
+              <div key={item.id} className="flex items-center gap-2 bg-rk-surface border border-rk-stroke rounded-[8px] p-2 min-w-0">
+                <ItemTile item={item} />
+                <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+                  <span className="text-[12px] text-rk-secondary truncate leading-tight">{item.name}</span>
+                  <div className="flex items-center gap-1">
+                    <div
+                      className="w-7 h-7 flex items-center justify-center rounded-sm text-xs font-bold text-black flex-shrink-0"
+                      style={{ backgroundColor: sortedTiers[myTierIdx].color }}
+                    >
+                      {sortedTiers[myTierIdx].title}
+                    </div>
+                    <span className="text-rk-tertiary text-[10px]">→</span>
+                    <div
+                      className="w-7 h-7 flex items-center justify-center rounded-sm text-xs font-bold text-black flex-shrink-0"
+                      style={{ backgroundColor: sortedTiers[theirTierIdx].color }}
+                    >
+                      {sortedTiers[theirTierIdx].title}
+                    </div>
                   </div>
                 </div>
               </div>

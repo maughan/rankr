@@ -17,7 +17,10 @@ export function MatrixSkeleton() {
       {/* Stat tiles — real containers, skeleton values */}
       <div className="flex gap-4 flex-wrap">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="flex-1 min-w-28 bg-gray-900 rounded-sm p-4 flex flex-col gap-2">
+          <div
+            key={i}
+            className="flex-1 min-w-28 bg-gray-900 rounded-sm p-4 flex flex-col gap-2"
+          >
             <Skeleton height={10} width="60%" />
             <Skeleton height={24} width="45%" />
           </div>
@@ -25,12 +28,15 @@ export function MatrixSkeleton() {
       </div>
 
       {/* Matrix — real axis labels, skeleton cells */}
-      <div className="overflow-x-auto">
+      <div className="mx-auto">
         <div className="inline-flex flex-col gap-1">
           <p className="text-xs text-gray-400 ml-16 mb-1">Their rank →</p>
 
           <div className="flex gap-1">
-            <div className="flex items-center justify-center flex-shrink-0" style={{ width: 16 }}>
+            <div
+              className="flex items-center justify-center flex-shrink-0"
+              style={{ width: 16 }}
+            >
               <span
                 className="text-xs text-gray-400 whitespace-nowrap"
                 style={{ writingMode: "vertical-lr" }}

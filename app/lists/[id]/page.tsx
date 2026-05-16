@@ -190,19 +190,31 @@ export default function List() {
   if (isError) {
     return (
       <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
-        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-              TierStack.io
-            </span>
+        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+          <div className="flex justify-between items-center h-12">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+              <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+                TierStack.io
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                href="/lists"
+                className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+              >
+                Back
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/lists"
-            className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
-          >
-            Back
-          </Link>
+          <div className="flex sm:hidden items-center gap-2 pb-3">
+            <Link
+              href="/lists"
+              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+            >
+              Back
+            </Link>
+          </div>
         </div>
         <div className="px-4 sm:px-8 py-6 max-w-3xl">
           <ErrorBanner message="Couldn't load this list" onRetry={refetch} />
@@ -215,19 +227,31 @@ export default function List() {
     return (
       <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
         {/* Top bar — real chrome */}
-        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-              TierStack
-            </span>
+        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+          <div className="flex justify-between items-center h-12">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+              <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+                TierStack
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                href="/lists"
+                className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+              >
+                Back
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/lists"
-            className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
-          >
-            Back
-          </Link>
+          <div className="flex sm:hidden items-center gap-2 pb-3">
+            <Link
+              href="/lists"
+              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+            >
+              Back
+            </Link>
+          </div>
         </div>
 
         <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
@@ -287,41 +311,86 @@ export default function List() {
   return (
     <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
-        {/* Logo */}
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-          <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-            TierStack.io
-          </span>
+      <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+        <div className="flex justify-between items-center h-12">
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+              TierStack.io
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {isLoggedIn && (
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
+                style={{
+                  backgroundColor: nameToColor(getUserFromToken().username),
+                }}
+              >
+                {getUserFromToken().username[0].toUpperCase()}
+              </div>
+            )}
+            {/* Desktop actions */}
+            <div className="hidden sm:flex items-center gap-2">
+              {/* <Link
+                href="/lists"
+                className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+              >
+                Back
+              </Link> */}
+              {isLoggedIn && list && currentUserId === list.createdBy.id && (
+                <button
+                  onClick={() => setShareOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+                >
+                  <Share2 size={13} />
+                  Share
+                </button>
+              )}
+              {isLoggedIn && (
+                <Link
+                  href={`/lists/${id}/rank`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+                >
+                  <Pencil size={12} strokeWidth={2.5} />
+                  Stack it
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          <Link
-            href="/lists"
-            className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
-          >
-            Back
-          </Link>
-          {isLoggedIn && list && currentUserId === list.createdBy.id && (
-            <button
-              onClick={() => setShareOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
-            >
-              <Share2 size={13} />
-              Share
-            </button>
-          )}
-          {isLoggedIn && (
+        {/* Mobile action row */}
+        <div className="flex sm:hidden items-center justify-between pb-3">
+          <div>
             <Link
-              href={`/lists/${id}/rank`}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+              href="/lists"
+              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
             >
-              <Pencil size={12} strokeWidth={2.5} />
-              Stack it
+              Back
             </Link>
-          )}
+          </div>
+
+          <div className="flex gap-2">
+            {isLoggedIn && list && currentUserId === list.createdBy.id && (
+              <button
+                onClick={() => setShareOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+              >
+                <Share2 size={13} />
+                Share
+              </button>
+            )}
+            {isLoggedIn && (
+              <Link
+                href={`/lists/${id}/rank`}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+              >
+                <Pencil size={12} strokeWidth={2.5} />
+                Stack it
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 

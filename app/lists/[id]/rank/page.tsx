@@ -21,6 +21,7 @@ import {
   processRankingData,
 } from "@/lib/helpers";
 import { Tier, TierItem } from "@/app/types";
+import { nameToColor } from "@/lib/itemColor";
 
 // ── Tier label colours ────────────────────────────────────────────────────────
 
@@ -135,14 +136,28 @@ export default function Rank() {
     return (
       <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
         {/* Top bar — real chrome */}
-        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-              TierStack.io
-            </span>
+        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+          <div className="flex justify-between items-center h-12">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+              <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+                TierStack.io
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                href={`/lists/${id}`}
+                className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+              >
+                Back
+              </Link>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-rk-accent/30">
+                <Skeleton width={12} height={12} />
+                <Skeleton width={44} height={11} />
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
               href={`/lists/${id}`}
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
@@ -181,15 +196,44 @@ export default function Rank() {
     <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
       <DndContext onDragEnd={handleDragEnd}>
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
-        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke flex justify-between items-center px-4 sm:px-8 h-12">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-              TierStack.io
-            </span>
+        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+          <div className="flex justify-between items-center h-12">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+              <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+                TierStack.io
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
+                style={{ backgroundColor: nameToColor(getUserFromToken().username) }}
+              >
+                {getUserFromToken().username[0].toUpperCase()}
+              </div>
+              <div className="hidden sm:flex items-center gap-2">
+                <Link
+                  href={`/lists/${id}`}
+                  className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+                >
+                  Back
+                </Link>
+                <button
+                  onClick={handleRankSubmit}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
+                  ) : (
+                    <Pencil size={12} strokeWidth={2.5} />
+                  )}
+                  Submit
+                </button>
+              </div>
+            </div>
           </div>
-
-          <div className="flex items-center gap-2">
+          <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
               href={`/lists/${id}`}
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
