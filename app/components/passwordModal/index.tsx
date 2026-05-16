@@ -17,7 +17,7 @@ export default function PasswordModal() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    function handleKeyDown(e) {
+    function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         dispatch(uiActions.closePasswordModal());
       }
