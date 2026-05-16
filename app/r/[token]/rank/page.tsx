@@ -10,7 +10,7 @@ import { Pencil } from "lucide-react";
 
 import { useGetSharedListQuery, SharedListItem } from "@/lib/api/listsApi";
 import Skeleton from "@/app/components/Skeleton";
-import { TierRowSkeleton } from "@/app/lists/[id]/skeletons";
+import { TierRowSkeleton } from "@/app/s/[id]/skeletons";
 import Draggable from "@/app/Draggable";
 import Droppable from "@/app/Droppable";
 import { ImageKitLoader } from "@/lib/helpers";
@@ -211,7 +211,7 @@ export default function AnonRankPage() {
             This share link may have been disabled or rotated.
           </p>
           <Link
-            href="/lists"
+            href="/s"
             className="mt-2 px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
           >
             Browse lists

@@ -146,7 +146,7 @@ export default function Lists() {
       const result = await imagekit.upload({
         file,
         fileName: `${Date.now()}-${file.name}`,
-        folder: "/lists",
+        folder: "/s",
         token,
         expire,
         signature,
@@ -298,7 +298,7 @@ export default function Lists() {
 
                 return (
                   <div key={list.id} className="relative">
-                    <Link href={`/lists/${list.id}`}>
+                    <Link href={`/s/${list.id}`}>
                       <div className="bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors">
                         {/* Preview area */}
                         {list.img ? (

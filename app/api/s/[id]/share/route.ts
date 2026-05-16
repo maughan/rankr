@@ -31,7 +31,7 @@ async function resolveOwner(listId: number, userId: number) {
   return { list, forbidden: false };
 }
 
-// POST /api/lists/:id/share — enable sharing, return share_token
+// POST /api/s/:id/share — enable sharing, return share_token
 export async function POST(req: Request, { params }: Params) {
   const user = await getUserFromRequest();
   if (!user) return new Response(null, { status: 401 });
@@ -50,14 +50,19 @@ export async function POST(req: Request, { params }: Params) {
     data: {
       is_shareable: true,
       share_token: token,
-      share_token_created_at: list.share_token ? list.share_token_created_at : new Date(),
+      share_token_created_at: list.share_token
+        ? list.share_token_created_at
+        : new Date(),
     },
   });
 
-  return NextResponse.json({ share_token: token, share_url: shareUrl(req, token) });
+  return NextResponse.json({
+    share_token: token,
+    share_url: shareUrl(req, token),
+  });
 }
 
-// DELETE /api/lists/:id/share — disable sharing (keeps token for re-enable)
+// DELETE /api/s/:id/share — disable sharing (keeps token for re-enable)
 export async function DELETE(req: Request, { params }: Params) {
   const user = await getUserFromRequest();
   if (!user) return new Response(null, { status: 401 });
@@ -77,7 +82,7 @@ export async function DELETE(req: Request, { params }: Params) {
   return new Response(null, { status: 204 });
 }
 
-// PATCH /api/lists/:id/share — rotate token or toggle anonymous_rankings_enabled
+// PATCH /api/s/:id/share — rotate token or toggle anonymous_rankings_enabled
 export async function PATCH(req: Request, { params }: Params) {
   const user = await getUserFromRequest();
   if (!user) return new Response(null, { status: 401 });

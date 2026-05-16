@@ -23,7 +23,13 @@ export interface SharedList {
   createdAt: string;
   updatedAt: string;
   createdBy: { id: number; username: string };
-  tiers: Array<{ id: number; title: string; color: string; value: number; items: number[] }>;
+  tiers: Array<{
+    id: number;
+    title: string;
+    color: string;
+    value: number;
+    items: number[];
+  }>;
   items: SharedListItem[];
   ranker_count: number;
 }
@@ -48,19 +54,19 @@ export const listsApi = baseApi.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
     getLists: builder.query<ListPreview[], void>({
-      query: () => "/lists",
+      query: () => "/s",
       providesTags: ["Lists"],
     }),
 
     getList: builder.query<TierList, number>({
-      query: (id) => `/lists/${id}`,
+      query: (id) => `/s/${id}`,
       transformResponse: (response: TierList) =>
         processResponseData([response])[0],
       providesTags: (_result, _err, id) => [{ type: "List", id }],
     }),
 
     getMyLists: builder.query<TierList[], void>({
-      query: () => "/user/lists",
+      query: () => "/user/s",
     }),
 
     getItems: builder.query<TierItem[], void>({
@@ -69,10 +75,18 @@ export const listsApi = baseApi.injectEndpoints({
 
     createList: builder.mutation<
       void,
-      Pick<TierList, "title" | "description" | "img" | "hidden" | "category_icon" | "category_color">
+      Pick<
+        TierList,
+        | "title"
+        | "description"
+        | "img"
+        | "hidden"
+        | "category_icon"
+        | "category_color"
+      >
     >({
       query: (editList) => ({
-        url: "/lists",
+        url: "/s",
         method: "POST",
         body: createNewList(editList),
       }),
@@ -82,7 +96,7 @@ export const listsApi = baseApi.injectEndpoints({
     updateList: builder.mutation<void, { id: number; data: Partial<TierList> }>(
       {
         query: ({ id, data }) => ({
-          url: "/lists",
+          url: "/s",
           method: "PATCH",
           body: { id, ...data },
         }),
@@ -121,7 +135,7 @@ export const listsApi = baseApi.injectEndpoints({
 
     togglePin: builder.mutation<{ pinned: boolean }, number>({
       query: (listId) => ({
-        url: `/lists/${listId}/pin`,
+        url: `/s/${listId}/pin`,
         method: "POST",
       }),
       invalidatesTags: ["Lists"],
@@ -129,7 +143,7 @@ export const listsApi = baseApi.injectEndpoints({
 
     enableShare: builder.mutation<ShareResponse, number>({
       query: (listId) => ({
-        url: `/lists/${listId}/share`,
+        url: `/s/${listId}/share`,
         method: "POST",
       }),
       invalidatesTags: (_r, _e, listId) => [{ type: "List", id: listId }],
@@ -137,7 +151,7 @@ export const listsApi = baseApi.injectEndpoints({
 
     disableShare: builder.mutation<void, number>({
       query: (listId) => ({
-        url: `/lists/${listId}/share`,
+        url: `/s/${listId}/share`,
         method: "DELETE",
       }),
       invalidatesTags: (_r, _e, listId) => [{ type: "List", id: listId }],
@@ -148,7 +162,7 @@ export const listsApi = baseApi.injectEndpoints({
       { listId: number; rotate?: boolean; anonymous_rankings_enabled?: boolean }
     >({
       query: ({ listId, ...body }) => ({
-        url: `/lists/${listId}/share`,
+        url: `/s/${listId}/share`,
         method: "PATCH",
         body,
       }),
@@ -156,24 +170,42 @@ export const listsApi = baseApi.injectEndpoints({
     }),
 
     getShareStats: builder.query<ShareStats, number>({
-      query: (listId) => `/lists/${listId}/share/stats`,
+      query: (listId) => `/s/${listId}/share/stats`,
       providesTags: (_r, _e, listId) => [{ type: "List", id: listId }],
     }),
 
     getSharedList: builder.query<SharedList, string>({
       query: (token) => `/r/${token}`,
-      providesTags: (_r, _e, token) => [{ type: "SharedList" as const, id: token }],
+      providesTags: (_r, _e, token) => [
+        { type: "SharedList" as const, id: token },
+      ],
     }),
 
     getMyRanking: builder.query<
-      { tiers: Array<{ id: number; title: string; color: string; value: number; items: number[] }> } | null,
+      {
+        tiers: Array<{
+          id: number;
+          title: string;
+          color: string;
+          value: number;
+          items: number[];
+        }>;
+      } | null,
       string
     >({
       query: (token) => `/r/${token}/my-ranking`,
     }),
 
     getCreatorRanking: builder.query<
-      { tiers: Array<{ id: number; title: string; color: string; value: number; items: number[] }> } | null,
+      {
+        tiers: Array<{
+          id: number;
+          title: string;
+          color: string;
+          value: number;
+          items: number[];
+        }>;
+      } | null,
       string
     >({
       query: (token) => `/r/${token}/creator-ranking`,

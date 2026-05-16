@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function SignupPage() {
-  redirect("/lists");
+  redirect("/s");
 }

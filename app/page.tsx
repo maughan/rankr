@@ -43,7 +43,7 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center font-sans p-16 gap-4">
         <Link
           className="rounded-sm text-black font-bold px-4 py-2 bg-white"
-          href="/lists"
+          href="/s"
         >
           Go to lists
         </Link>

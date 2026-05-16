@@ -13,7 +13,7 @@ import {
   SharedListItem,
 } from "@/lib/api/listsApi";
 import Skeleton from "@/app/components/Skeleton";
-import { TierRowSkeleton } from "@/app/lists/[id]/skeletons";
+import { TierRowSkeleton } from "@/app/s/[id]/skeletons";
 import AnonComparison from "@/app/components/anonComparison";
 import { ImageKitLoader } from "@/lib/helpers";
 
@@ -103,7 +103,7 @@ export default function SharedListPage() {
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <Link
-                href="/lists"
+                href="/s"
                 className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
               >
                 Browse lists
@@ -112,7 +112,7 @@ export default function SharedListPage() {
           </div>
           <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
-              href="/lists"
+              href="/s"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
               Browse lists
@@ -151,7 +151,7 @@ export default function SharedListPage() {
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <Link
-                href="/lists"
+                href="/s"
                 className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
               >
                 Browse lists
@@ -160,7 +160,7 @@ export default function SharedListPage() {
           </div>
           <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
-              href="/lists"
+              href="/s"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
               Browse lists
@@ -175,7 +175,7 @@ export default function SharedListPage() {
             This share link may have been disabled or rotated.
           </p>
           <Link
-            href="/lists"
+            href="/s"
             className="mt-2 px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
           >
             Browse lists
@@ -206,7 +206,7 @@ export default function SharedListPage() {
           </div>
           <div className="hidden sm:flex items-center gap-2">
             <Link
-              href="/lists"
+              href="/s"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
             >
               Browse lists
@@ -223,7 +223,7 @@ export default function SharedListPage() {
         </div>
         <div className="flex sm:hidden items-center gap-2 pb-3">
           <Link
-            href="/lists"
+            href="/s"
             className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
           >
             Browse lists

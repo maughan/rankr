@@ -200,7 +200,7 @@ export default function List() {
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <Link
-                href="/lists"
+                href="/s"
                 className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
               >
                 Back
@@ -209,7 +209,7 @@ export default function List() {
           </div>
           <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
-              href="/lists"
+              href="/s"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
               Back
@@ -238,7 +238,7 @@ export default function List() {
           </div>
           <div className="flex sm:hidden items-center justify-between gap-2 pb-3">
             <Link
-              href="/lists"
+              href="/s"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
               Back
@@ -257,7 +257,7 @@ export default function List() {
 
         <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
           <Link
-            href="/lists"
+            href="/s"
             className="px-3 hidden sm:block py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
           >
             Back
@@ -350,7 +350,7 @@ export default function List() {
                     </button>
                   )}
                   <Link
-                    href={`/lists/${id}/rank`}
+                    href={`/s/${id}/rank`}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
                   >
                     <Pencil size={12} strokeWidth={2.5} />
@@ -374,7 +374,7 @@ export default function List() {
         <div className="flex sm:hidden items-center justify-between pb-3">
           <div>
             <Link
-              href="/lists"
+              href="/s"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
             >
               Back
@@ -401,7 +401,7 @@ export default function List() {
             )}
             {isLoggedIn && (
               <Link
-                href={`/lists/${id}/rank`}
+                href={`/s/${id}/rank`}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
               >
                 <Pencil size={12} strokeWidth={2.5} />
@@ -415,7 +415,7 @@ export default function List() {
       {/* ── Content ───────────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
         <Link
-          href="/lists"
+          href="/s"
           className="px-3 hidden sm:block py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
         >
           Back

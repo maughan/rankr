@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 
 type Params = { params: Promise<{ id: string }> };
 
-// GET /api/lists/:id/share/stats — creator-only share status + submission counts
+// GET /api/s/:id/share/stats — creator-only share status + submission counts
 export async function GET(req: Request, { params }: Params) {
   const user = await getUserFromRequest();
   if (!user) return new Response(null, { status: 401 });
@@ -47,8 +47,9 @@ export async function GET(req: Request, { params }: Params) {
   ]);
 
   const { protocol, host } = new URL(req.url);
-  const share_url =
-    list.share_token ? `${protocol}//${host}/r/${list.share_token}` : null;
+  const share_url = list.share_token
+    ? `${protocol}//${host}/r/${list.share_token}`
+    : null;
 
   return NextResponse.json({
     is_shareable: list.is_shareable,

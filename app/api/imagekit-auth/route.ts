@@ -15,7 +15,7 @@ const generateUploadParams = (fileName: string, folder: string) => {
 
 export async function GET() {
   const fileName = `${crypto.randomBytes(16).toString("hex")}.png`;
-  const folder = "/lists";
+  const folder = "/s";
 
   const { token, expire, signature } = generateUploadParams(fileName, folder);
 

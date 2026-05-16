@@ -124,7 +124,7 @@ export default function Rank() {
       await submitRankings(userRankings).unwrap();
 
       toast.success("Rankings saved.");
-      router.push(`/lists/${id}`);
+      router.push(`/s/${id}`);
       dispatch(uiActions.clearRankings());
     } catch (e) {
       console.error(e);
@@ -146,7 +146,7 @@ export default function Rank() {
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <Link
-                href={`/lists/${id}`}
+                href={`/s/${id}`}
                 className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
               >
                 Back
@@ -159,7 +159,7 @@ export default function Rank() {
           </div>
           <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
-              href={`/lists/${id}`}
+              href={`/s/${id}`}
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
               Back
@@ -215,7 +215,7 @@ export default function Rank() {
               </div>
               <div className="hidden sm:flex items-center gap-2">
                 <Link
-                  href={`/lists/${id}`}
+                  href={`/s/${id}`}
                   className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
                 >
                   Back
@@ -237,7 +237,7 @@ export default function Rank() {
           </div>
           <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
-              href={`/lists/${id}`}
+              href={`/s/${id}`}
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
             >
               Back

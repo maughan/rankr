@@ -1,0 +1,53 @@
+import type { ReactElement } from "react";
+
+// ── Formats ───────────────────────────────────────────────────────────────────
+
+export type Format = "square" | "story" | "wide";
+
+export interface FormatSpec {
+  width: number;
+  height: number;
+}
+
+export const FORMATS: Record<Format, FormatSpec> = {
+  square: { width: 1200, height: 1200 },
+  story:  { width: 1080, height: 1920 },
+  wide:   { width: 1200, height: 675  },
+};
+
+// ── Template registry ─────────────────────────────────────────────────────────
+
+export const KNOWN_TEMPLATES = ["head-to-head", "hot-takes"] as const;
+export type TemplateName = (typeof KNOWN_TEMPLATES)[number];
+
+// Each template file exports one object conforming to this interface.
+// handler() fetches its own data and returns the JSX element to render.
+// Adding a new card format = one new file + one entry in renderer.ts.
+export interface TemplateModule {
+  handler(params: URLSearchParams, format: Format): Promise<ReactElement>;
+}
+
+// ── Per-template data shapes ──────────────────────────────────────────────────
+// Defined here so the route handler can assemble data independently of the
+// template rendering (useful for tests and future pre-computation).
+
+export interface HeadToHeadData {
+  alignmentPct: number;
+  creatorHandle: string | null; // null → show "the creator"
+  listName: string;
+  // null when list has <5 items or alignment is perfect
+  biggestGap: { itemName: string; yourTier: string; theirTier: string } | null;
+  shareUrl: string;
+}
+
+export interface HotTakesData {
+  listName: string;
+  rankerCount: number;
+  takes: Array<{
+    itemName: string;
+    yourTier: string;
+    crowdTier: string;
+    delta: number; // positive = you ranked higher than crowd
+  }>;
+  shareUrl: string;
+}
