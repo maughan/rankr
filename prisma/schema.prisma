@@ -25,9 +25,15 @@ model Item {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
   createdById Int
-  createdBy   User      @relation(fields: [createdById], references: [id])
-  rankings    Ranking[]
-  lists       List[]    @relation("ItemToList")
+
+  // Edit-audit fields
+  name_updated_at      DateTime?
+  image_uploaded_at    DateTime?
+  short_label_user_set Boolean   @default(false)
+
+  createdBy User      @relation(fields: [createdById], references: [id])
+  rankings  Ranking[]
+  lists     List[]    @relation("ItemToList")
 }
 
 model User {
@@ -63,6 +69,12 @@ model List {
   share_token_created_at     DateTime?
   anonymous_rankings_enabled Boolean   @default(true)
 
+  // Community contributions
+  allow_contributions        Boolean   @default(false)
+
+  // Editorial curation
+  is_featured                Boolean   @default(false)
+
   items    Item[]        @relation("ItemToList")
   tiers    Tier[]        @relation("ListToTier")
   pins     UserListPin[]
@@ -95,7 +107,7 @@ model Ranking {
   anonymous_session_token String?
   submitter_ip_hash       String?
 
-  item Item  @relation(fields: [itemId], references: [id])
+  item Item  @relation(fields: [itemId], references: [id], onDelete: Cascade)
   user User? @relation(fields: [userId], references: [id])
   list List? @relation(fields: [listId], references: [id])
 

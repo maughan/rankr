@@ -6,7 +6,7 @@ import { formatDistanceStrict } from "date-fns";
 import { toast } from "sonner";
 import ImageKit from "imagekit-javascript";
 import Image from "next/image";
-import { LayoutGrid, Bookmark, EyeClosed } from "lucide-react";
+import { LayoutGrid, EyeClosed } from "lucide-react";
 import {
   IconStack2,
   IconBurger,
@@ -33,7 +33,6 @@ import {
 import {
   useGetListsQuery,
   useCreateListMutation,
-  useTogglePinMutation,
 } from "@/lib/api/listsApi";
 import ListCardSkeleton from "./ListCardSkeleton";
 import UpdatingToast from "../components/UpdatingToast";
@@ -91,6 +90,188 @@ function CategoryIconDisplay({
   return Comp ? <Comp size={size} /> : null;
 }
 
+// ── List card ─────────────────────────────────────────────────────────────────
+
+function ListCard({
+  list,
+  currentUserId,
+}: {
+  list: import("@/app/types").ListPreview;
+  currentUserId: number;
+}) {
+  return (
+    <div className="relative">
+      <Link href={`/s/${list.id}`}>
+        <div className="bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors">
+          {list.img ? (
+            <div className="relative h-36">
+              <Image
+                loader={ImageKitLoader}
+                src={list.img}
+                alt=""
+                fill
+                sizes="360px"
+                style={{ objectFit: "cover" }}
+                priority
+              />
+            </div>
+          ) : (
+            <div
+              className="h-36 p-3 flex flex-wrap gap-1.5 content-start overflow-hidden"
+              style={{ backgroundColor: "#0F1828" }}
+            >
+              {list.top_tier_items.map((item: TopTierItem) => (
+                <div
+                  key={item.id}
+                  className="w-[22px] h-[22px] rounded-[4px] flex-shrink-0"
+                  style={{ backgroundColor: item.color ?? "#334155" }}
+                />
+              ))}
+              {list.top_tier_items.length === 0 && (
+                <p className="text-[11px] text-rk-tertiary">No items yet</p>
+              )}
+            </div>
+          )}
+          <div className="px-3 py-3">
+            <p className="text-[15px] font-[500] text-rk-primary truncate">
+              {list.title}
+            </p>
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              <span className="text-[11px] text-rk-tertiary">
+                {list.item_count} item{list.item_count !== 1 ? "s" : ""}
+              </span>
+              <span className="text-rk-tertiary text-[11px]">·</span>
+              <span className="text-[11px] text-rk-tertiary">
+                {formatDistanceStrict(new Date(list.updatedAt), new Date())} ago
+              </span>
+              {list.ranker_count > 0 && (
+                <>
+                  <span className="text-rk-tertiary text-[11px]">·</span>
+                  <span className="text-[11px] text-rk-tertiary">
+                    {list.ranker_count} stacker
+                    {list.ranker_count !== 1 ? "s" : ""}
+                  </span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
+
+      {list.createdBy.id === currentUserId && list.hidden && (
+        <div
+          className="absolute top-2 right-2"
+          title="Hidden"
+        >
+          <div
+            className="w-8 h-8 flex items-center justify-center rounded-[6px]"
+            style={{ backgroundColor: "rgba(10,18,32,0.72)" }}
+          >
+            <EyeClosed size={14} className="text-rk-accent" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Section ───────────────────────────────────────────────────────────────────
+
+function Section({
+  title,
+  lists,
+  currentUserId,
+}: {
+  title: string;
+  lists: import("@/app/types").ListPreview[];
+  currentUserId: number;
+}) {
+  if (!lists.length) return null;
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest">
+        {title}
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        {lists.map((list) => (
+          <ListCard
+            key={list.id}
+            list={list}
+            currentUserId={currentUserId}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Sectioned content ─────────────────────────────────────────────────────────
+
+function ListsContent({
+  lists,
+  isLoggedIn,
+  currentUserId,
+  isFetching,
+  onCreateList,
+  onLogin,
+}: {
+  lists: import("@/app/types").ListPreview[];
+  isLoggedIn: boolean;
+  currentUserId: number;
+  isFetching: boolean;
+  onCreateList: () => void;
+  onLogin: () => void;
+}) {
+  const myLists = lists.filter((l) => l.createdBy.id === currentUserId);
+  const rankedLists = lists.filter(
+    (l) => l.user_has_ranked && l.createdBy.id !== currentUserId
+  );
+  const exploreLists = lists.filter(
+    (l) => l.createdBy.id !== currentUserId && !l.user_has_ranked
+  );
+
+  const sharedProps = { currentUserId };
+
+  if (lists.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4">
+        <div className="w-12 h-12 rounded-[10px] bg-rk-surface border border-rk-stroke flex items-center justify-center">
+          <LayoutGrid size={22} className="text-rk-muted" />
+        </div>
+        <p className="text-rk-muted text-[14px]">No lists yet</p>
+        {isLoggedIn ? (
+          <button
+            onClick={onCreateList}
+            className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+          >
+            Create your first list
+          </button>
+        ) : (
+          <button
+            onClick={onLogin}
+            className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+          >
+            Log in to get started
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative flex flex-col gap-8">
+      {isFetching && (
+        <div className="absolute top-0 right-0 z-10">
+          <UpdatingToast />
+        </div>
+      )}
+      <Section title="Your stacks" lists={myLists} {...sharedProps} />
+      <Section title="Stacks you've ranked" lists={rankedLists} {...sharedProps} />
+      <Section title="Explore" lists={exploreLists} {...sharedProps} />
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function Lists() {
@@ -105,17 +286,6 @@ export default function Lists() {
     refetch,
   } = useGetListsQuery();
   const [createList, { isLoading: isCreating }] = useCreateListMutation();
-  const [togglePin] = useTogglePinMutation();
-
-  const [pinningIds, setPinningIds] = useState(new Set<number>());
-  const [optimisticPins, setOptimisticPins] = useState(
-    new Map<number, boolean>()
-  );
-
-  // Once the background refetch settles, let the real pinned values take over
-  useEffect(() => {
-    if (!isFetching) setOptimisticPins(new Map());
-  }, [isFetching]);
 
   const { modals, editList } = useAppSelector((state) => state.ui);
 
@@ -159,29 +329,6 @@ export default function Lists() {
     } catch (err) {
       console.error(err);
       toast.error("Image upload failed");
-    }
-  };
-
-  const handlePin = async (listId: number, currentPinned: boolean) => {
-    if (pinningIds.has(listId)) return;
-    setPinningIds((prev) => new Set([...prev, listId]));
-    setOptimisticPins((prev) => new Map([...prev, [listId, !currentPinned]]));
-    try {
-      await togglePin(listId).unwrap();
-    } catch {
-      // Roll back optimistic state; isFetching effect will clear the rest
-      setOptimisticPins((prev) => {
-        const next = new Map(prev);
-        next.set(listId, currentPinned);
-        return next;
-      });
-      toast.error("Failed to update pin");
-    } finally {
-      setPinningIds((prev) => {
-        const next = new Set(prev);
-        next.delete(listId);
-        return next;
-      });
     }
   };
 
@@ -261,160 +408,15 @@ export default function Lists() {
           </div>
         ) : isError ? (
           <ErrorBanner message="Couldn't load lists" onRetry={refetch} />
-        ) : lists.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="w-12 h-12 rounded-[10px] bg-rk-surface border border-rk-stroke flex items-center justify-center">
-              <LayoutGrid size={22} className="text-rk-muted" />
-            </div>
-            <p className="text-rk-muted text-[14px]">No lists yet</p>
-            {isLoggedIn ? (
-              <button
-                onClick={() => dispatch(uiActions.openCreateListModal())}
-                className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-              >
-                Create your first list
-              </button>
-            ) : (
-              <button
-                onClick={() => dispatch(uiActions.openAuthModal())}
-                className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-              >
-                Log in to get started
-              </button>
-            )}
-          </div>
         ) : (
-          <div className="relative">
-            {/* Silent background-refresh indicator */}
-            {isFetching && (
-              <div className="absolute top-0 right-0 z-10">
-                <UpdatingToast />
-              </div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {lists.map((list) => {
-                const isPinned = optimisticPins.has(list.id)
-                  ? optimisticPins.get(list.id)!
-                  : list.pinned;
-                const isPinning = pinningIds.has(list.id);
-
-                return (
-                  <div key={list.id} className="relative">
-                    <Link href={`/s/${list.id}`}>
-                      <div className="bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors">
-                        {/* Preview area */}
-                        {list.img ? (
-                          <div className="relative h-36">
-                            <Image
-                              loader={ImageKitLoader}
-                              src={list.img}
-                              alt=""
-                              fill
-                              sizes="360px"
-                              style={{ objectFit: "cover" }}
-                              priority
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            className="h-36 p-3 flex flex-wrap gap-1.5 content-start overflow-hidden"
-                            style={{ backgroundColor: "#0F1828" }}
-                          >
-                            {list.top_tier_items.map((item: TopTierItem) => (
-                              <div
-                                key={item.id}
-                                className="w-[22px] h-[22px] rounded-[4px] flex-shrink-0"
-                                style={{
-                                  backgroundColor: item.color ?? "#334155",
-                                }}
-                              />
-                            ))}
-                            {list.top_tier_items.length === 0 && (
-                              <p className="text-[11px] text-rk-tertiary">
-                                No items yet
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Info */}
-                        <div className="px-3 py-3">
-                          <p className="text-[15px] font-[500] text-rk-primary truncate">
-                            {list.title}
-                          </p>
-                          <div className="flex items-center gap-1 mt-1 flex-wrap">
-                            <span className="text-[11px] text-rk-tertiary">
-                              {list.item_count} item
-                              {list.item_count !== 1 ? "s" : ""}
-                            </span>
-                            <span className="text-rk-tertiary text-[11px]">
-                              ·
-                            </span>
-                            <span className="text-[11px] text-rk-tertiary">
-                              {formatDistanceStrict(
-                                new Date(list.updatedAt),
-                                new Date()
-                              )}{" "}
-                              ago
-                            </span>
-                            {list.ranker_count > 0 && (
-                              <>
-                                <span className="text-rk-tertiary text-[11px]">
-                                  ·
-                                </span>
-                                <span className="text-[11px] text-rk-tertiary">
-                                  {list.ranker_count} stacker
-                                  {list.ranker_count !== 1 ? "s" : ""}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-
-                    {/* Pin button — floats over preview, only for logged-in users */}
-                    <div className="absolute top-2 right-2 h-8 flex items-center gap-2">
-                      {list.createdBy.id === currentUserId && list.hidden && (
-                        <button
-                          onClick={() => null}
-                          title="Hidden"
-                          className="w-8 h-8 flex items-center justify-center rounded-[6px] transition-colors hover:bg-rk-surface/90"
-                          style={{ backgroundColor: "rgba(10,18,32,0.72)" }}
-                        >
-                          <EyeClosed size={14} className="text-rk-accent" />
-                        </button>
-                      )}
-                      {isLoggedIn && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handlePin(list.id, list.pinned);
-                          }}
-                          title={isPinned ? "Unpin" : "Pin"}
-                          className="w-8 h-8 flex items-center justify-center rounded-[6px] cursor-pointer transition-colors hover:bg-rk-surface/90"
-                          style={{ backgroundColor: "rgba(10,18,32,0.72)" }}
-                        >
-                          {isPinning ? (
-                            <div className="w-[22px] h-[22px] rounded-full border-[1.5px] border-rk-stroke border-t-rk-accent animate-spin" />
-                          ) : (
-                            <Bookmark
-                              size={14}
-                              className={
-                                isPinned ? "text-rk-accent" : "text-rk-muted"
-                              }
-                              fill={isPinned ? "currentColor" : "none"}
-                            />
-                          )}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <ListsContent
+            lists={lists}
+            isLoggedIn={isLoggedIn}
+            currentUserId={currentUserId}
+            isFetching={isFetching}
+            onCreateList={() => dispatch(uiActions.openCreateListModal())}
+            onLogin={() => dispatch(uiActions.openAuthModal())}
+          />
         )}
       </div>
 

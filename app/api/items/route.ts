@@ -47,6 +47,18 @@ export async function POST(req: Request) {
       throw new Error("Token invalid");
     }
 
+    // Verify the caller owns the list, or contributions are open to all logged-in users
+    // Verify the caller owns the list, or contributions are open to all logged-in users
+    const targetList = await prisma.list.findFirst({
+      where: { id: body.listId },
+      select: { createdById: true, allow_contributions: true },
+    });
+    if (!targetList) return new Response(null, { status: 404 });
+    const isOwner = targetList.createdById === decoded.sub;
+    if (!isOwner && !targetList.allow_contributions) {
+      return new Response(null, { status: 403 });
+    }
+
     const names: string[] = body.names;
 
     const itemPromises = names.map((name: string) =>

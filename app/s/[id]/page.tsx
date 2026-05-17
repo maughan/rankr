@@ -46,7 +46,9 @@ import {
   useGetListQuery,
   useCreateItemsMutation,
   useUpdateListMutation,
+  useDeleteItemMutation,
 } from "@/lib/api/listsApi";
+import EditItemModal from "./EditItemModal";
 import Skeleton from "@/app/components/Skeleton";
 import {
   TierRowSkeleton,
@@ -123,9 +125,23 @@ function CategoryIconDisplay({
 
 // ── Item card ────────────────────────────────────────────────────────────────
 
-function ItemCard({ item }: { item: TierItem }) {
-  const base =
-    "w-[70px] bg-rk-surface border border-rk-stroke rounded-[8px] overflow-hidden transition-transform hover:scale-[1.04] cursor-default";
+function ItemCard({ item, onEdit }: { item: TierItem; onEdit?: () => void }) {
+  const editable = !!onEdit;
+  const base = [
+    "w-[70px] bg-rk-surface border border-rk-stroke rounded-[8px] overflow-hidden relative",
+    editable
+      ? "cursor-pointer group"
+      : "transition-transform hover:scale-[1.04] cursor-default",
+  ].join(" ");
+
+  const overlay = editable ? (
+    <div
+      className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+      onClick={onEdit}
+    >
+      <Pencil size={14} className="text-white" />
+    </div>
+  ) : null;
 
   if (item.img) {
     return (
@@ -145,6 +161,7 @@ function ItemCard({ item }: { item: TierItem }) {
             {item.name ?? "—"}
           </p>
         </div>
+        {overlay}
       </div>
     );
   }
@@ -164,6 +181,7 @@ function ItemCard({ item }: { item: TierItem }) {
           {item.name}
         </p>
       </div>
+      {overlay}
     </div>
   );
 }
@@ -190,6 +208,7 @@ export default function List() {
   const { data: list, isLoading, isError, refetch } = useGetListQuery(listId);
   const [createItems, { isLoading: isCreating }] = useCreateItemsMutation();
   const [saveList, { isLoading: isSaving }] = useUpdateListMutation();
+  const [deleteItem] = useDeleteItemMutation();
 
   const { modals, imageModalUrl, filteredListRankings, userfilter, editList } =
     useAppSelector((state) => state.ui);
@@ -208,6 +227,9 @@ export default function List() {
     { id: number; name: string }[]
   >([]);
   const [fadingItemIds, setFadingItemIds] = useState(new Set<number>());
+  const [editItem, setEditItem] = useState<TierItem | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const deleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isListOwner = list?.createdBy.id === currentUserId;
 
   useEffect(() => {
@@ -269,6 +291,7 @@ export default function List() {
         hidden: list?.hidden ?? true,
         category_icon: list?.category_icon ?? "ti-stack-2",
         category_color: list?.category_color ?? "blue",
+        allow_contributions: list?.allow_contributions ?? false,
       })
     );
   };
@@ -331,6 +354,31 @@ export default function List() {
       }, 350);
       toast.error("Failed to add items");
     }
+  };
+
+  const handleDeleteRequest = (item: TierItem) => {
+    setEditItem(null);
+    setPendingDeleteId(item.id);
+    const timeoutId = setTimeout(async () => {
+      try {
+        await deleteItem({ listId, itemId: item.id }).unwrap();
+      } catch {
+        setPendingDeleteId(null);
+        toast.error(`Failed to remove ${item.name ?? "item"}`);
+      }
+      setPendingDeleteId(null);
+    }, 5000);
+    deleteTimeoutRef.current = timeoutId;
+    toast(`Removed "${item.name ?? "item"}"`, {
+      duration: 5000,
+      action: {
+        label: "Undo",
+        onClick: () => {
+          clearTimeout(timeoutId);
+          setPendingDeleteId(null);
+        },
+      },
+    });
   };
 
   if (isError) {
@@ -458,8 +506,18 @@ export default function List() {
   // Unranked items (not placed in any tier in the current view)
   const rankedIds = new Set(filteredListRankings.flatMap((t) => t.items));
   const unranked = list.items.filter(
-    (item: TierItem) => !rankedIds.has(item.id)
+    (item: TierItem) => !rankedIds.has(item.id) && item.id !== pendingDeleteId
   );
+
+  // Owner can edit everything; contributors can only edit items with no rankings yet
+  const getOnEdit = (item: TierItem) => {
+    if (isListOwner) return () => setEditItem(item);
+    if (list.allow_contributions) {
+      const isRanked = item.rankings?.some((r) => r.value !== 0);
+      if (!isRanked) return () => setEditItem(item);
+    }
+    return undefined;
+  };
 
   return (
     <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
@@ -572,7 +630,7 @@ export default function List() {
 
           {isListOwner && (
             <p
-              className="px-3 items-center gap-1.5 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke cursor-pointer rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
+              className="flex px-3 items-center gap-1.5 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke cursor-pointer rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
               onClick={handleEditList}
             >
               <SquarePen size={13} />
@@ -640,14 +698,16 @@ export default function List() {
               </div>
               <Dot />
               <div className="flex gap-1 items-center">
-                {list.hidden ? (
+                {list.allow_contributions ? (
                   <Lock size={11} className="text-rk-tertiary" />
                 ) : (
                   <LockOpen size={11} className="text-rk-tertiary" />
                 )}
 
                 <p className="text-[11px] text-rk-tertiary">
-                  {list.hidden ? "Edits locked" : "Editable"}
+                  {list.allow_contributions
+                    ? "Contributions enabled"
+                    : "Contributions disabled"}
                 </p>
               </div>
             </div>
@@ -754,7 +814,7 @@ export default function List() {
               .map((itemId) =>
                 list.items.find((i: TierItem) => i.id === itemId)
               )
-              .filter((i): i is TierItem => !!i);
+              .filter((i): i is TierItem => !!i && i.id !== pendingDeleteId);
 
             return (
               <div
@@ -784,7 +844,11 @@ export default function List() {
                   style={{ backgroundColor: "#0F1828" }}
                 >
                   {tierItems.map((item) => (
-                    <ItemCard key={item.id} item={item} />
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      onEdit={getOnEdit(item)}
+                    />
                   ))}
                 </div>
               </div>
@@ -802,7 +866,11 @@ export default function List() {
             <div className="flex flex-wrap gap-2">
               {isLoggedIn &&
                 unranked.map((item: TierItem) => (
-                  <ItemCard key={item.id} item={item} />
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    onEdit={getOnEdit(item)}
+                  />
                 ))}
               {pendingItems.map((ghost, i) => (
                 <div
@@ -855,7 +923,7 @@ export default function List() {
         )}
 
         {/* ── Add items ────────────────────────────────────────────────── */}
-        {isLoggedIn && isListOwner && (
+        {isLoggedIn && (isListOwner || list.allow_contributions) && (
           <button
             onClick={() => setAddItemsOpen(true)}
             className="self-start px-4 py-2 text-[13px] cursor-pointer font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
@@ -923,6 +991,17 @@ export default function List() {
           template={shareCardTemplate}
           open={shareCardTemplate !== null}
           onClose={() => setShareCardTemplate(null)}
+        />
+      )}
+
+      {/* ── Edit item modal ───────────────────────────────────────────────── */}
+      {editItem && (
+        <EditItemModal
+          item={editItem}
+          listId={listId}
+          open={!!editItem}
+          onClose={() => setEditItem(null)}
+          onDeleteRequest={handleDeleteRequest}
         />
       )}
 
@@ -1077,6 +1156,29 @@ export default function List() {
               checked={editList.hidden}
               onChange={(e) =>
                 dispatch(uiActions.updateListMeta({ hidden: e.target.checked }))
+              }
+              className="accent-rk-accent"
+            />
+          </label>
+
+          <label className="flex items-center justify-between">
+            <div className="flex flex-col gap-0.5">
+              <span className="text-[13px] text-rk-secondary">
+                Allow contributions
+              </span>
+              <span className="text-[11px] text-rk-muted">
+                Let logged-in users add items to this list
+              </span>
+            </div>
+            <input
+              type="checkbox"
+              checked={editList.allow_contributions}
+              onChange={(e) =>
+                dispatch(
+                  uiActions.updateListMeta({
+                    allow_contributions: e.target.checked,
+                  })
+                )
               }
               className="accent-rk-accent"
             />
