@@ -172,7 +172,8 @@ type T = {
   pillPadV: number;
   pillRadius: number;
   titleFont: number; // list name
-  thinFont: number; // thin-aggregate note
+  thinFont: number; // context/subtitle text
+  labelFont: number; // "Me" / "Crowd" column headers above badges
   itemFont: number; // item name inside each take row
   badge: number; // tier badge box size (letter = badge * 0.52)
   vsFont: number; // "vs" separator
@@ -186,7 +187,6 @@ type T = {
   rowRadius: number;
   sectionGap: number; // between title block and takes block
   titleCut: number; // max chars before truncation in title
-  itemCut: number; // max chars before truncation in item name
 };
 
 const TOKENS: Record<Format, T> = {
@@ -200,6 +200,7 @@ const TOKENS: Record<Format, T> = {
     pillRadius: 8,
     titleFont: 56,
     thinFont: 24,
+    labelFont: 22,
     itemFont: 48,
     badge: 72,
     vsFont: 32,
@@ -213,7 +214,6 @@ const TOKENS: Record<Format, T> = {
     rowRadius: 14,
     sectionGap: 52,
     titleCut: 30,
-    itemCut: 22,
   },
   wide: {
     pad: 60,
@@ -225,6 +225,7 @@ const TOKENS: Record<Format, T> = {
     pillRadius: 7,
     titleFont: 40,
     thinFont: 17,
+    labelFont: 15,
     itemFont: 33,
     badge: 52,
     vsFont: 24,
@@ -238,7 +239,6 @@ const TOKENS: Record<Format, T> = {
     rowRadius: 10,
     sectionGap: 28,
     titleCut: 28,
-    itemCut: 20,
   },
   story: {
     pad: 90,
@@ -250,6 +250,7 @@ const TOKENS: Record<Format, T> = {
     pillRadius: 10,
     titleFont: 68,
     thinFont: 30,
+    labelFont: 28,
     itemFont: 58,
     badge: 88,
     vsFont: 40,
@@ -263,7 +264,6 @@ const TOKENS: Record<Format, T> = {
     rowRadius: 18,
     sectionGap: 64,
     titleCut: 34,
-    itemCut: 26,
   },
 };
 
@@ -327,11 +327,61 @@ function DeltaPill({ delta, t }: { delta: number; t: T }) {
   );
 }
 
-function TakeRow({ take, t }: { take: HotTakesData["takes"][number]; t: T }) {
-  const name =
-    take.itemName.length > t.itemCut
-      ? take.itemName.slice(0, t.itemCut - 1) + "…"
-      : take.itemName;
+function BadgeWithLabel({
+  tier,
+  label,
+  labelColor,
+  size,
+  labelFont,
+  showLabel,
+}: {
+  tier: string;
+  label: string;
+  labelColor: string;
+  size: number;
+  labelFont: number;
+  showLabel: boolean;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: Math.round(labelFont * 0.35),
+      }}
+    >
+      {showLabel ? (
+        <span
+          style={{
+            fontSize: labelFont,
+            fontWeight: 600,
+            color: labelColor,
+            lineHeight: 1,
+            letterSpacing: "0.04em",
+          }}
+        >
+          {label}
+        </span>
+      ) : (
+        <span style={{ fontSize: labelFont, lineHeight: 1 }}>{" "}</span>
+      )}
+      <TierBadge tier={tier} size={size} />
+    </div>
+  );
+}
+
+function TakeRow({
+  take,
+  t,
+  showLabels,
+}: {
+  take: HotTakesData["takes"][number];
+  t: T;
+  showLabels?: boolean;
+}) {
+  // Cap at 2 lines — overflow:hidden clips anything beyond
+  const twoLineHeight = Math.ceil(t.itemFont * 1.15 * 2);
 
   return (
     <div
@@ -352,9 +402,11 @@ function TakeRow({ take, t }: { take: HotTakesData["takes"][number]; t: T }) {
           color: COLORS.primary,
           flex: 1,
           lineHeight: 1.15,
+          overflow: "hidden",
+          maxHeight: twoLineHeight,
         }}
       >
-        {name}
+        {take.itemName}
       </span>
 
       <div
@@ -365,17 +417,33 @@ function TakeRow({ take, t }: { take: HotTakesData["takes"][number]; t: T }) {
           flexShrink: 0,
         }}
       >
-        <TierBadge tier={take.yourTier} size={t.badge} />
+        <BadgeWithLabel
+          tier={take.yourTier}
+          label="Me"
+          labelColor={COLORS.accent}
+          size={t.badge}
+          labelFont={t.labelFont}
+          showLabel={!!showLabels}
+        />
         <span
           style={{
             fontSize: t.vsFont,
             color: COLORS.tertiary,
             lineHeight: 1,
+            alignSelf: "flex-end",
+            paddingBottom: Math.round(t.badge * 0.1),
           }}
         >
           vs
         </span>
-        <TierBadge tier={take.crowdTier} size={t.badge} />
+        <BadgeWithLabel
+          tier={take.crowdTier}
+          label="Crowd"
+          labelColor={COLORS.muted}
+          size={t.badge}
+          labelFont={t.labelFont}
+          showLabel={!!showLabels}
+        />
         <DeltaPill delta={take.delta} t={t} />
       </div>
     </div>
@@ -393,7 +461,7 @@ function SquareOrStoryCard({
 }) {
   const t = TOKENS[format];
   const { width, height } = FORMATS[format];
-  const thinAggregate = data.rankerCount < 5;
+  const otherRankers = Math.max(data.rankerCount - 1, 0);
   const title =
     data.listName.length > t.titleCut
       ? data.listName.slice(0, t.titleCut - 1) + "…"
@@ -438,7 +506,7 @@ function SquareOrStoryCard({
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: Math.round(t.titleFont * 0.2),
+            gap: Math.round(t.thinFont * 0.5),
           }}
         >
           <span
@@ -447,22 +515,32 @@ function SquareOrStoryCard({
               fontWeight: 700,
               color: COLORS.primary,
               lineHeight: 1.15,
+              letterSpacing: "-0.03em",
+            }}
+          >
+            Me vs the crowd on
+          </span>
+          <span
+            style={{
+              fontSize: t.titleFont,
+              fontWeight: 700,
+              color: COLORS.primary,
+              lineHeight: 1.15,
+              letterSpacing: "-0.03em",
             }}
           >
             {title}
           </span>
-          {thinAggregate && (
-            <span
-              style={{
-                fontSize: t.thinFont,
-                color: COLORS.muted,
-                lineHeight: 1,
-              }}
-            >
-              based on {data.rankerCount} stacker
-              {data.rankerCount === 1 ? "" : "s"} — results may shift
-            </span>
-          )}
+          <span
+            style={{
+              fontSize: t.thinFont,
+              color: COLORS.muted,
+              lineHeight: 1,
+            }}
+          >
+            where I most disagree with {otherRankers} stacker
+            {otherRankers === 1 ? "" : "s"}
+          </span>
         </div>
 
         {/* Take rows */}
@@ -474,13 +552,21 @@ function SquareOrStoryCard({
           }}
         >
           {data.takes.map((take, i) => (
-            <TakeRow key={i} take={take} t={t} />
+            <TakeRow key={i} take={take} t={t} showLabels={i === 0} />
           ))}
         </div>
       </div>
 
       {/* Zone C — footer */}
-      <ShareFoot url={data.shareUrl} scale={t.footScale} />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: Math.round(t.footScale * 5),
+        }}
+      >
+        <ShareFoot url={data.shareUrl} scale={t.footScale} />
+      </div>
     </div>
   );
 }
@@ -488,7 +574,7 @@ function SquareOrStoryCard({
 function WideCard({ data }: { data: HotTakesData }) {
   const t = TOKENS.wide;
   const { width, height } = FORMATS.wide;
-  const thinAggregate = data.rankerCount < 5;
+  const otherRankers = Math.max(data.rankerCount - 1, 0);
   const title =
     data.listName.length > t.titleCut
       ? data.listName.slice(0, t.titleCut - 1) + "…"
@@ -534,7 +620,7 @@ function WideCard({ data }: { data: HotTakesData }) {
             flex: 1,
             flexDirection: "column",
             justifyContent: "center",
-            gap: Math.round(t.titleFont * 0.2),
+            gap: Math.round(t.thinFont * 0.5),
           }}
         >
           <span
@@ -542,42 +628,60 @@ function WideCard({ data }: { data: HotTakesData }) {
               fontSize: t.titleFont,
               fontWeight: 700,
               color: COLORS.primary,
+              lineHeight: 1.15,
+              letterSpacing: "-0.03em",
+            }}
+          >
+            Me vs the crowd on
+          </span>
+          <span
+            style={{
+              fontSize: t.titleFont,
+              fontWeight: 700,
+              color: COLORS.primary,
               lineHeight: 1.2,
+              letterSpacing: "-0.03em",
             }}
           >
             {title}
           </span>
-          {thinAggregate && (
-            <span
-              style={{
-                fontSize: t.thinFont,
-                color: COLORS.muted,
-                lineHeight: 1,
-              }}
-            >
-              based on {data.rankerCount} stacker
-              {data.rankerCount === 1 ? "" : "s"}
-            </span>
-          )}
+          <span
+            style={{
+              fontSize: t.thinFont,
+              color: COLORS.muted,
+              lineHeight: 1,
+            }}
+          >
+            where I most disagree with {otherRankers} stacker
+            {otherRankers === 1 ? "" : "s"}
+          </span>
         </div>
 
-        {/* Right: take rows — distribute evenly */}
+        {/* Right: take rows — centered with even gap */}
         <div
           style={{
             display: "flex",
             flex: 1.3,
             flexDirection: "column",
-            justifyContent: "space-between",
+            justifyContent: "center",
+            gap: t.rowGap,
           }}
         >
           {data.takes.map((take, i) => (
-            <TakeRow key={i} take={take} t={t} />
+            <TakeRow key={i} take={take} t={t} showLabels={i === 0} />
           ))}
         </div>
       </div>
 
       {/* Zone C — footer */}
-      <div style={{ display: "flex", marginTop: 20 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: Math.round(t.footScale * 5),
+          marginTop: 20,
+        }}
+      >
         <ShareFoot url={data.shareUrl} scale={t.footScale} />
       </div>
     </div>

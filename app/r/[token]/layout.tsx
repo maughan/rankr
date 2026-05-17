@@ -20,13 +20,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 
   if (!list || !list.is_shareable) {
-    return { title: "TierStack" };
+    return { title: "tierstack.dev" };
   }
 
-  const title = `${list.title} — TierStack`;
+  const title = `${list.title} — tierstack.dev`;
   const description = list.description
     ? list.description
-    : `Rank ${list.title} and compare with the community on TierStack.`;
+    : `Rank ${list.title} and compare with the community on tierstack.dev.`;
 
   return {
     title,
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       type: "website",
-      siteName: "TierStack",
+      siteName: "tierstack.dev",
     },
     twitter: {
       card: "summary",

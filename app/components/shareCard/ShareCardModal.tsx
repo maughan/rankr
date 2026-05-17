@@ -43,13 +43,23 @@ export default function ShareCardModal({ token, template, open, onClose }: Props
   const [downloading, setDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [cacheBust, setCacheBust] = useState(() => Date.now());
 
-  const imgUrl = `/api/share/${template}?token=${encodeURIComponent(token)}&format=${format}`;
+  const imgUrl = `/api/share/${template}?token=${encodeURIComponent(token)}&format=${format}&t=${cacheBust}`;
 
-  // Reset image state when the modal opens or format changes
+  // New cache-bust key on every open so stale images are never shown
+  useEffect(() => {
+    if (open) {
+      setCacheBust(Date.now());
+      setImgState("loading");
+      setErrorMsg(null);
+    }
+  }, [open]);
+
+  // Reset load state when format switches within the same open session
   useEffect(() => {
     if (open) { setImgState("loading"); setErrorMsg(null); }
-  }, [open, format]);
+  }, [format]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchBlob = async (): Promise<Blob | null> => {
     try {

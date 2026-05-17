@@ -66,6 +66,7 @@ export async function GET() {
       const creatorRankMap = new Map<number, number>(); // itemId → tier value
       let lastActivity: Date | null = null;
       const rankerSet = new Set<number>();
+      let userHasRanked = false;
 
       for (const item of list.items) {
         for (const r of item.rankings) {
@@ -75,6 +76,9 @@ export async function GET() {
           }
           if (r.userId === list.createdById) {
             creatorRankMap.set(item.id, r.value);
+          }
+          if (viewerId !== null && r.userId === viewerId && r.value !== 0) {
+            userHasRanked = true;
           }
         }
       }
@@ -125,6 +129,7 @@ export async function GET() {
         last_activity_at: (lastActivity ?? list.updatedAt).toISOString(),
         pinned: viewerId !== null && (list.pins?.length ?? 0) > 0,
         top_tier_items: topItems,
+        user_has_ranked: userHasRanked,
       };
     });
 
@@ -234,6 +239,9 @@ export async function PATCH(req: Request) {
           COLOR_NAMES_SET.has(data.category_color) && {
             category_color: data.category_color,
           }),
+        ...(typeof data.allow_contributions === "boolean" && {
+          allow_contributions: data.allow_contributions,
+        }),
       },
     });
 

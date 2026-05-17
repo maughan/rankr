@@ -169,6 +169,43 @@ export const listsApi = baseApi.injectEndpoints({
       invalidatesTags: (_r, _e, { listId }) => [{ type: "List", id: listId }],
     }),
 
+    updateItem: builder.mutation<
+      TierItem,
+      { listId: number; itemId: number; name?: string; short_label?: string }
+    >({
+      query: ({ listId, itemId, ...body }) => ({
+        url: `/s/${listId}/items/${itemId}`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: (_r, _e, { listId }) => [{ type: "List", id: listId }],
+    }),
+
+    deleteItemImage: builder.mutation<
+      TierItem,
+      { listId: number; itemId: number }
+    >({
+      query: ({ listId, itemId }) => ({
+        url: `/s/${listId}/items/${itemId}/image`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, { listId }) => [{ type: "List", id: listId }],
+    }),
+
+    deleteItem: builder.mutation<
+      { deleted_rankings_count: number },
+      { listId: number; itemId: number }
+    >({
+      query: ({ listId, itemId }) => ({
+        url: `/s/${listId}/items/${itemId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, { listId }) => [
+        "Lists",
+        { type: "List", id: listId },
+      ],
+    }),
+
     getShareStats: builder.query<ShareStats, number>({
       query: (listId) => `/s/${listId}/share/stats`,
       providesTags: (_r, _e, listId) => [{ type: "List", id: listId }],
@@ -226,6 +263,9 @@ export const {
   useEnableShareMutation,
   useDisableShareMutation,
   useUpdateShareMutation,
+  useUpdateItemMutation,
+  useDeleteItemImageMutation,
+  useDeleteItemMutation,
   useGetShareStatsQuery,
   useGetSharedListQuery,
   useGetMyRankingQuery,

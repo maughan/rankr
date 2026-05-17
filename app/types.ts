@@ -23,6 +23,7 @@ export interface ListPreview {
   last_activity_at: string;
   pinned: boolean;
   top_tier_items: TopTierItem[];
+  user_has_ranked: boolean;
 }
 
 export interface TierList {
@@ -43,6 +44,7 @@ export interface TierList {
   is_shareable: boolean;
   share_token: string | null;
   anonymous_rankings_enabled: boolean;
+  allow_contributions: boolean;
   tiers: Array<Tier>;
   items: Array<TierItem>;
 }
@@ -61,6 +63,9 @@ export interface TierItem {
   name?: string;
   color?: string;
   short_label?: string;
+  short_label_user_set?: boolean;
+  name_updated_at?: string | null;
+  image_uploaded_at?: string | null;
   createdAt: string;
   updatedAt: string;
   createdBy: string;

@@ -479,7 +479,15 @@ function SquareOrStoryCard({
       </div>
 
       {/* Zone C — footer */}
-      <ShareFoot url={data.shareUrl} scale={t.footScale} />
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: Math.round(t.footScale * 5),
+        }}
+      >
+        <ShareFoot url={data.shareUrl} scale={t.footScale} />
+      </div>
     </div>
   );
 }
@@ -500,7 +508,7 @@ function WideCard({ data }: { data: HeadToHeadData }) {
         fontFamily: "Geist",
       }}
     >
-      {/* Zone A — brand left, URL right */}
+      {/* Zone A — brand left, tagline+URL right */}
       <div
         style={{
           display: "flex",
@@ -509,7 +517,16 @@ function WideCard({ data }: { data: HeadToHeadData }) {
         }}
       >
         <Brand scale={t.brandScale} />
-        <ShareFoot url={data.shareUrl} scale={t.footScale} />
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            gap: Math.round(t.footScale * 5),
+          }}
+        >
+          <ShareFoot url={data.shareUrl} scale={t.footScale} />
+        </div>
       </div>
 
       {/* Zone B — hero left, callout right */}

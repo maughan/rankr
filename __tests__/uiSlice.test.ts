@@ -28,6 +28,7 @@ const makeList = (overrides: Partial<TierList> = {}): TierList => ({
   is_shareable: false,
   share_token: null,
   anonymous_rankings_enabled: true,
+  allow_contributions: false,
   tiers: [
     makeTier({ id: 1, value: 8, items: [10] }),
     makeTier({ id: 2, title: "A", value: 6, items: [20] }),
