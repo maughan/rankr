@@ -19,7 +19,8 @@ export default function Droppable({
       ref={setNodeRef}
       style={{
         ...styleProp,
-        outline: isOver ? "1px solid #4A8AE8" : undefined,
+        boxShadow: isOver ? "inset 0 0 0 1.5px #4A8AE8" : undefined,
+        transition: "box-shadow 120ms ease-out",
       }}
       className={className ?? "min-h-16 w-full flex flex-wrap"}
     >

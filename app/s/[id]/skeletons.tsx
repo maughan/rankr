@@ -62,7 +62,7 @@ export function TierRowSkeleton({ tier, count }: TierRowSkeletonProps) {
 
       {/* Skeleton item cards */}
       <div
-        className="flex flex-wrap gap-2 p-3 flex-1 min-h-[76px] content-start"
+        className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
         style={{ backgroundColor: "#0F1828" }}
       >
         {Array.from({ length: count }).map((_, i) => (

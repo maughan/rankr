@@ -3,10 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { Users } from "lucide-react";
-
 import { useState } from "react";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, Users } from "lucide-react";
+import EmptyState from "@/app/components/EmptyState";
+import { S } from "@/app/content/strings";
 import {
   useGetSharedListQuery,
   useGetMyRankingQuery,
@@ -174,10 +174,10 @@ export default function SharedListPage() {
         </div>
         <div className="px-4 sm:px-8 py-16 max-w-3xl mx-auto flex flex-col items-center gap-3 text-center">
           <p className="text-rk-primary text-[17px] font-[500]">
-            Link not found
+            {S.errors.linkNotFound}
           </p>
           <p className="text-[13px] text-rk-muted">
-            This share link may have been disabled or rotated.
+            {S.errors.linkNotFoundDetail}
           </p>
           <Link
             href="/s"
@@ -332,7 +332,7 @@ export default function SharedListPage() {
                   </span>
                 </div>
                 <div
-                  className="flex flex-wrap gap-2 p-3 flex-1 min-h-[76px] content-start"
+                  className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
                   style={{ backgroundColor: "#0F1828" }}
                 >
                   {tierItems.map((item) => (
@@ -358,24 +358,36 @@ export default function SharedListPage() {
           </div>
         )}
 
-        {/* CTA — "rank" prompt before they've submitted; "re-rank" link after */}
+        {/* CTA — empty state when nobody has ranked; pill prompt after they have */}
         {list.anonymous_rankings_enabled && (
-          <div
-            className="flex items-center justify-between px-4 py-3 rounded-[10px] border border-rk-stroke"
-            style={{ backgroundColor: "rgba(255,255,255,0.02)" }}
-          >
-            <p className="text-[13px] text-rk-muted">
-              {hasMyRanking
-                ? "Want to update your stack?"
-                : "Where would you put them?"}
-            </p>
-            <Link
-              href={`/r/${token}/s`}
-              className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity flex-shrink-0"
-            >
-              {hasMyRanking ? "Re-stack" : "Stack this list"}
-            </Link>
-          </div>
+          <>
+            {!hasMyRanking && list.ranker_count === 0 ? (
+              <EmptyState
+                icon={Users}
+                heading={S.empty.anonNoRankings.heading}
+                subhead={S.empty.anonNoRankings.subhead}
+                ctaLabel={S.empty.anonNoRankings.cta}
+                ctaAction={() => (window.location.href = `/r/${token}/s`)}
+              />
+            ) : (
+              <div
+                className="flex items-center justify-between px-4 py-3 rounded-[10px] border border-rk-stroke"
+                style={{ backgroundColor: "rgba(255,255,255,0.02)" }}
+              >
+                <p className="text-[13px] text-rk-muted">
+                  {hasMyRanking
+                    ? "Want to update your stack?"
+                    : "Where would you put them?"}
+                </p>
+                <Link
+                  href={`/r/${token}/s`}
+                  className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity flex-shrink-0"
+                >
+                  {hasMyRanking ? "Re-stack" : "Stack this list"}
+                </Link>
+              </div>
+            )}
+          </>
         )}
 
         {/* Comparison matrix — shown once the user has submitted rankings */}

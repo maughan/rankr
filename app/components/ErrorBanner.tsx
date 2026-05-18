@@ -1,10 +1,12 @@
+import { S } from "@/app/content/strings";
+
 interface Props {
   message?: string;
   onRetry: () => void;
 }
 
 export default function ErrorBanner({
-  message = "Something went wrong",
+  message = S.errors.default,
   onRetry,
 }: Props) {
   return (

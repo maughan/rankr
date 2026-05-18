@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import { baseApi } from "@/lib/api/baseApi";
 import Modal from "@/app/components/modal";
+import { S } from "@/app/content/strings";
 
 type Tab = "login" | "signup";
 
@@ -52,13 +53,13 @@ export default function AuthModal() {
         }),
       });
       if (!res.ok) {
-        toast.error("Invalid email or password.");
+        toast.error(S.auth.loginFailed);
         return;
       }
       handleSuccess();
-      toast.success("Logged in.");
+      toast.success(S.auth.loginSuccess);
     } catch {
-      toast.error("Something went wrong.");
+      toast.error(S.auth.loginError);
     } finally {
       setLoading(false);
     }
@@ -79,13 +80,13 @@ export default function AuthModal() {
         }),
       });
       if (!res.ok) {
-        toast.error("Email or username already taken.");
+        toast.error(S.auth.signupTaken);
         return;
       }
       handleSuccess();
-      toast.success("Account created.");
+      toast.success(S.auth.signupSuccess);
     } catch {
-      toast.error("Something went wrong.");
+      toast.error(S.auth.signupError);
     } finally {
       setLoading(false);
     }

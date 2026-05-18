@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Copy, Check, RefreshCw, Link2, Users } from "lucide-react";
 
 import Modal from "@/app/components/modal";
+import { S } from "@/app/content/strings";
 import {
   useGetShareStatsQuery,
   useEnableShareMutation,
@@ -39,7 +40,7 @@ export default function ShareModal({ listId, open, onClose }: Props) {
     try {
       await enableShare(listId).unwrap();
     } catch {
-      toast.error("Failed to create share link.");
+      toast.error(S.share.linkCreateFailed);
     }
   };
 
@@ -47,7 +48,7 @@ export default function ShareModal({ listId, open, onClose }: Props) {
     try {
       await disableShare(listId).unwrap();
     } catch {
-      toast.error("Failed to disable sharing.");
+      toast.error(S.share.linkDisableFailed);
     }
   };
 
@@ -55,9 +56,9 @@ export default function ShareModal({ listId, open, onClose }: Props) {
     try {
       await updateShare({ listId, rotate: true }).unwrap();
       setCopied(false);
-      toast.success("Share link rotated.");
+      toast.success(S.share.linkRotated);
     } catch {
-      toast.error("Failed to rotate link.");
+      toast.error(S.share.linkRotateFailed);
     }
   };
 
@@ -69,7 +70,7 @@ export default function ShareModal({ listId, open, onClose }: Props) {
         anonymous_rankings_enabled: !stats.anonymous_rankings_enabled,
       }).unwrap();
     } catch {
-      toast.error("Failed to update settings.");
+      toast.error(S.share.settingsUpdateFailed);
     }
   };
 
@@ -177,8 +178,7 @@ export default function ShareModal({ listId, open, onClose }: Props) {
         ) : (
           <div className="flex flex-col gap-4">
             <p className="text-[13px] text-rk-muted leading-relaxed">
-              Create a link so anyone can view the community aggregate.
-              Optionally let them submit anonymous rankings too.
+              {S.lists.shareDescription}
             </p>
             <button
               onClick={handleEnable}

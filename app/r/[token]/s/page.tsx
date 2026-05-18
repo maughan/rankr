@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { useRouter, useParams } from "next/navigation";
@@ -9,6 +9,7 @@ import Image from "next/image";
 import { Pencil } from "lucide-react";
 
 import { useGetSharedListQuery, SharedListItem } from "@/lib/api/listsApi";
+import { S } from "@/app/content/strings";
 import Skeleton from "@/app/components/Skeleton";
 import { TierRowSkeleton } from "@/app/s/[id]/skeletons";
 import Draggable from "@/app/Draggable";
@@ -24,13 +25,22 @@ const TIER_STYLE: Record<string, { bg: string; text: string }> = {
   F: { bg: "#AFA9EC", text: "#26215C" },
 };
 
-function ItemCard({ item }: { item: SharedListItem }) {
+function ItemCard({
+  item,
+  isJustDropped,
+}: {
+  item: SharedListItem;
+  isJustDropped?: boolean;
+}) {
   const base =
-    "w-[70px] bg-rk-surface border border-rk-stroke rounded-[8px] overflow-hidden cursor-grab active:cursor-grabbing";
+    "relative w-[70px] bg-rk-surface border border-rk-stroke rounded-[8px] overflow-hidden cursor-grab active:cursor-grabbing" +
+    " motion-safe:transition-[transform,border-color] motion-safe:duration-150 motion-safe:ease-out" +
+    " motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.02] motion-safe:hover:border-rk-muted";
+  const cls = `${base}${isJustDropped ? " rk-item-drop" : ""}`;
 
   if (item.img) {
     return (
-      <div className={base}>
+      <div className={cls}>
         <div className="relative h-[44px]">
           <Image
             loader={ImageKitLoader}
@@ -51,7 +61,7 @@ function ItemCard({ item }: { item: SharedListItem }) {
   }
 
   return (
-    <div className={base}>
+    <div className={cls}>
       <div
         className="h-[44px] flex items-center justify-center rounded-t-[6px]"
         style={{ backgroundColor: item.color ?? "#334155" }}
@@ -78,25 +88,51 @@ export default function AnonRankPage() {
   // tierId → itemId[] — starts empty (all items unranked)
   const [tierItems, setTierItems] = useState<Record<number, number[]>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [justDroppedId, setJustDroppedId] = useState<number | null>(null);
+  const [pulsingTiers, setPulsingTiers] = useState<Set<number>>(new Set());
 
-  const handleDragEnd = (event: any) => {
-    const { over, active } = event;
-    if (!over || !list) return;
+  const handleDragEnd = useCallback(
+    (event: any) => {
+      const { over, active } = event;
+      if (!over || !list) return;
 
-    const draggedId = active.id as number;
-    const targetId = over.id as number; // tier id or -1 for unranked pool
+      const draggedId = active.id as number;
+      const targetId = over.id as number;
 
-    setTierItems((prev) => {
-      const next: Record<number, number[]> = {};
-      for (const tier of list.tiers) {
-        next[tier.id] = (prev[tier.id] ?? []).filter((id) => id !== draggedId);
+      const isFirstItemInTier =
+        targetId !== -1 && (tierItems[targetId] ?? []).length === 0;
+
+      setTierItems((prev) => {
+        const next: Record<number, number[]> = {};
+        for (const tier of list.tiers) {
+          next[tier.id] = (prev[tier.id] ?? []).filter(
+            (id) => id !== draggedId
+          );
+        }
+        if (targetId !== -1 && next[targetId] !== undefined) {
+          next[targetId] = [...next[targetId], draggedId];
+        }
+        return next;
+      });
+
+      if (targetId !== -1) {
+        setJustDroppedId(draggedId);
+        setTimeout(() => setJustDroppedId(null), 320);
       }
-      if (targetId !== -1 && next[targetId] !== undefined) {
-        next[targetId] = [...next[targetId], draggedId];
+
+      if (isFirstItemInTier) {
+        setPulsingTiers((prev) => new Set([...prev, targetId]));
+        setTimeout(() => {
+          setPulsingTiers((prev) => {
+            const next = new Set(prev);
+            next.delete(targetId);
+            return next;
+          });
+        }, 450);
       }
-      return next;
-    });
-  };
+    },
+    [list, tierItems]
+  );
 
   const handleSubmit = async () => {
     if (!list) return;
@@ -109,7 +145,7 @@ export default function AnonRankPage() {
     }
 
     if (!body.length) {
-      toast.error("Place at least one item before submitting.");
+      toast.error(S.rankings.submitEmpty);
       return;
     }
 
@@ -122,22 +158,22 @@ export default function AnonRankPage() {
       });
 
       if (res.status === 429) {
-        toast.error("Too many submissions. Please wait before trying again.");
+        toast.error(S.rankings.submitRateLimit);
         return;
       }
       if (res.status === 403) {
-        toast.error("Anonymous rankings are disabled for this list.");
+        toast.error(S.rankings.submitAnonDisabled);
         return;
       }
       if (!res.ok) {
-        toast.error("Failed to submit rankings.");
+        toast.error(S.rankings.submitFailed);
         return;
       }
 
-      toast.success("Rankings submitted.");
+      toast.success(S.rankings.submitted);
       router.push(`/r/${token}`);
     } catch {
-      toast.error("Something went wrong.");
+      toast.error(S.rankings.submitError);
     } finally {
       setIsSubmitting(false);
     }
@@ -205,10 +241,10 @@ export default function AnonRankPage() {
       <div className="fixed inset-0 z-10 bg-rk-page flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-center px-4">
           <p className="text-rk-primary text-[17px] font-[500]">
-            Link not found
+            {S.errors.linkNotFound}
           </p>
           <p className="text-[13px] text-rk-muted">
-            This share link may have been disabled or rotated.
+            {S.errors.linkNotFoundDetail}
           </p>
           <Link
             href="/s"
@@ -227,10 +263,10 @@ export default function AnonRankPage() {
       <div className="fixed inset-0 z-10 bg-rk-page flex items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-center px-4">
           <p className="text-rk-primary text-[17px] font-[500]">
-            Rankings disabled
+            {S.errors.anonDisabledTitle}
           </p>
           <p className="text-[13px] text-rk-muted">
-            The list owner has turned off anonymous submissions.
+            {S.errors.anonDisabledDetail}
           </p>
           <Link
             href={`/r/${token}`}
@@ -334,16 +370,23 @@ export default function AnonRankPage() {
               return (
                 <div
                   key={tier.id}
-                  className="flex overflow-hidden border border-rk-stroke"
+                  className="flex border border-rk-stroke"
                   style={{ borderRadius: 10 }}
                 >
                   <div
                     className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px]"
-                    style={{ backgroundColor: style.bg, minHeight: 76 }}
+                    style={{
+                      backgroundColor: style.bg,
+                      minHeight: 76,
+                      borderTopLeftRadius: 9,
+                      borderBottomLeftRadius: 9,
+                    }}
                   >
                     <span
-                      className="text-[26px] font-[500] leading-none select-none"
-                      style={{ color: style.text }}
+                      className={`text-[26px] font-[500] leading-none select-none${
+                        pulsingTiers.has(tier.id) ? " rk-tier-pulse" : ""
+                      }`}
+                      style={{ color: style.text, display: "inline-block" }}
                     >
                       {tier.title}
                     </span>
@@ -356,8 +399,12 @@ export default function AnonRankPage() {
                   </div>
                   <Droppable
                     id={tier.id}
-                    className="flex flex-wrap gap-2 p-3 flex-1 min-h-[76px] content-start"
-                    style={{ backgroundColor: "#0F1828" }}
+                    className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
+                    style={{
+                      backgroundColor: "#0F1828",
+                      borderTopRightRadius: 9,
+                      borderBottomRightRadius: 9,
+                    }}
                   >
                     {items.map((item) => (
                       <Draggable
@@ -365,7 +412,10 @@ export default function AnonRankPage() {
                         id={item.id}
                         url={item?.img || ""}
                       >
-                        <ItemCard item={item} />
+                        <ItemCard
+                          item={item}
+                          isJustDropped={justDroppedId === item.id}
+                        />
                       </Draggable>
                     ))}
                   </Droppable>
@@ -381,11 +431,14 @@ export default function AnonRankPage() {
             </p>
             <Droppable
               id={-1}
-              className="flex flex-wrap gap-2 min-h-[76px] content-start"
+              className="flex flex-wrap gap-2 min-h-[96px] content-start"
             >
               {unranked.map((item) => (
                 <Draggable key={item.id} id={item.id} url={item?.img || ""}>
-                  <ItemCard item={item} />
+                  <ItemCard
+                    item={item}
+                    isJustDropped={justDroppedId === item.id}
+                  />
                 </Draggable>
               ))}
             </Droppable>
