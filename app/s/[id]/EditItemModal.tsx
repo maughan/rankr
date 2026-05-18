@@ -13,6 +13,7 @@ import {
   useDeleteItemImageMutation,
 } from "@/lib/api/listsApi";
 import { ImageKitLoader } from "@/lib/helpers";
+import { S } from "@/app/content/strings";
 
 interface Props {
   item: TierItem;
@@ -54,11 +55,11 @@ export default function EditItemModal({
   const handleSave = async () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
-      toast.error("Name cannot be empty");
+      toast.error(S.items.nameEmpty);
       return;
     }
     if (trimmedName.length > 60) {
-      toast.error("Name must be 60 chars or fewer");
+      toast.error(S.items.nameTooLong);
       return;
     }
     try {
@@ -68,7 +69,7 @@ export default function EditItemModal({
         name: trimmedName,
         short_label: shortLabel.trim(),
       }).unwrap();
-      toast.success("Item updated");
+      toast.success(S.items.updated);
       onClose();
     } catch (err: any) {
       const msg = err?.data?.error ?? "Failed to update item";
@@ -79,11 +80,11 @@ export default function EditItemModal({
   const uploadImage = async (file: File) => {
     const allowed = new Set(["image/jpeg", "image/png", "image/webp"]);
     if (!allowed.has(file.type)) {
-      toast.error("File must be JPEG, PNG, or WebP");
+      toast.error(S.items.imageTypeError);
       return;
     }
     if (file.size > 5 * 1_048_576) {
-      toast.error("File must be under 5 MB");
+      toast.error(S.items.imageSizeError);
       return;
     }
     setIsUploadingImage(true);
@@ -101,9 +102,9 @@ export default function EditItemModal({
       dispatch(
         baseApi.util.invalidateTags([{ type: "List" as const, id: listId }])
       );
-      toast.success("Image uploaded");
+      toast.success(S.items.imageAdded);
     } catch (err: any) {
-      toast.error(err?.message ?? "Image upload failed");
+      toast.error(err?.message ?? S.items.imageUploadFailed);
     } finally {
       setIsUploadingImage(false);
     }
@@ -125,9 +126,9 @@ export default function EditItemModal({
   const handleRemoveImage = async () => {
     try {
       await deleteItemImage({ listId, itemId: item.id }).unwrap();
-      toast.success("Image removed");
+      toast.success(S.items.imageRemoved);
     } catch {
-      toast.error("Failed to remove image");
+      toast.error(S.items.imageRemoveFailed);
     }
   };
 

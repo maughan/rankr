@@ -41,7 +41,9 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import { ImageKitLoader, getUserFromToken } from "@/lib/helpers";
 import Modal from "../components/modal";
+import EmptyState from "../components/EmptyState";
 import { TopTierItem } from "@/app/types";
+import { S } from "@/app/content/strings";
 import {
   ICON_NAMES,
   COLOR_NAMES,
@@ -234,27 +236,21 @@ function ListsContent({
 
   if (lists.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <div className="w-12 h-12 rounded-[10px] bg-rk-surface border border-rk-stroke flex items-center justify-center">
-          <LayoutGrid size={22} className="text-rk-muted" />
-        </div>
-        <p className="text-rk-muted text-[14px]">No lists yet</p>
-        {isLoggedIn ? (
-          <button
-            onClick={onCreateList}
-            className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-          >
-            Create your first list
-          </button>
-        ) : (
-          <button
-            onClick={onLogin}
-            className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-          >
-            Log in to get started
-          </button>
-        )}
-      </div>
+      <EmptyState
+        icon={LayoutGrid}
+        heading={S.empty.library.heading}
+        subhead={
+          isLoggedIn
+            ? S.empty.library.subheadLoggedIn
+            : S.empty.library.subheadLoggedOut
+        }
+        ctaLabel={
+          isLoggedIn
+            ? S.empty.library.ctaLoggedIn
+            : S.empty.library.ctaLoggedOut
+        }
+        ctaAction={isLoggedIn ? onCreateList : onLogin}
+      />
     );
   }
 
@@ -325,10 +321,10 @@ export default function Lists() {
       } as any);
 
       dispatch(uiActions.updateListMeta({ img: result.url }));
-      toast.success("Image uploaded");
+      toast.success(S.lists.imageUploaded);
     } catch (err) {
       console.error(err);
-      toast.error("Image upload failed");
+      toast.error(S.lists.imageUploadFailed);
     }
   };
 
@@ -338,10 +334,10 @@ export default function Lists() {
     try {
       await createList(editList).unwrap();
       dispatch(uiActions.closeCreateListModal());
-      toast.success("List created");
+      toast.success(S.lists.created);
     } catch (e) {
       console.error(e);
-      toast.error("Failed to create list");
+      toast.error(S.lists.createFailed);
     }
   };
 

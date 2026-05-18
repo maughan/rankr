@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import { baseApi } from "@/lib/api/baseApi";
 import Modal from "@/app/components/modal";
+import { S } from "@/app/content/strings";
 
 export default function PasswordModal() {
   const dispatch = useAppDispatch();
@@ -50,13 +51,13 @@ export default function PasswordModal() {
         }),
       });
       if (!res.ok) {
-        toast.error("Something went wrong.");
+        toast.error(S.auth.resetError);
         return;
       }
       handleSuccess();
-      toast.success("Password reset successfully.");
+      toast.success(S.auth.resetSuccess);
     } catch {
-      toast.error("Something went wrong.");
+      toast.error(S.auth.resetError);
     } finally {
       setLoading(false);
     }

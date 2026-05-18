@@ -2,6 +2,19 @@ import { baseApi } from "./baseApi";
 import { ListPreview, TierList, TierItem } from "@/app/types";
 import { createNewList, processResponseData } from "@/lib/helpers";
 
+export interface SpicyTake {
+  itemName: string;
+  userTier: string;
+  crowdTier: string;
+  delta: number;
+  rankerCount: number;
+}
+
+export interface SubmitRankingsResponse {
+  rankings: unknown[];
+  spicy: SpicyTake | null;
+}
+
 export interface SharedListItem {
   id: number;
   img: string | null;
@@ -119,7 +132,7 @@ export const listsApi = baseApi.injectEndpoints({
       ],
     }),
 
-    submitRankings: builder.mutation<void, any[]>({
+    submitRankings: builder.mutation<SubmitRankingsResponse, any[]>({
       query: (userRankings) => ({
         url: `/rankings`,
         method: "PUT",

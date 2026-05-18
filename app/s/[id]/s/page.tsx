@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Pencil } from "lucide-react";
+import { X, Pencil, Flame } from "lucide-react";
 
 import { useGetListQuery, useSubmitRankingsMutation } from "@/lib/api/listsApi";
+import { S } from "@/app/content/strings";
 import Skeleton from "@/app/components/Skeleton";
 import { TierRowSkeleton } from "../skeletons";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -36,13 +37,22 @@ const TIER_STYLE: Record<string, { bg: string; text: string }> = {
 
 // ── Item card (matches list view) ─────────────────────────────────────────────
 
-function ItemCard({ item }: { item: TierItem }) {
+function ItemCard({
+  item,
+  isJustDropped,
+}: {
+  item: TierItem;
+  isJustDropped?: boolean;
+}) {
   const base =
-    "w-[70px] bg-rk-surface border border-rk-stroke rounded-[8px] overflow-hidden cursor-grab active:cursor-grabbing";
+    "relative w-[70px] bg-rk-surface border border-rk-stroke rounded-[8px] overflow-hidden cursor-grab active:cursor-grabbing" +
+    " motion-safe:transition-[transform,border-color] motion-safe:duration-150 motion-safe:ease-out" +
+    " motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.02] motion-safe:hover:border-rk-muted";
+  const cls = `${base}${isJustDropped ? " rk-item-drop" : ""}`;
 
   if (item.img) {
     return (
-      <div className={base}>
+      <div className={cls}>
         <div className="relative h-[44px]">
           <Image
             loader={ImageKitLoader}
@@ -63,7 +73,7 @@ function ItemCard({ item }: { item: TierItem }) {
   }
 
   return (
-    <div className={base}>
+    <div className={cls}>
       <div
         className="h-[44px] flex items-center justify-center rounded-t-[6px]"
         style={{ backgroundColor: item.color ?? "#334155" }}
@@ -97,6 +107,9 @@ export default function Rank() {
   const { rankings, modals, selectedItems, openTier, imageModalUrl } =
     useAppSelector((state) => state.ui);
 
+  const [justDroppedId, setJustDroppedId] = useState<number | null>(null);
+  const [pulsingTiers, setPulsingTiers] = useState<Set<number>>(new Set());
+
   useEffect(() => {
     if (list && rankings.length === 0) {
       dispatch(uiActions.startRanking(list));
@@ -105,9 +118,32 @@ export default function Rank() {
 
   const handleDragEnd = (event: any) => {
     const { over, active } = event;
-    if (over) {
-      dispatch(uiActions.handleDropItem({ over: over.id, active: active.id }));
+    if (!over) return;
+
+    const targetTier = rankings.find((t) => t.id === over.id);
+    const isFirstItemInTier =
+      targetTier !== undefined &&
+      over.id !== -1 &&
+      targetTier.items.length === 0;
+
+    dispatch(uiActions.handleDropItem({ over: over.id, active: active.id }));
+
+    const droppedId = active.id as number;
+    setJustDroppedId(droppedId);
+    const dropTimer = setTimeout(() => setJustDroppedId(null), 320);
+
+    if (isFirstItemInTier) {
+      setPulsingTiers((prev: Set<number>) => new Set([...prev, over.id]));
+      setTimeout(() => {
+        setPulsingTiers((prev: Set<number>) => {
+          const next = new Set(prev);
+          next.delete(over.id);
+          return next;
+        });
+      }, 450);
     }
+
+    return () => clearTimeout(dropTimer);
   };
 
   const handleRankSubmit = async () => {
@@ -121,14 +157,63 @@ export default function Rank() {
         list.id
       );
 
-      await submitRankings(userRankings).unwrap();
+      const result = await submitRankings(userRankings).unwrap();
 
-      toast.success("Rankings saved.");
+      if (result.spicy) {
+        const { itemName, userTier, crowdTier, rankerCount } = result.spicy;
+        toast.custom(
+          () => (
+            <div
+              style={{
+                background: "#1C0A0A",
+                border: "1px solid #6B1A1A",
+                borderRadius: 10,
+                padding: "10px 14px",
+                display: "flex",
+                gap: 10,
+                alignItems: "flex-start",
+                minWidth: 260,
+                maxWidth: 340,
+              }}
+            >
+              <Flame
+                size={15}
+                style={{ color: "#E05C5C", flexShrink: 0, marginTop: 2 }}
+              />
+              <div>
+                <p
+                  style={{
+                    color: "#F0D0D0",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    marginBottom: 3,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {S.rankings.spicyHeading}
+                </p>
+                <p style={{ color: "#B07070", fontSize: 12, lineHeight: 1.4 }}>
+                  {S.rankings.spicyDetail(
+                    itemName,
+                    userTier,
+                    crowdTier,
+                    rankerCount
+                  )}
+                </p>
+              </div>
+            </div>
+          ),
+          { duration: 5000 }
+        );
+      } else {
+        toast.success(S.rankings.saved);
+      }
+
       router.push(`/s/${id}`);
       dispatch(uiActions.clearRankings());
     } catch (e) {
       console.error(e);
-      toast.error("Error saving stacks.");
+      toast.error(S.rankings.saveFailed);
     }
   };
 
@@ -258,7 +343,7 @@ export default function Rank() {
         </div>
 
         {/* ── Content ─────────────────────────────────────────────────────── */}
-        <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl">
+        <div className="px-4 mx-auto sm:px-8 py-6 flex flex-col gap-6 max-w-3xl">
           {/* Header */}
           <div>
             <p
@@ -290,18 +375,25 @@ export default function Rank() {
               return (
                 <div
                   key={tier.id}
-                  className="flex overflow-hidden border border-rk-stroke"
+                  className="flex border border-rk-stroke"
                   style={{ borderRadius: 10 }}
                 >
                   {/* Tier label — click to open item picker */}
                   <button
                     className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px] hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: style.bg, minHeight: 76 }}
+                    style={{
+                      backgroundColor: style.bg,
+                      minHeight: 76,
+                      borderTopLeftRadius: 9,
+                      borderBottomLeftRadius: 9,
+                    }}
                     onClick={() => dispatch(uiActions.openTierModal(tier))}
                   >
                     <span
-                      className="text-[26px] font-[500] leading-none select-none"
-                      style={{ color: style.text }}
+                      className={`text-[26px] font-[500] leading-none select-none${
+                        pulsingTiers.has(tier.id) ? " rk-tier-pulse" : ""
+                      }`}
+                      style={{ color: style.text, display: "inline-block" }}
                     >
                       {tier.title}
                     </span>
@@ -316,12 +408,19 @@ export default function Rank() {
                   {/* Droppable items area */}
                   <Droppable
                     id={tier.id}
-                    className="flex flex-wrap gap-2 p-3 flex-1 min-h-[76px] content-start"
-                    style={{ backgroundColor: "#0F1828" }}
+                    className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
+                    style={{
+                      backgroundColor: "#0F1828",
+                      borderTopRightRadius: 9,
+                      borderBottomRightRadius: 9,
+                    }}
                   >
                     {tierItems.map((item) => (
                       <Draggable key={item.id} id={item.id} url={item.img}>
-                        <ItemCard item={item} />
+                        <ItemCard
+                          item={item}
+                          isJustDropped={justDroppedId === item.id}
+                        />
                       </Draggable>
                     ))}
                   </Droppable>
@@ -337,7 +436,7 @@ export default function Rank() {
             </p>
             <Droppable
               id={-1}
-              className="flex flex-wrap gap-2 min-h-[76px] content-start"
+              className="flex flex-wrap gap-2 min-h-[96px] content-start"
             >
               {list.items.map((item: TierItem) => {
                 const isRanked = rankings.some((tier) =>
@@ -346,7 +445,10 @@ export default function Rank() {
                 if (isRanked) return null;
                 return (
                   <Draggable key={item.id} id={item.id} url={item.img}>
-                    <ItemCard item={item} />
+                    <ItemCard
+                      item={item}
+                      isJustDropped={justDroppedId === item.id}
+                    />
                   </Draggable>
                 );
               })}

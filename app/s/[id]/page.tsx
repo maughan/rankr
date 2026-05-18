@@ -66,6 +66,8 @@ import { selectRankersByListId } from "@/lib/selectors";
 import { Tier, TierItem } from "@/app/types";
 import TierComparison from "../../components/tierComparison";
 import { nameToColor } from "@/lib/itemColor";
+import EmptyState from "@/app/components/EmptyState";
+import { S } from "@/app/content/strings";
 import {
   ICON_NAMES,
   COLOR_NAMES,
@@ -275,10 +277,10 @@ export default function List() {
       } as any);
 
       dispatch(uiActions.updateListMeta({ img: result.url }));
-      toast.success("Image uploaded");
+      toast.success(S.lists.imageUploaded);
     } catch (err) {
       console.error(err);
-      toast.error("Image upload failed");
+      toast.error(S.lists.imageUploadFailed);
     }
   };
 
@@ -302,10 +304,10 @@ export default function List() {
     try {
       await saveList({ id: listId, data: editList }).unwrap();
       dispatch(uiActions.closeEditListModal());
-      toast.success("Stack updated");
+      toast.success(S.lists.updated);
     } catch (e) {
       console.error(e);
-      toast.error("Failed to update stack");
+      toast.error(S.lists.updateFailed);
     }
   };
 
@@ -327,7 +329,7 @@ export default function List() {
     }
 
     if (!names.length) {
-      toast.error("No valid items — names must be under 60 chars");
+      toast.error(S.items.invalidNames);
       return;
     }
 
@@ -340,9 +342,7 @@ export default function List() {
     try {
       await createItems({ listId, names }).unwrap();
       setPendingItems([]);
-      toast.success(
-        `${names.length} item${names.length !== 1 ? "s" : ""} added`
-      );
+      toast.success(S.items.addedCount(names.length));
     } catch (err) {
       console.error(err);
       // Fade then remove ghost cards
@@ -352,7 +352,7 @@ export default function List() {
         setPendingItems([]);
         setFadingItemIds(new Set());
       }, 350);
-      toast.error("Failed to add items");
+      toast.error(S.items.addFailed);
     }
   };
 
@@ -364,12 +364,12 @@ export default function List() {
         await deleteItem({ listId, itemId: item.id }).unwrap();
       } catch {
         setPendingDeleteId(null);
-        toast.error(`Failed to remove ${item.name ?? "item"}`);
+        toast.error(S.items.removeFailed(item.name ?? "item"));
       }
       setPendingDeleteId(null);
     }, 5000);
     deleteTimeoutRef.current = timeoutId;
-    toast(`Removed "${item.name ?? "item"}"`, {
+    toast(S.items.removedUndo(item.name ?? "item"), {
       duration: 5000,
       action: {
         label: "Undo",
@@ -411,7 +411,7 @@ export default function List() {
           </div>
         </div>
         <div className="px-4 sm:px-8 py-6 max-w-3xl">
-          <ErrorBanner message="Couldn't load this list" onRetry={refetch} />
+          <ErrorBanner message={S.errors.loadList} onRetry={refetch} />
         </div>
       </div>
     );
@@ -801,60 +801,81 @@ export default function List() {
           </div>
         )}
 
+        {/* ── No items state ────────────────────────────────────────────── */}
+        {list.items.length === 0 && (
+          <EmptyState
+            icon={IconStack2}
+            heading={S.empty.listNoItems.heading}
+            subhead={S.empty.listNoItems.subhead}
+            ctaLabel={
+              isLoggedIn && (isListOwner || list.allow_contributions)
+                ? S.empty.listNoItems.cta
+                : undefined
+            }
+            ctaAction={
+              isLoggedIn && (isListOwner || list.allow_contributions)
+                ? () => setAddItemsOpen(true)
+                : undefined
+            }
+          />
+        )}
+
         {/* ── Tier rows — always shown, driven by filteredListRankings ──── */}
-        <div className="flex flex-col gap-[6px]">
-          {filteredListRankings.map((tier) => {
-            if (tier.value === 0) return null;
+        {list.items.length > 0 && (
+          <div className="flex flex-col gap-[6px]">
+            {filteredListRankings.map((tier) => {
+              if (tier.value === 0) return null;
 
-            const style = TIER_STYLE[tier.title] ?? {
-              bg: tier.color,
-              text: "#000000",
-            };
-            const tierItems = tier.items
-              .map((itemId) =>
-                list.items.find((i: TierItem) => i.id === itemId)
-              )
-              .filter((i): i is TierItem => !!i && i.id !== pendingDeleteId);
+              const style = TIER_STYLE[tier.title] ?? {
+                bg: tier.color,
+                text: "#000000",
+              };
+              const tierItems = tier.items
+                .map((itemId) =>
+                  list.items.find((i: TierItem) => i.id === itemId)
+                )
+                .filter((i): i is TierItem => !!i && i.id !== pendingDeleteId);
 
-            return (
-              <div
-                key={tier.id}
-                className="flex overflow-hidden border border-rk-stroke"
-                style={{ borderRadius: 10 }}
-              >
+              return (
                 <div
-                  className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px]"
-                  style={{ backgroundColor: style.bg, minHeight: 76 }}
+                  key={tier.id}
+                  className="flex overflow-hidden border border-rk-stroke"
+                  style={{ borderRadius: 10 }}
                 >
-                  <span
-                    className="text-[26px] font-[500] leading-none select-none"
-                    style={{ color: style.text }}
+                  <div
+                    className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px]"
+                    style={{ backgroundColor: style.bg, minHeight: 76 }}
                   >
-                    {tier.title}
-                  </span>
-                  <span
-                    className="text-[10px] leading-none"
-                    style={{ color: style.text, opacity: 0.65 }}
+                    <span
+                      className="text-[26px] font-[500] leading-none select-none"
+                      style={{ color: style.text }}
+                    >
+                      {tier.title}
+                    </span>
+                    <span
+                      className="text-[10px] leading-none"
+                      style={{ color: style.text, opacity: 0.65 }}
+                    >
+                      {tierItems.length}
+                    </span>
+                  </div>
+                  <div
+                    className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
+                    style={{ backgroundColor: "#0F1828" }}
                   >
-                    {tierItems.length}
-                  </span>
+                    {tierItems.map((item) => (
+                      <ItemCard
+                        key={item.id}
+                        item={item}
+                        onEdit={getOnEdit(item)}
+                      />
+                    ))}
+                  </div>
                 </div>
-                <div
-                  className="flex flex-wrap gap-2 p-3 flex-1 min-h-[76px] content-start"
-                  style={{ backgroundColor: "#0F1828" }}
-                >
-                  {tierItems.map((item) => (
-                    <ItemCard
-                      key={item.id}
-                      item={item}
-                      onEdit={getOnEdit(item)}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Unranked pool — only relevant when viewing own or aggregate rankings */}
         {(!userfilter || userfilter === currentUserId) &&
@@ -943,9 +964,7 @@ export default function List() {
       >
         <div className="p-6 flex flex-col gap-4">
           <p className="text-rk-primary text-[17px] font-[500]">Add items</p>
-          <p className="text-[12px] text-rk-muted">
-            One item per line or comma-separated. Max 60 chars each.
-          </p>
+          <p className="text-[12px] text-rk-muted">{S.lists.addItemsHint}</p>
           <textarea
             className="bg-rk-row border border-rk-stroke rounded-[8px] p-3 text-rk-primary text-[13px] outline-none resize-none h-40 placeholder:text-rk-tertiary"
             placeholder={"Tim Tams\nKit Kat\nSnickers"}

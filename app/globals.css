@@ -36,3 +36,49 @@ body {
   0%, 100% { opacity: 0.45; }
   50%       { opacity: 0.85; }
 }
+
+/* ── Drag & drop animations ─────────────────────────────────────────────────
+   All motion is gated — when reduced-motion is preferred the classes are
+   imported but produce no visible animation.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Item settle — spring overshoot on drop */
+  @keyframes item-drop {
+    0%   { transform: scale(1.1); }
+    55%  { transform: scale(0.96); }
+    100% { transform: scale(1.0); }
+  }
+
+  /* Chip ripple — radial flash that fires from the item's centre */
+  @keyframes chip-ripple {
+    from { opacity: 0.5; transform: scale(0.6); }
+    to   { opacity: 0;   transform: scale(1.4); }
+  }
+
+  /* Tier label pulse — fires when a tier receives its very first item */
+  @keyframes tier-pulse {
+    0%   { transform: scale(1.0); }
+    35%  { transform: scale(1.1); filter: brightness(1.25); }
+    100% { transform: scale(1.0); filter: brightness(1.0); }
+  }
+
+  .rk-item-drop {
+    animation: item-drop 280ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Ripple fires as a sibling overlay; caller must set position:relative */
+  .rk-item-drop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 68%);
+    animation: chip-ripple 350ms ease-out forwards;
+    pointer-events: none;
+  }
+
+  .rk-tier-pulse {
+    animation: tier-pulse 400ms ease-out forwards;
+  }
+}

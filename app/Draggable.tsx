@@ -11,10 +11,20 @@ export default function Draggable({ id, children, url }: { id: number; children:
   const dispatch = useAppDispatch();
   const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
 
+  const dragging = !!transform;
+  const canAnimate =
+    dragging &&
+    typeof window !== "undefined" &&
+    !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const style = transform
     ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)${
+          canAnimate ? " scale(1.05) rotate(1.5deg)" : ""
+        }`,
         touchAction: "none",
+        zIndex: 50,
+        position: "relative" as const,
       }
     : { touchAction: "none" };
 
