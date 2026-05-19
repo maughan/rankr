@@ -1,25 +1,48 @@
 import { cache } from "react";
-import { headers } from "next/headers";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { resolveListParam } from "@/lib/server/resolveList";
 import { listUrl } from "@/lib/listUrl";
+import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from "@/app/siteConfig";
+import { JsonLd } from "@/app/components/JsonLd";
 import ListDetail from "./ListDetail";
 
 type Props = { params: Promise<{ id: string }> };
 
-// Cached so generateMetadata and the page share one DB round-trip per request
+interface ListMeta {
+  title: string;
+  description: string;
+  visibility: string;
+  short_id: string;
+  createdBy: { username: string; display_name: string | null };
+  _count: { items: number; rankings: number };
+  items: { id: number; name: string | null }[];
+}
+
+// Cached — generateMetadata and the page share one DB round-trip per request.
 const getListMeta = cache(async (param: string) => {
   const result = await resolveListParam(param);
   if (result.kind === "notfound") return null;
 
-  const meta = await (prisma.list as any).findUnique({
+  const list = await (prisma.list as any).findUnique({
     where: { short_id: result.list.short_id },
-    select: { title: true, description: true },
-  }) as { title: string; description: string } | null;
+    select: {
+      title: true,
+      description: true,
+      visibility: true,
+      short_id: true,
+      createdBy: { select: { username: true, display_name: true } },
+      _count: { select: { items: true, rankings: true } },
+      items: {
+        select: { id: true, name: true },
+        take: 20,
+        orderBy: { createdAt: "asc" },
+      },
+    },
+  }) as ListMeta | null;
 
-  return meta ? { result, meta } : null;
+  return list ? { result, list } : null;
 });
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -27,46 +50,79 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolved = await getListMeta(param);
   if (!resolved) return {};
 
-  const { result, meta } = resolved;
-  const canonical = listUrl(result.list);
+  const { result, list } = resolved;
+  const isPublic = list.visibility === "public";
+  const canonical = `${SITE_URL}${listUrl(result.list)}`;
 
-  const hdr = await headers();
-  const host = hdr.get("host") ?? "localhost:3000";
-  const proto = hdr.get("x-forwarded-proto") ?? "http";
-  const absoluteCanonical = `${proto}://${host}${canonical}`;
-
-  const title = `${meta.title} — tierstack.dev`;
-  const description = meta.description ||
-    `Rank ${meta.title} and compare with the community on tierstack.dev.`;
+  const title = `${list.title} — ${SITE_NAME}`;
+  const description = list.description ||
+    `${list._count.items} items ranked S to F. ${list._count.rankings} people have submitted rankings. Compare yours.`;
 
   return {
     title,
     description,
-    alternates: { canonical: absoluteCanonical },
+    robots: { index: isPublic, follow: isPublic },
+    alternates: { canonical },
     openGraph: {
       title,
       description,
       type: "website",
-      siteName: "tierstack.dev",
-      url: absoluteCanonical,
+      url: canonical,
+      images: isPublic
+        ? [{ url: `/api/og/list?id=${list.short_id}`, width: 1200, height: 675 }]
+        : undefined,
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
-      site: "@tierstack",
+      site: TWITTER_HANDLE,
+      images: isPublic ? [`/api/og/list?id=${list.short_id}`] : undefined,
     },
   };
 }
 
 export default async function ListPage({ params }: Props) {
   const { id: param } = await params;
-  const result = await resolveListParam(param);
+  const resolved = await getListMeta(param);
 
-  if (result.kind === "notfound") notFound();
+  if (!resolved) notFound();
 
+  const { result, list } = resolved;
   const canonical = listUrl(result.list);
+
   if (result.kind === "redirect") permanentRedirect(canonical);
 
-  return <ListDetail listId={result.list.id} listHref={canonical} />;
+  const absoluteCanonical = `${SITE_URL}${canonical}`;
+  const creator = list.createdBy.display_name ?? list.createdBy.username;
+  const profileUrl = `${SITE_URL}/u/${list.createdBy.username.toLowerCase()}`;
+
+  const jsonLd =
+    list.visibility === "public"
+      ? {
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: list.title,
+          description: list.description || undefined,
+          url: absoluteCanonical,
+          numberOfItems: list._count.items,
+          author: {
+            "@type": "Person",
+            name: creator,
+            url: profileUrl,
+          },
+          itemListElement: list.items.map((item, i) => ({
+            "@type": "ListItem",
+            position: i + 1,
+            name: item.name ?? "Unknown",
+          })),
+        }
+      : null;
+
+  return (
+    <>
+      {jsonLd && <JsonLd data={jsonLd} />}
+      <ListDetail listId={result.list.id} listHref={canonical} />
+    </>
+  );
 }
