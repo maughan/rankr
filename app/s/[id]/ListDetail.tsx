@@ -198,7 +198,13 @@ function Dot() {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ListDetail({ listId, listHref }: { listId: number; listHref: string }) {
+export default function ListDetail({
+  listId,
+  listHref,
+}: {
+  listId: number;
+  listHref: string;
+}) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const dispatch = useAppDispatch();
@@ -290,6 +296,7 @@ export default function ListDetail({ listId, listHref }: { listId: number; listH
         category_icon: list?.category_icon ?? "ti-stack-2",
         category_color: list?.category_color ?? "blue",
         allow_contributions: list?.allow_contributions ?? false,
+        hidden: list?.hidden ?? false,
       })
     );
   };
@@ -688,7 +695,11 @@ export default function ListDetail({ listId, listHref }: { listId: number; listH
                   <EyeOff size={11} className="text-rk-tertiary" />
                 )}
                 <p className="text-[11px] text-rk-tertiary">
-                  {list.visibility === "public" ? "Visible" : list.visibility === "hidden" ? "Hidden" : "Draft"}
+                  {list.visibility === "public"
+                    ? "Visible"
+                    : list.visibility === "hidden"
+                    ? "Hidden"
+                    : "Draft"}
                 </p>
               </div>
               <Dot />
@@ -1168,7 +1179,11 @@ export default function ListDetail({ listId, listHref }: { listId: number; listH
             <select
               value={editList.visibility}
               onChange={(e) =>
-                dispatch(uiActions.updateListMeta({ visibility: e.target.value as "public" | "hidden" | "draft" }))
+                dispatch(
+                  uiActions.updateListMeta({
+                    visibility: e.target.value as "public" | "hidden" | "draft",
+                  })
+                )
               }
               className="text-[13px] text-rk-primary bg-rk-bg border border-rk-stroke rounded-[6px] px-2 py-1"
             >
