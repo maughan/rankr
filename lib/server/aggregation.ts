@@ -25,7 +25,7 @@ export interface AggregatedList {
   title: string;
   description: string;
   img: string | null;
-  hidden: boolean;
+  visibility: "public" | "hidden" | "draft";
   is_shareable: boolean;
   anonymous_rankings_enabled: boolean;
   createdAt: Date;
@@ -115,7 +115,7 @@ export async function computeListAggregates(
     title: list.title,
     description: list.description,
     img: list.img,
-    hidden: list.hidden,
+    visibility: (list as any).visibility,
     is_shareable: (list as any).is_shareable,
     anonymous_rankings_enabled: (list as any).anonymous_rankings_enabled,
     createdAt: list.createdAt,

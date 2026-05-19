@@ -60,7 +60,7 @@ export async function GET() {
     });
 
     const filteredLists: any[] = lists.filter(
-      (list) => !list.hidden || list.createdBy.id === viewerId
+      (list) => list.visibility === "public" || list.createdBy.id === viewerId
     );
 
     const result = filteredLists.map((list) => {
@@ -121,7 +121,7 @@ export async function GET() {
         description: list.description,
         createdAt: list.createdAt.toISOString(),
         updatedAt: list.updatedAt.toISOString(),
-        hidden: list.hidden,
+        visibility: list.visibility,
         img: list.img,
         createdBy: list.createdBy,
         tags: list.tags,
@@ -169,7 +169,7 @@ export async function POST(req: Request) {
         tags: data.tags,
         createdById: decoded.sub,
         img: data.img,
-        hidden: data.hidden,
+        visibility: data.visibility ?? "draft",
         short_id: generateShortId(),
         slug: slugify(data.title ?? "list"),
         category_icon: ICON_NAMES_SET.has(data.category_icon)
@@ -237,7 +237,7 @@ export async function PATCH(req: Request) {
         ...(data.title !== undefined && { slug: slugify(data.title) }),
         description: data.description,
         img: data.img,
-        hidden: data.hidden,
+        ...(data.visibility && { visibility: data.visibility }),
         ...(data.category_icon &&
           ICON_NAMES_SET.has(data.category_icon) && {
             category_icon: data.category_icon,

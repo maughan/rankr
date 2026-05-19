@@ -20,7 +20,7 @@ const makeList = (overrides: Partial<TierList> = {}): TierList => ({
   title: "Test List",
   description: "",
   img: "",
-  hidden: false,
+  visibility: "public",
   createdAt: "2024-01-01",
   updatedAt: "2024-01-01",
   createdBy: { id: 1, username: "alice" },
@@ -67,7 +67,7 @@ describe("updateListMeta", () => {
   it("merges partial data into editList", () => {
     const state = reducer(initialState, uiActions.updateListMeta({ title: "New Title" }));
     expect(state.editList.title).toBe("New Title");
-    expect(state.editList.hidden).toBe(true); // other fields unchanged
+    expect(state.editList.visibility).toBe("draft"); // other fields unchanged
   });
 });
 
@@ -205,7 +205,7 @@ describe("openCreateListModal / closeCreateListModal", () => {
     state = reducer(state, uiActions.closeCreateListModal());
     expect(state.modals.createList).toBe(false);
     expect(state.editList.title).toBe("");
-    expect(state.editList.hidden).toBe(true);
+    expect(state.editList.visibility).toBe("draft");
   });
 });
 

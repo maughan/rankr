@@ -7,6 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum ListVisibility {
+  public
+  hidden
+  draft
+}
+
 model Tier {
   id    Int    @id @default(autoincrement())
   title String
@@ -37,15 +43,31 @@ model Item {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
-  username     String        @unique
-  password     String
-  email        String?       @unique
-  tokenVersion Int           @default(0)
-  lists        List[]
-  rankings     Ranking[]
-  items        Item[]
-  pins         UserListPin[]
+  id                   Int                   @id @default(autoincrement())
+  username             String                @unique
+  password             String
+  email                String?               @unique
+  tokenVersion         Int                   @default(0)
+  display_name         String?
+  bio                  String?
+  username_changed_at  DateTime?
+  createdAt            DateTime              @default(now())
+  lists                List[]
+  rankings             Ranking[]
+  items                Item[]
+  pins                 UserListPin[]
+  usernameHistory      UserUsernameHistory[]
+}
+
+model UserUsernameHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  username  String
+  changedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([username])
 }
 
 model List {
@@ -54,7 +76,7 @@ model List {
   description String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
-  hidden      Boolean  @default(true)
+  visibility  ListVisibility @default(draft)
   img         String?
   createdById Int
   createdBy   User     @relation(fields: [createdById], references: [id])

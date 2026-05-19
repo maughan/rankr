@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Tier, TierItem, TierList, User } from "@/app/types";
+import { Tier, TierItem, TierList, ListVisibility } from "@/app/types";
 import {
   fetchUserRankings,
   filterListResponseData,
@@ -24,7 +24,7 @@ interface UIState {
     | "title"
     | "description"
     | "img"
-    | "hidden"
+    | "visibility"
     | "category_icon"
     | "category_color"
     | "allow_contributions"
@@ -53,7 +53,7 @@ const initialState: UIState = {
     title: "",
     img: "",
     description: "",
-    hidden: true,
+    visibility: "draft" as ListVisibility,
     category_icon: "ti-stack-2",
     category_color: "blue",
     allow_contributions: false,
@@ -124,7 +124,7 @@ export const uiSlice = createSlice({
         title: "",
         img: "",
         description: "",
-        hidden: true,
+        visibility: "draft",
         category_icon: "ti-stack-2",
         category_color: "blue",
         allow_contributions: false,
@@ -138,7 +138,7 @@ export const uiSlice = createSlice({
           | "title"
           | "description"
           | "img"
-          | "hidden"
+          | "visibility"
           | "category_icon"
           | "category_color"
           | "allow_contributions"
@@ -156,7 +156,7 @@ export const uiSlice = createSlice({
         title: "",
         img: "",
         description: "",
-        hidden: true,
+        visibility: "draft",
         category_icon: "ti-stack-2",
         category_color: "blue",
         allow_contributions: false,

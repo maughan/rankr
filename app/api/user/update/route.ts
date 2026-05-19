@@ -2,6 +2,10 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
 import { prisma } from "@/lib/prisma";
+import { isReservedUsername } from "@/lib/reservedUsernames";
+
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
+const RENAME_COOLDOWN_DAYS = 30;
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -24,14 +28,39 @@ export async function POST(req: Request) {
 
     const data = await req.json();
 
-    const updatedUser = await prisma.user.update({
+    const isRename = data.username && data.username !== user.username;
+    if (isRename) {
+      if (!USERNAME_RE.test(data.username)) {
+        return new Response("Username must be 3–20 characters: letters, numbers, underscores only.", { status: 422 });
+      }
+      if (isReservedUsername(data.username)) {
+        return new Response("That username is reserved.", { status: 422 });
+      }
+      const lastChanged = (user as any).username_changed_at as Date | null;
+      if (lastChanged) {
+        const daysSince = (Date.now() - lastChanged.getTime()) / 86_400_000;
+        if (daysSince < RENAME_COOLDOWN_DAYS) {
+          const daysLeft = Math.ceil(RENAME_COOLDOWN_DAYS - daysSince);
+          return new Response(`You can rename again in ${daysLeft} day${daysLeft === 1 ? "" : "s"}.`, { status: 429 });
+        }
+      }
+      // Record the old username in history before overwriting
+      await prisma.userUsernameHistory.create({
+        data: { userId: user.id, username: user.username },
+      });
+    }
+
+    const updatedUser = await (prisma.user as any).update({
       where: {
         id: decoded.sub,
         username: decoded.username,
       },
       data: {
         email: data.email,
-        username: data.username,
+        ...(isRename && {
+          username: data.username,
+          username_changed_at: new Date(),
+        }),
       },
     });
 

@@ -286,7 +286,7 @@ export default function ListDetail({ listId, listHref }: { listId: number; listH
         title: list?.title ?? "",
         img: list?.img ?? "",
         description: list?.description ?? "",
-        hidden: list?.hidden ?? true,
+        visibility: list?.visibility ?? "draft",
         category_icon: list?.category_icon ?? "ti-stack-2",
         category_color: list?.category_color ?? "blue",
         allow_contributions: list?.allow_contributions ?? false,
@@ -682,14 +682,13 @@ export default function ListDetail({ listId, listHref }: { listId: number; listH
               )}
               <Dot />
               <div className="flex gap-1 items-center">
-                {list.hidden ? (
-                  <EyeOff size={11} className="text-rk-tertiary" />
-                ) : (
+                {list.visibility === "public" ? (
                   <Eye size={11} className="text-rk-tertiary" />
+                ) : (
+                  <EyeOff size={11} className="text-rk-tertiary" />
                 )}
-
                 <p className="text-[11px] text-rk-tertiary">
-                  {list.hidden ? "Hidden" : "Visible"}
+                  {list.visibility === "public" ? "Visible" : list.visibility === "hidden" ? "Hidden" : "Draft"}
                 </p>
               </div>
               <Dot />
@@ -1165,15 +1164,18 @@ export default function ListDetail({ listId, listHref }: { listId: number; listH
           />
 
           <label className="flex items-center justify-between">
-            <span className="text-[13px] text-rk-secondary">Hide list</span>
-            <input
-              type="checkbox"
-              checked={editList.hidden}
+            <span className="text-[13px] text-rk-secondary">Visibility</span>
+            <select
+              value={editList.visibility}
               onChange={(e) =>
-                dispatch(uiActions.updateListMeta({ hidden: e.target.checked }))
+                dispatch(uiActions.updateListMeta({ visibility: e.target.value as "public" | "hidden" | "draft" }))
               }
-              className="accent-rk-accent"
-            />
+              className="text-[13px] text-rk-primary bg-rk-bg border border-rk-stroke rounded-[6px] px-2 py-1"
+            >
+              <option value="draft">Draft</option>
+              <option value="public">Public</option>
+              <option value="hidden">Hidden</option>
+            </select>
           </label>
 
           <label className="flex items-center justify-between">
