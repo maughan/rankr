@@ -673,7 +673,13 @@ export default function ListDetail({
             )}
             <div className="flex items-center flex-wrap mt-1.5">
               <span className="text-[11px] text-rk-tertiary">
-                by {isListOwner ? "You" : list.createdBy.username}
+                by{" "}
+                <Link
+                  href={`/u/${list.createdBy.username.toLowerCase()}`}
+                  className="text-rk-primary hover:text-rk-secondary transition-colors font-bold"
+                >
+                  {isListOwner ? "You" : list.createdBy.username}
+                </Link>
               </span>
               <Dot />
               <span className="text-[11px] text-rk-tertiary">{timeAgo}</span>
