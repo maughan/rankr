@@ -176,6 +176,16 @@ export const S = {
     noRankingFound: "No ranking found for this list.",
   },
 
+  // ── Profile settings ──────────────────────────────────────────────────────
+  profile: {
+    saved: "Profile saved.",
+    saveFailed: "Couldn't save profile.",
+    accountSaved: "Account saved.",
+    accountSaveFailed: "Couldn't save account details.",
+    usernameReserved: "That username is reserved.",
+    usernameFormat: "3–20 characters: letters, numbers, underscores only.",
+  },
+
   // ── Landing (source of truth — re-exported via app/landing/content.ts) ────
   landing: {
     eyebrow: "Tier lists. But actually fun.",

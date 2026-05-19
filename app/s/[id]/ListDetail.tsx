@@ -65,6 +65,7 @@ import { Tier, TierItem } from "@/app/types";
 import TierComparison from "../../components/tierComparison";
 import { nameToColor } from "@/lib/itemColor";
 import EmptyState from "@/app/components/EmptyState";
+import NavAvatar from "@/app/components/NavAvatar";
 import { S } from "@/app/content/strings";
 import {
   ICON_NAMES,
@@ -296,7 +297,6 @@ export default function ListDetail({
         category_icon: list?.category_icon ?? "ti-stack-2",
         category_color: list?.category_color ?? "blue",
         allow_contributions: list?.allow_contributions ?? false,
-        hidden: list?.hidden ?? false,
       })
     );
   };
@@ -389,12 +389,15 @@ export default function ListDetail({
       <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
-            <div className="flex items-center gap-2">
+            <Link
+              href={isLoggedIn ? "/s" : "/"}
+              className="flex items-center gap-2"
+            >
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
                 tierstack.dev
               </span>
-            </div>
+            </Link>
             <div className="hidden sm:flex items-center gap-2">
               <Link
                 href="/s"
@@ -426,12 +429,15 @@ export default function ListDetail({
         {/* Top bar — real chrome */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
-            <div className="flex items-center gap-2">
+            <Link
+              href={isLoggedIn ? "/s" : "/"}
+              className="flex items-center gap-2"
+            >
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
                 tierstack.dev
               </span>
-            </div>
+            </Link>
           </div>
           <div className="flex sm:hidden items-center justify-between gap-2 pb-3">
             <Link
@@ -528,23 +534,19 @@ export default function ListDetail({
       <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
         <div className="flex justify-between items-center h-12">
           {/* Logo */}
-          <div className="flex items-center gap-2">
+          <Link
+            href={isLoggedIn ? "/s" : "/"}
+            className="flex items-center gap-2"
+          >
             <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
             <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
               tierstack.dev
             </span>
-          </div>
+          </Link>
           <div className="flex items-center gap-2">
             {isLoggedIn ? (
               <>
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
-                  style={{
-                    backgroundColor: nameToColor(getUserFromToken().username),
-                  }}
-                >
-                  {getUserFromToken().username[0].toUpperCase()}
-                </div>
+                <NavAvatar username={getUserFromToken().username} />
                 {/* Desktop actions */}
                 <div className="hidden sm:flex items-center gap-2">
                   {list && currentUserId === list.createdBy.id && (
@@ -671,7 +673,13 @@ export default function ListDetail({
             )}
             <div className="flex items-center flex-wrap mt-1.5">
               <span className="text-[11px] text-rk-tertiary">
-                by {isListOwner ? "You" : list.createdBy.username}
+                by{" "}
+                <Link
+                  href={`/u/${list.createdBy.username.toLowerCase()}`}
+                  className="text-rk-primary hover:text-rk-secondary transition-colors font-bold"
+                >
+                  {isListOwner ? "You" : list.createdBy.username}
+                </Link>
               </span>
               <Dot />
               <span className="text-[11px] text-rk-tertiary">{timeAgo}</span>

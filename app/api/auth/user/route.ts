@@ -10,7 +10,9 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 
 export async function POST(req: Request) {
   try {
-    const { email, username, password } = await req.json();
+    const body = await req.json();
+    const { email, password } = body;
+    const username = (body.username as string).toLowerCase();
 
     if (!USERNAME_RE.test(username)) {
       return new Response("Username must be 3–20 characters: letters, numbers, underscores only.", { status: 422 });
@@ -21,7 +23,10 @@ export async function POST(req: Request) {
 
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [{ username, email }],
+        OR: [
+          { username: { equals: username, mode: "insensitive" } as any },
+          ...(email ? [{ email }] : []),
+        ],
       },
     });
 
