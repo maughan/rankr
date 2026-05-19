@@ -81,4 +81,15 @@ body {
   .rk-tier-pulse {
     animation: tier-pulse 400ms ease-out forwards;
   }
+
+  /* Confetti — fires once on first-complete submission */
+  @keyframes confetti-fall {
+    0%   { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+    100% { opacity: 0; transform: translateY(140px) rotate(var(--rot, 360deg)) scale(0.7); }
+  }
+
+  .rk-confetti {
+    animation: confetti-fall 1.6s ease-out forwards;
+    pointer-events: none;
+  }
 }

@@ -23,7 +23,7 @@ type HeroItem = {
 
 async function fetchHeroData() {
   const list = await (prisma.list as any).findFirst({
-    where: { share_token: HERO_LIST_TOKEN },
+    where: { id: 1 },
     select: {
       id: true,
       title: true,

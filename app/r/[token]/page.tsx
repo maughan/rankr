@@ -350,7 +350,12 @@ export default function SharedListPage() {
             <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
               Unranked
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div
+              className="flex flex-wrap gap-2 p-3"
+              style={{
+                borderRadius: 9,
+              }}
+            >
               {unranked.map((item) => (
                 <ItemCard key={item.id} item={item} />
               ))}

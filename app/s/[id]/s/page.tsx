@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Pencil, Flame } from "lucide-react";
+import { X, Pencil } from "lucide-react";
 
 import { useGetListQuery, useSubmitRankingsMutation } from "@/lib/api/listsApi";
 import { S } from "@/app/content/strings";
@@ -159,58 +159,8 @@ export default function Rank() {
 
       const result = await submitRankings(userRankings).unwrap();
 
-      if (result.spicy) {
-        const { itemName, userTier, crowdTier, rankerCount } = result.spicy;
-        toast.custom(
-          () => (
-            <div
-              style={{
-                background: "#1C0A0A",
-                border: "1px solid #6B1A1A",
-                borderRadius: 10,
-                padding: "10px 14px",
-                display: "flex",
-                gap: 10,
-                alignItems: "flex-start",
-                minWidth: 260,
-                maxWidth: 340,
-              }}
-            >
-              <Flame
-                size={15}
-                style={{ color: "#E05C5C", flexShrink: 0, marginTop: 2 }}
-              />
-              <div>
-                <p
-                  style={{
-                    color: "#F0D0D0",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    marginBottom: 3,
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {S.rankings.spicyHeading}
-                </p>
-                <p style={{ color: "#B07070", fontSize: 12, lineHeight: 1.4 }}>
-                  {S.rankings.spicyDetail(
-                    itemName,
-                    userTier,
-                    crowdTier,
-                    rankerCount
-                  )}
-                </p>
-              </div>
-            </div>
-          ),
-          { duration: 5000 }
-        );
-      } else {
-        toast.success(S.rankings.saved);
-      }
-
-      router.push(`/s/${id}`);
       dispatch(uiActions.clearRankings());
+      router.push(`/s/${id}/submitted${result.isFirstSubmit ? "?first=1" : ""}`);
     } catch (e) {
       console.error(e);
       toast.error(S.rankings.saveFailed);
@@ -436,7 +386,10 @@ export default function Rank() {
             </p>
             <Droppable
               id={-1}
-              className="flex flex-wrap gap-2 min-h-[96px] content-start"
+              className="flex flex-wrap gap-2 min-h-[96px] content-start p-3"
+              style={{
+                borderRadius: 9,
+              }}
             >
               {list.items.map((item: TierItem) => {
                 const isRanked = rankings.some((tier) =>
