@@ -28,6 +28,7 @@ interface UIState {
     | "category_icon"
     | "category_color"
     | "allow_contributions"
+    | "hidden"
   >;
   rankings: Tier[];
   filteredListRankings: Tier[];
@@ -57,6 +58,7 @@ const initialState: UIState = {
     category_icon: "ti-stack-2",
     category_color: "blue",
     allow_contributions: false,
+    hidden: false,
   },
   rankings: [],
   filteredListRankings: [],
@@ -128,6 +130,7 @@ export const uiSlice = createSlice({
         category_icon: "ti-stack-2",
         category_color: "blue",
         allow_contributions: false,
+        hidden: false,
       };
     },
     openEditListModal: (
@@ -142,6 +145,7 @@ export const uiSlice = createSlice({
           | "category_icon"
           | "category_color"
           | "allow_contributions"
+          | "hidden"
         >
       >
     ) => {
@@ -160,6 +164,7 @@ export const uiSlice = createSlice({
         category_icon: "ti-stack-2",
         category_color: "blue",
         allow_contributions: false,
+        hidden: false,
       };
     },
     setUserFilter: (s, a: PayloadAction<number>) => {
