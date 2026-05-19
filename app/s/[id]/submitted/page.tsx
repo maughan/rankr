@@ -1,26 +1,32 @@
-"use client";
+import { notFound, permanentRedirect } from "next/navigation";
+import { resolveListParam } from "@/lib/server/resolveList";
+import { listUrl } from "@/lib/listUrl";
+import AuthSubmittedClient from "./AuthSubmittedClient";
 
-import { useParams, useSearchParams } from "next/navigation";
-import { useGetPayoffQuery } from "@/lib/api/listsApi";
-import PayoffPage from "@/app/components/payoff";
+type Props = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ first?: string }>;
+};
 
-export default function AuthSubmittedPage() {
-  const { id } = useParams<{ id: string }>();
-  const listId = Number(id);
-  const searchParams = useSearchParams();
-  const isFirst = searchParams.get("first") === "1";
+export default async function SubmittedPage({ params, searchParams }: Props) {
+  const { id: param } = await params;
+  const { first } = await searchParams;
+  const result = await resolveListParam(param);
 
-  const { data, isLoading, isError } = useGetPayoffQuery(listId);
+  if (result.kind === "notfound") notFound();
+
+  const canonical = listUrl(result.list);
+  if (result.kind === "redirect") {
+    permanentRedirect(
+      `${canonical}/submitted${first === "1" ? "?first=1" : ""}`
+    );
+  }
 
   return (
-    <PayoffPage
-      data={data}
-      isLoading={isLoading}
-      isError={isError}
-      isFirst={isFirst}
-      isAnon={false}
-      backHref={`/s/${id}`}
-      listId={listId}
+    <AuthSubmittedClient
+      listId={result.list.id}
+      listHref={canonical}
+      isFirst={first === "1"}
     />
   );
 }

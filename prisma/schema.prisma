@@ -63,6 +63,10 @@ model List {
   category_icon  String   @default("ti-stack-2")
   category_color String   @default("blue")
 
+  // Human-readable URL fields
+  short_id                   String    @unique
+  slug                       String
+
   // Shareable-link fields
   is_shareable               Boolean   @default(false)
   share_token                String?   @unique

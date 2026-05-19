@@ -15,6 +15,8 @@ const makeTier = (overrides: Partial<Tier> = {}): Tier => ({
 
 const makeList = (overrides: Partial<TierList> = {}): TierList => ({
   id: 1,
+  short_id: "aBcXyZ12",
+  slug: "test-list",
   title: "Test List",
   description: "",
   img: "",

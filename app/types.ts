@@ -8,6 +8,8 @@ export interface TopTierItem {
 
 export interface ListPreview {
   id: number;
+  short_id: string;
+  slug: string;
   title: string;
   description: string;
   img: string | null;
@@ -28,6 +30,8 @@ export interface ListPreview {
 
 export interface TierList {
   id: number;
+  short_id: string;
+  slug: string;
   title: string;
   description: string;
   img: string;
