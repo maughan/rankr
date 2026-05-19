@@ -2,12 +2,22 @@ import { prisma } from "@/lib/prisma";
 import * as argon2 from "argon2";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
+import { isReservedUsername } from "@/lib/reservedUsernames";
+
+const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 export async function POST(req: Request) {
   try {
     const { email, username, password } = await req.json();
+
+    if (!USERNAME_RE.test(username)) {
+      return new Response("Username must be 3–20 characters: letters, numbers, underscores only.", { status: 422 });
+    }
+    if (isReservedUsername(username)) {
+      return new Response("That username is reserved.", { status: 422 });
+    }
 
     const existingUser = await prisma.user.findFirst({
       where: {

@@ -15,7 +15,7 @@ export const createNewList = ({
   title,
   description,
   img,
-  hidden,
+  visibility,
   category_icon,
   category_color,
 }: Pick<
@@ -23,7 +23,7 @@ export const createNewList = ({
   | "title"
   | "description"
   | "img"
-  | "hidden"
+  | "visibility"
   | "category_icon"
   | "category_color"
 >): Pick<
@@ -31,7 +31,7 @@ export const createNewList = ({
   | "title"
   | "description"
   | "tags"
-  | "hidden"
+  | "visibility"
   | "img"
   | "category_icon"
   | "category_color"
@@ -39,7 +39,7 @@ export const createNewList = ({
   title,
   description,
   img,
-  hidden,
+  visibility,
   category_icon,
   category_color,
   tags: [],

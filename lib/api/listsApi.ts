@@ -119,6 +119,7 @@ export const listsApi = baseApi.injectEndpoints({
         | "hidden"
         | "category_icon"
         | "category_color"
+        | "visibility"
       >
     >({
       query: (editList) => ({

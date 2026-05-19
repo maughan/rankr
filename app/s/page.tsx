@@ -35,6 +35,7 @@ import {
   useCreateListMutation,
 } from "@/lib/api/listsApi";
 import ListCardSkeleton from "./ListCardSkeleton";
+import ListCard from "../components/list/ListCard";
 import UpdatingToast from "../components/UpdatingToast";
 import ErrorBanner from "../components/ErrorBanner";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
@@ -91,91 +92,6 @@ function CategoryIconDisplay({
 }) {
   const Comp = ICON_COMPONENTS[name as CategoryIcon];
   return Comp ? <Comp size={size} /> : null;
-}
-
-// ── List card ─────────────────────────────────────────────────────────────────
-
-function ListCard({
-  list,
-  currentUserId,
-}: {
-  list: import("@/app/types").ListPreview;
-  currentUserId: number;
-}) {
-  return (
-    <div className="relative">
-      <Link href={listUrl(list)}>
-        <div className="bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors">
-          {list.img ? (
-            <div className="relative h-36">
-              <Image
-                loader={ImageKitLoader}
-                src={list.img}
-                alt=""
-                fill
-                sizes="360px"
-                style={{ objectFit: "cover" }}
-                priority
-              />
-            </div>
-          ) : (
-            <div
-              className="h-36 p-3 flex flex-wrap gap-1.5 content-start overflow-hidden"
-              style={{ backgroundColor: "#0F1828" }}
-            >
-              {list.top_tier_items.map((item: TopTierItem) => (
-                <div
-                  key={item.id}
-                  className="w-[22px] h-[22px] rounded-[4px] flex-shrink-0"
-                  style={{ backgroundColor: item.color ?? "#334155" }}
-                />
-              ))}
-              {list.top_tier_items.length === 0 && (
-                <p className="text-[11px] text-rk-tertiary">No items yet</p>
-              )}
-            </div>
-          )}
-          <div className="px-3 py-3">
-            <p className="text-[15px] font-[500] text-rk-primary truncate">
-              {list.title}
-            </p>
-            <div className="flex items-center gap-1 mt-1 flex-wrap">
-              <span className="text-[11px] text-rk-tertiary">
-                {list.item_count} item{list.item_count !== 1 ? "s" : ""}
-              </span>
-              <span className="text-rk-tertiary text-[11px]">·</span>
-              <span className="text-[11px] text-rk-tertiary">
-                {formatDistanceStrict(new Date(list.updatedAt), new Date())} ago
-              </span>
-              {list.ranker_count > 0 && (
-                <>
-                  <span className="text-rk-tertiary text-[11px]">·</span>
-                  <span className="text-[11px] text-rk-tertiary">
-                    {list.ranker_count} stacker
-                    {list.ranker_count !== 1 ? "s" : ""}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </Link>
-
-      {list.createdBy.id === currentUserId && list.hidden && (
-        <div
-          className="absolute top-2 right-2"
-          title="Hidden"
-        >
-          <div
-            className="w-8 h-8 flex items-center justify-center rounded-[6px]"
-            style={{ backgroundColor: "rgba(10,18,32,0.72)" }}
-          >
-            <EyeClosed size={14} className="text-rk-accent" />
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
 // ── Section ───────────────────────────────────────────────────────────────────
@@ -545,15 +461,18 @@ export default function Lists() {
           />
 
           <label className="flex items-center justify-between">
-            <span className="text-[13px] text-rk-secondary">Hide list</span>
-            <input
-              type="checkbox"
-              checked={editList.hidden}
+            <span className="text-[13px] text-rk-secondary">Visibility</span>
+            <select
+              value={editList.visibility}
               onChange={(e) =>
-                dispatch(uiActions.updateListMeta({ hidden: e.target.checked }))
+                dispatch(uiActions.updateListMeta({ visibility: e.target.value as "public" | "hidden" | "draft" }))
               }
-              className="accent-rk-accent"
-            />
+              className="text-[13px] text-rk-primary bg-rk-bg border border-rk-stroke rounded-[6px] px-2 py-1"
+            >
+              <option value="draft">Draft</option>
+              <option value="public">Public</option>
+              <option value="hidden">Hidden</option>
+            </select>
           </label>
 
           <div className="flex justify-end gap-2">

@@ -1,3 +1,5 @@
+export type ListVisibility = "public" | "hidden" | "draft";
+
 export interface TopTierItem {
   id: number;
   name: string | null;
@@ -13,7 +15,7 @@ export interface ListPreview {
   title: string;
   description: string;
   img: string | null;
-  hidden: boolean;
+  visibility: ListVisibility;
   createdAt: string;
   updatedAt: string;
   createdBy: { id: number; username: string };
@@ -35,7 +37,7 @@ export interface TierList {
   title: string;
   description: string;
   img: string;
-  hidden: boolean;
+  visibility: ListVisibility;
   createdAt: string;
   updatedAt: string;
   createdBy: {
@@ -51,6 +53,7 @@ export interface TierList {
   allow_contributions: boolean;
   tiers: Array<Tier>;
   items: Array<TierItem>;
+  hidden: boolean;
 }
 
 export interface Tier {
