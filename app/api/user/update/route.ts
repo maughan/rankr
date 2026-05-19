@@ -27,6 +27,7 @@ export async function POST(req: Request) {
     }
 
     const data = await req.json();
+    if (data.username) data.username = (data.username as string).toLowerCase();
 
     const isRename = data.username && data.username !== user.username;
     if (isRename) {
@@ -50,13 +51,25 @@ export async function POST(req: Request) {
       });
     }
 
+    // display_name: null clears it; undefined means "not sent, leave alone"
+    const displayNameUpdate =
+      "display_name" in data
+        ? { display_name: data.display_name?.trim() || null }
+        : {};
+    const bioUpdate =
+      "bio" in data
+        ? { bio: data.bio?.trim() || null }
+        : {};
+
     const updatedUser = await (prisma.user as any).update({
       where: {
         id: decoded.sub,
         username: decoded.username,
       },
       data: {
-        email: data.email,
+        ...(data.email !== undefined && { email: data.email }),
+        ...displayNameUpdate,
+        ...bioUpdate,
         ...(isRename && {
           username: data.username,
           username_changed_at: new Date(),

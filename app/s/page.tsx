@@ -30,10 +30,7 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 
-import {
-  useGetListsQuery,
-  useCreateListMutation,
-} from "@/lib/api/listsApi";
+import { useGetListsQuery, useCreateListMutation } from "@/lib/api/listsApi";
 import ListCardSkeleton from "./ListCardSkeleton";
 import ListCard from "../components/list/ListCard";
 import UpdatingToast from "../components/UpdatingToast";
@@ -43,6 +40,7 @@ import { uiActions } from "@/lib/store/uiSlice";
 import { ImageKitLoader, getUserFromToken } from "@/lib/helpers";
 import Modal from "../components/modal";
 import EmptyState from "../components/EmptyState";
+import NavAvatar from "../components/NavAvatar";
 import { TopTierItem } from "@/app/types";
 import { S } from "@/app/content/strings";
 import {
@@ -113,11 +111,7 @@ function Section({
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         {lists.map((list) => (
-          <ListCard
-            key={list.id}
-            list={list}
-            currentUserId={currentUserId}
-          />
+          <ListCard key={list.id} list={list} currentUserId={currentUserId} />
         ))}
       </div>
     </div>
@@ -179,7 +173,11 @@ function ListsContent({
         </div>
       )}
       <Section title="Your stacks" lists={myLists} {...sharedProps} />
-      <Section title="Stacks you've ranked" lists={rankedLists} {...sharedProps} />
+      <Section
+        title="Stacks you've ranked"
+        lists={rankedLists}
+        {...sharedProps}
+      />
       <Section title="Explore" lists={exploreLists} {...sharedProps} />
     </div>
   );
@@ -263,23 +261,19 @@ export default function Lists() {
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
         <div className="flex justify-between items-center h-12">
-          <div className="flex items-center gap-2">
+          <Link
+            href={isLoggedIn ? "/s" : "/"}
+            className="flex items-center gap-2"
+          >
             <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
             <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
               tierstack.dev
             </span>
-          </div>
+          </Link>
           <div className="flex items-center gap-2">
             {isLoggedIn ? (
               <>
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
-                  style={{
-                    backgroundColor: nameToColor(getUserFromToken().username),
-                  }}
-                >
-                  {getUserFromToken().username[0].toUpperCase()}
-                </div>
+                <NavAvatar username={getUserFromToken().username} />
                 <div className="hidden sm:flex items-center gap-2">
                   <button
                     onClick={() => dispatch(uiActions.openCreateListModal())}
@@ -465,7 +459,11 @@ export default function Lists() {
             <select
               value={editList.visibility}
               onChange={(e) =>
-                dispatch(uiActions.updateListMeta({ visibility: e.target.value as "public" | "hidden" | "draft" }))
+                dispatch(
+                  uiActions.updateListMeta({
+                    visibility: e.target.value as "public" | "hidden" | "draft",
+                  })
+                )
               }
               className="text-[13px] text-rk-primary bg-rk-bg border border-rk-stroke rounded-[6px] px-2 py-1"
             >

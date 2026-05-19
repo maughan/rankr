@@ -23,6 +23,7 @@ import {
 } from "@/lib/helpers";
 import { Tier, TierItem } from "@/app/types";
 import { nameToColor } from "@/lib/itemColor";
+import NavAvatar from "@/app/components/NavAvatar";
 
 // ── Tier label colours ────────────────────────────────────────────────────────
 
@@ -93,7 +94,13 @@ function ItemCard({
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default function RankClient({ listId, listHref }: { listId: number; listHref: string }) {
+export default function RankClient({
+  listId,
+  listHref,
+}: {
+  listId: number;
+  listHref: string;
+}) {
   const router = useRouter();
 
   const dispatch = useAppDispatch();
@@ -105,6 +112,8 @@ export default function RankClient({ listId, listHref }: { listId: number; listH
   const { rankings, modals, selectedItems, openTier, imageModalUrl } =
     useAppSelector((state) => state.ui);
 
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(0);
   const [justDroppedId, setJustDroppedId] = useState<number | null>(null);
   const [pulsingTiers, setPulsingTiers] = useState<Set<number>>(new Set());
 
@@ -113,6 +122,14 @@ export default function RankClient({ listId, listHref }: { listId: number; listH
       dispatch(uiActions.startRanking(list));
     }
   }, [list]);
+
+  useEffect(() => {
+    if (!modals.auth) {
+      const { id } = getUserFromToken();
+      setIsLoggedIn(id > 0);
+      setCurrentUserId(id);
+    }
+  }, [modals.auth]);
 
   const handleDragEnd = (event: any) => {
     const { over, active } = event;
@@ -158,7 +175,9 @@ export default function RankClient({ listId, listHref }: { listId: number; listH
       const result = await submitRankings(userRankings).unwrap();
 
       dispatch(uiActions.clearRankings());
-      router.push(`${listHref}/submitted${result.isFirstSubmit ? "?first=1" : ""}`);
+      router.push(
+        `${listHref}/submitted${result.isFirstSubmit ? "?first=1" : ""}`
+      );
     } catch (e) {
       console.error(e);
       toast.error(S.rankings.saveFailed);
@@ -171,12 +190,15 @@ export default function RankClient({ listId, listHref }: { listId: number; listH
         {/* Top bar — real chrome */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
-            <div className="flex items-center gap-2">
+            <Link
+              href={isLoggedIn ? "/s" : "/"}
+              className="flex items-center gap-2"
+            >
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
                 tierstack.dev
               </span>
-            </div>
+            </Link>
             <div className="hidden sm:flex items-center gap-2">
               <Link
                 href={listHref}
@@ -190,7 +212,7 @@ export default function RankClient({ listId, listHref }: { listId: number; listH
               </div>
             </div>
           </div>
-          <div className="flex sm:hidden items-center gap-2 pb-3">
+          <div className="flex sm:hidden items-center gap-2 pb-3 justify-between">
             <Link
               href={listHref}
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
@@ -204,7 +226,7 @@ export default function RankClient({ listId, listHref }: { listId: number; listH
           </div>
         </div>
 
-        <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl">
+        <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
           {/* Header skeleton */}
           <div className="flex flex-col gap-2">
             <Skeleton height={20} width="50%" />
@@ -231,21 +253,17 @@ export default function RankClient({ listId, listHref }: { listId: number; listH
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
-            <div className="flex items-center gap-2">
+            <Link
+              href={isLoggedIn ? "/s" : "/"}
+              className="flex items-center gap-2"
+            >
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
               <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
                 tierstack.dev
               </span>
-            </div>
+            </Link>
             <div className="flex items-center gap-2">
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer flex-shrink-0"
-                style={{
-                  backgroundColor: nameToColor(getUserFromToken().username),
-                }}
-              >
-                {getUserFromToken().username[0].toUpperCase()}
-              </div>
+              <NavAvatar username={getUserFromToken().username} />
               <div className="hidden sm:flex items-center justify-between gap-2">
                 <Link
                   href={listHref}

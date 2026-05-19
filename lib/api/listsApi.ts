@@ -116,7 +116,6 @@ export const listsApi = baseApi.injectEndpoints({
         | "title"
         | "description"
         | "img"
-        | "hidden"
         | "category_icon"
         | "category_color"
         | "visibility"

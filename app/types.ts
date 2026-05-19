@@ -53,7 +53,6 @@ export interface TierList {
   allow_contributions: boolean;
   tiers: Array<Tier>;
   items: Array<TierItem>;
-  hidden: boolean;
 }
 
 export interface Tier {
