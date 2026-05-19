@@ -217,7 +217,7 @@ export default function EditItemModal({
               Name
             </label>
             <input
-              className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-[13px] outline-none placeholder:text-rk-tertiary focus:border-rk-muted transition-colors"
+              className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary focus:border-rk-muted transition-colors"
               value={name}
               onChange={(e) => setName(e.target.value)}
               maxLength={60}
@@ -234,7 +234,7 @@ export default function EditItemModal({
               </span>
             </label>
             <input
-              className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-[13px] outline-none placeholder:text-rk-tertiary focus:border-rk-muted transition-colors w-24 uppercase"
+              className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary focus:border-rk-muted transition-colors w-24 uppercase"
               value={shortLabel}
               onChange={(e) =>
                 setShortLabel(e.target.value.toUpperCase().slice(0, 3))

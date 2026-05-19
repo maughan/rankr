@@ -336,7 +336,7 @@ export default function Lists() {
           <p className="text-rk-primary text-[17px] font-[500]">Create list</p>
 
           <input
-            className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-[13px] outline-none placeholder:text-rk-tertiary"
+            className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary"
             placeholder="List name"
             value={editList.title}
             onChange={(e) =>
@@ -346,7 +346,7 @@ export default function Lists() {
           />
 
           <input
-            className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-[13px] outline-none placeholder:text-rk-tertiary"
+            className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary"
             placeholder="Description"
             value={editList.description}
             onChange={(e) =>
