@@ -98,7 +98,7 @@ export default function AuthModal() {
   };
 
   const inputCls =
-    "bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-[13px] outline-none placeholder:text-rk-tertiary w-full focus:border-rk-muted transition-colors";
+    "bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary w-full focus:border-rk-muted transition-colors";
 
   return (
     <Modal open={open} handleClose={() => dispatch(uiActions.closeAuthModal())}>
