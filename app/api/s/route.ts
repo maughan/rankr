@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 import { ICON_NAMES_SET, COLOR_NAMES_SET } from "@/lib/categoryIcons";
+import { generateShortId, slugify } from "@/lib/listUrl";
 
 function verifyToken(token: string) {
   return jwt.verify(token, process.env.JWT_SECRET!) as unknown as {
@@ -114,6 +115,8 @@ export async function GET() {
 
       return {
         id: list.id,
+        short_id: list.short_id,
+        slug: list.slug,
         title: list.title,
         description: list.description,
         createdAt: list.createdAt.toISOString(),
@@ -167,6 +170,8 @@ export async function POST(req: Request) {
         createdById: decoded.sub,
         img: data.img,
         hidden: data.hidden,
+        short_id: generateShortId(),
+        slug: slugify(data.title ?? "list"),
         category_icon: ICON_NAMES_SET.has(data.category_icon)
           ? data.category_icon
           : "ti-stack-2",
@@ -228,6 +233,8 @@ export async function PATCH(req: Request) {
       where: { id: data.id, createdById: user.id },
       data: {
         title: data.title,
+        // Regenerate slug whenever the title changes so canonical redirects stay fresh
+        ...(data.title !== undefined && { slug: slugify(data.title) }),
         description: data.description,
         img: data.img,
         hidden: data.hidden,

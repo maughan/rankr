@@ -52,6 +52,7 @@ import {
   CategoryColor,
 } from "@/lib/categoryIcons";
 import { nameToColor } from "@/lib/itemColor";
+import { listUrl } from "@/lib/listUrl";
 
 // ── Icon registry ─────────────────────────────────────────────────────────────
 
@@ -103,7 +104,7 @@ function ListCard({
 }) {
   return (
     <div className="relative">
-      <Link href={`/s/${list.id}`}>
+      <Link href={listUrl(list)}>
         <div className="bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors">
           {list.img ? (
             <div className="relative h-36">
