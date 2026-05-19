@@ -170,8 +170,8 @@ export default function AnonRankPage() {
         return;
       }
 
-      toast.success(S.rankings.submitted);
-      router.push(`/r/${token}`);
+      const { isFirstSubmit } = await res.json();
+      router.push(`/r/${token}/submitted${isFirstSubmit ? "?first=1" : ""}`);
     } catch {
       toast.error(S.rankings.submitError);
     } finally {
@@ -431,7 +431,10 @@ export default function AnonRankPage() {
             </p>
             <Droppable
               id={-1}
-              className="flex flex-wrap gap-2 min-h-[96px] content-start"
+              className="flex flex-wrap gap-2 min-h-[96px] content-start p-3"
+              style={{
+                borderRadius: 9,
+              }}
             >
               {unranked.map((item) => (
                 <Draggable key={item.id} id={item.id} url={item?.img || ""}>

@@ -121,6 +121,61 @@ export const S = {
     },
   },
 
+  // ── Payoff screen ─────────────────────────────────────────────────────────
+  payoff: {
+    eyebrow: "ranking submitted",
+
+    // Page title — four states: first/re × complete/partial
+    titleFirstComplete:    "Done.",
+    titleFirstPartial:     "Saved.",
+    titleResubmitComplete: "Updated.",
+    titleResubmitPartial:  "Hot reload.",
+
+    // Subtitle
+    subtitleComplete: (n: number, total: number) =>
+      `${n} of ${total} ranked. Strong opinions, hold for applause.`,
+    subtitlePartial: (n: number, total: number) =>
+      `${n} of ${total} ranked. Come back to finish.`,
+
+    // Alignment stat
+    alignedWith: (n: number) =>
+      `aligned with ${n} other ranker${n !== 1 ? "s" : ""}`,
+    alignedFew: (n: number) =>
+      `aligned with ${n} other${n !== 1 ? "s" : ""} — results may shift`,
+    alignedFirst: "First in. No comparisons yet — you're the standard.",
+
+    // Hottest take card
+    hottestTakeEyebrow: "your hottest take",
+    hottestTakeSupportLine: (tier: string, pct: number, dir: "above" | "below") =>
+      dir === "above"
+        ? `${pct}% of rankers put it in ${tier}-tier or lower`
+        : `${pct}% of rankers put it in ${tier}-tier or higher`,
+
+    // Closest match card
+    closestMatchEyebrow: "closest taste match",
+    closestMatchDetail: (handle: string, n: number, total: number) =>
+      `@${handle} agrees with you on ${n} of ${total}`,
+    closestMatchFew: "most aligned so far",
+
+    // Extras row labels
+    contrarianLabel: "contrarian picks",
+    perfectMatchLabel: "perfect matches",
+    sTierLabel: "in your S-tier",
+
+    // CTAs
+    ctaShare:      "Share my hot takes",
+    ctaShareFirst: "Share your ranking",
+    ctaCompare:    "See the full comparison",
+    ctaFinish:     "Finish ranking",
+    ctaSignup:     "Save your ranking to come back later",
+
+    // Footer
+    browseLists: "Browse more lists",
+
+    // No data
+    noRankingFound: "No ranking found for this list.",
+  },
+
   // ── Landing (source of truth — re-exported via app/landing/content.ts) ────
   landing: {
     eyebrow: "Tier lists. But actually fun.",

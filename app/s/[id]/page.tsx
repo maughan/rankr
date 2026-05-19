@@ -861,7 +861,7 @@ export default function List() {
                   </div>
                   <div
                     className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
-                    style={{ backgroundColor: "#0F1828" }}
+                    style={{ backgroundColor: "#0F1828", borderRadius: 9 }}
                   >
                     {tierItems.map((item) => (
                       <ItemCard
@@ -884,7 +884,7 @@ export default function List() {
             <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
               Unstacked
             </p>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 p-3">
               {isLoggedIn &&
                 unranked.map((item: TierItem) => (
                   <ItemCard

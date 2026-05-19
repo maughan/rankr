@@ -87,7 +87,7 @@ export async function POST(req: Request, { params }: Params) {
     })),
   });
 
-  const res = NextResponse.json({ ok: true }, { status: 201 });
+  const res = NextResponse.json({ ok: true, isFirstSubmit: isNewSession }, { status: 201 });
 
   if (isNewSession) {
     res.cookies.set(anonSessionCookieAttrs(sessionToken));

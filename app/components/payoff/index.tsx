@@ -1,0 +1,675 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { X, Flame, Sparkles, Check, Trophy, ArrowRight } from "lucide-react";
+import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
+import Skeleton from "@/app/components/Skeleton";
+import { PayoffData } from "@/lib/api/listsApi";
+import { S } from "@/app/content/strings";
+import { useAppDispatch } from "@/lib/hooks";
+import { uiActions } from "@/lib/store/uiSlice";
+
+// ── Confetti ──────────────────────────────────────────────────────────────────
+
+const TIER_COLORS = [
+  "#C44545",
+  "#E08C2C",
+  "#97C459",
+  "#5DCAA5",
+  "#85B7EB",
+  "#AFA9EC",
+];
+
+const CONFETTI_PARTICLES: {
+  left: number;
+  top: number;
+  delay: number;
+  color: string;
+  rot: number;
+  w: number;
+  h: number;
+}[] = [
+  { left: 8, top: 0, delay: 0, color: TIER_COLORS[0], rot: 320, w: 8, h: 11 },
+  {
+    left: 18,
+    top: 12,
+    delay: 60,
+    color: TIER_COLORS[1],
+    rot: -270,
+    w: 7,
+    h: 9,
+  },
+  { left: 30, top: 4, delay: 120, color: TIER_COLORS[2], rot: 400, w: 9, h: 7 },
+  {
+    left: 42,
+    top: 16,
+    delay: 40,
+    color: TIER_COLORS[3],
+    rot: -350,
+    w: 7,
+    h: 10,
+  },
+  { left: 55, top: 6, delay: 200, color: TIER_COLORS[4], rot: 290, w: 8, h: 8 },
+  {
+    left: 67,
+    top: 14,
+    delay: 80,
+    color: TIER_COLORS[5],
+    rot: -420,
+    w: 9,
+    h: 7,
+  },
+  {
+    left: 78,
+    top: 2,
+    delay: 160,
+    color: TIER_COLORS[0],
+    rot: 380,
+    w: 7,
+    h: 11,
+  },
+  {
+    left: 90,
+    top: 18,
+    delay: 240,
+    color: TIER_COLORS[1],
+    rot: -310,
+    w: 8,
+    h: 9,
+  },
+  {
+    left: 13,
+    top: 26,
+    delay: 300,
+    color: TIER_COLORS[2],
+    rot: 430,
+    w: 9,
+    h: 7,
+  },
+  {
+    left: 25,
+    top: 30,
+    delay: 140,
+    color: TIER_COLORS[3],
+    rot: -280,
+    w: 7,
+    h: 10,
+  },
+  {
+    left: 48,
+    top: 22,
+    delay: 350,
+    color: TIER_COLORS[4],
+    rot: 360,
+    w: 8,
+    h: 8,
+  },
+  {
+    left: 62,
+    top: 28,
+    delay: 100,
+    color: TIER_COLORS[5],
+    rot: -340,
+    w: 9,
+    h: 7,
+  },
+  {
+    left: 73,
+    top: 20,
+    delay: 220,
+    color: TIER_COLORS[0],
+    rot: 410,
+    w: 7,
+    h: 11,
+  },
+  {
+    left: 85,
+    top: 8,
+    delay: 380,
+    color: TIER_COLORS[1],
+    rot: -300,
+    w: 8,
+    h: 9,
+  },
+];
+
+// ── Props ─────────────────────────────────────────────────────────────────────
+
+export interface PayoffPageProps {
+  data: PayoffData | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  isFirst: boolean;
+  isAnon: boolean;
+  backHref: string;
+  listId?: number;
+  shareToken?: string;
+}
+
+// ── Nav ───────────────────────────────────────────────────────────────────────
+
+function PayoffNav({ backHref }: { backHref: string }) {
+  return (
+    <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+      <div className="flex justify-between items-center h-12">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+          <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+            tierstack.dev
+          </span>
+        </div>
+        <Link
+          href={backHref}
+          aria-label="Back to list"
+          className="w-8 h-8 flex items-center justify-center rounded-[8px] text-rk-muted hover:text-rk-primary hover:bg-rk-surface transition-colors"
+        >
+          <X size={16} strokeWidth={2} />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// ── Loading skeleton ──────────────────────────────────────────────────────────
+
+function PayoffSkeleton() {
+  return (
+    <div className="flex flex-col gap-8">
+      {/* Hero */}
+      <div className="flex flex-col items-center gap-4 pt-6 pb-4">
+        <Skeleton width={120} height={11} />
+        <Skeleton width="50%" height={32} />
+        <Skeleton width="70%" height={13} />
+        <div className="mt-2 flex flex-col items-center gap-1">
+          <Skeleton width={96} height={64} />
+          <Skeleton width={160} height={11} />
+        </div>
+      </div>
+      {/* Featured cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="rounded-[12px] border border-rk-stroke bg-rk-surface p-4 flex flex-col gap-3">
+          <Skeleton width={100} height={10} />
+          <Skeleton width="80%" height={20} />
+          <Skeleton width="60%" height={11} />
+        </div>
+        <div className="rounded-[12px] border border-rk-stroke bg-rk-surface p-4 flex flex-col gap-3">
+          <Skeleton width={100} height={10} />
+          <Skeleton width="80%" height={20} />
+          <Skeleton width="60%" height={11} />
+        </div>
+      </div>
+      {/* Extras */}
+      <div className="grid grid-cols-3 gap-3">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="rounded-[12px] border border-rk-stroke bg-rk-surface p-4 flex flex-col items-center gap-2"
+          >
+            <Skeleton width={28} height={28} circle />
+            <Skeleton width={40} height={22} />
+            <Skeleton width={64} height={10} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Hero ──────────────────────────────────────────────────────────────────────
+
+export function PayoffHero({
+  data,
+  isFirst,
+  title,
+}: PayoffPageProps & { title: string }) {
+  if (!data) return null;
+
+  const { completion, alignment } = data;
+  const shouldConfetti = isFirst && completion.isComplete;
+
+  const subtitle = completion.isComplete
+    ? S.payoff.subtitleComplete(completion.rankedCount, completion.totalCount)
+    : S.payoff.subtitlePartial(completion.rankedCount, completion.totalCount);
+
+  // rankerCount includes the current user; subtract 1 for "other rankers"
+  const otherCount = Math.max(0, alignment.rankerCount - 1);
+  const isFirstRanker = otherCount === 0;
+  const isFewRankers = otherCount >= 1 && otherCount < 4;
+
+  return (
+    <div className="relative overflow-hidden pt-6 pb-2 flex flex-col items-center text-center gap-3">
+      {/* Confetti — only rendered when isFirst + isComplete; animation gated in CSS */}
+      {shouldConfetti &&
+        CONFETTI_PARTICLES.map((p, i) => (
+          <span
+            key={i}
+            className="rk-confetti absolute rounded-[2px]"
+            style={
+              {
+                left: `${p.left}%`,
+                top: `${p.top}%`,
+                width: p.w,
+                height: p.h,
+                backgroundColor: p.color,
+                animationDelay: `${p.delay}ms`,
+                "--rot": `${p.rot}deg`,
+              } as React.CSSProperties
+            }
+          />
+        ))}
+
+      {/* Eyebrow */}
+      <p className="relative z-10 text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest">
+        {S.payoff.eyebrow}
+      </p>
+
+      {/* Title */}
+      <p
+        className="relative z-10 text-rk-primary font-[600] leading-none"
+        style={{ fontSize: 48, letterSpacing: "-1.5px" }}
+      >
+        {title}
+      </p>
+
+      {/* Subtitle */}
+      <p className="relative z-10 text-[13px] text-rk-muted leading-snug max-w-[280px]">
+        {subtitle}
+      </p>
+
+      {/* Alignment stat */}
+      {isFirstRanker ? (
+        <p className="relative z-10 mt-3 text-[13px] text-rk-secondary italic leading-snug max-w-[240px]">
+          {S.payoff.alignedFirst}
+        </p>
+      ) : (
+        <div className="relative z-10 mt-3 flex flex-col items-center gap-1">
+          <div className="flex items-end gap-[2px] leading-none">
+            <span
+              className="font-[700] text-rk-accent leading-none tabular-nums"
+              style={{ fontSize: 72 }}
+            >
+              {alignment.pct}
+            </span>
+            <span
+              className="font-[600] text-rk-accent"
+              style={{ fontSize: 30, paddingBottom: 6 }}
+            >
+              %
+            </span>
+          </div>
+          <p className="text-[12px] text-rk-muted">
+            {isFewRankers
+              ? S.payoff.alignedFew(otherCount)
+              : S.payoff.alignedWith(otherCount)}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Tier badge ────────────────────────────────────────────────────────────────
+
+const TIER_STYLE: Record<string, { bg: string; text: string }> = {
+  S: { bg: "#C44545", text: "#ffffff" },
+  A: { bg: "#E08C2C", text: "#2A1A04" },
+  B: { bg: "#97C459", text: "#173404" },
+  C: { bg: "#5DCAA5", text: "#04342C" },
+  D: { bg: "#85B7EB", text: "#042C53" },
+  F: { bg: "#AFA9EC", text: "#26215C" },
+};
+
+const TIER_ORDER = ["S", "A", "B", "C", "D", "F"];
+
+function TierBadge({ tier }: { tier: string }) {
+  const s = TIER_STYLE[tier] ?? { bg: "#334155", text: "#ffffff" };
+  return (
+    <span
+      className="inline-flex items-center justify-center w-8 h-8 rounded-[6px] text-[15px] font-[600] select-none flex-shrink-0"
+      style={{ backgroundColor: s.bg, color: s.text }}
+    >
+      {tier}
+    </span>
+  );
+}
+
+// ── Hottest take card ─────────────────────────────────────────────────────────
+
+function HottestTakeCard({
+  take,
+}: {
+  take: NonNullable<PayoffData["hottestTake"]>;
+}) {
+  const yourIdx = TIER_ORDER.indexOf(take.yourTier);
+  const crowdIdx = TIER_ORDER.indexOf(take.crowdMeanTier);
+  const dir: "above" | "below" = yourIdx < crowdIdx ? "above" : "below";
+
+  return (
+    <div className="rounded-[12px] border border-rk-stroke bg-rk-surface p-4 flex flex-col gap-3 justify-center items-center">
+      <div className="flex items-center gap-1.5">
+        <Flame size={12} className="text-rk-accent" />
+        <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest">
+          {S.payoff.hottestTakeEyebrow}
+        </p>
+      </div>
+
+      <p className="text-rk-primary font-[600] text-[18px] leading-snug">
+        {take.itemName}
+      </p>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-rk-muted">you</span>
+          <TierBadge tier={take.yourTier} />
+        </div>
+        <span className="text-rk-tertiary text-[13px]">·</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[11px] text-rk-muted">crowd</span>
+          <TierBadge tier={take.crowdMeanTier} />
+        </div>
+        <span
+          className="text-[11px] font-[500] px-2 py-[3px] rounded-full"
+          style={{ backgroundColor: "rgba(224,92,92,0.12)", color: "#E05C5C" }}
+        >
+          {take.delta} tiers apart
+        </span>
+      </div>
+
+      <p className="text-[12px] text-rk-muted leading-snug">
+        {S.payoff.hottestTakeSupportLine(
+          take.crowdMeanTier,
+          take.pctOfRankersDisagree,
+          dir
+        )}
+      </p>
+    </div>
+  );
+}
+
+// ── Closest match card ────────────────────────────────────────────────────────
+
+function ClosestMatchCard({
+  match,
+  isFew,
+}: {
+  match: NonNullable<PayoffData["closestMatch"]>;
+  isFew: boolean;
+}) {
+  return (
+    <div className="rounded-[12px] border border-rk-stroke bg-rk-surface p-4 flex flex-col gap-3 justify-center items-center">
+      <div className="flex items-center gap-1.5">
+        <Sparkles size={12} className="text-rk-accent" />
+        <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest">
+          {S.payoff.closestMatchEyebrow}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {/* Me */}
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-[600] text-white flex-shrink-0"
+          style={{ backgroundColor: "#4A8AE8" }}
+        >
+          me
+        </div>
+
+        <ArrowRight size={13} className="text-rk-tertiary flex-shrink-0" />
+
+        {/* Them */}
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-[14px] font-[600] text-white flex-shrink-0"
+          style={{ backgroundColor: match.avatarColor }}
+        >
+          {(match.handle[0] ?? "?").toUpperCase()}
+        </div>
+
+        <div className="flex flex-col leading-none gap-1">
+          <span
+            className="font-[700] text-rk-primary tabular-nums leading-none"
+            style={{ fontSize: 26 }}
+          >
+            {match.alignmentPct}%
+          </span>
+          <span className="text-[11px] text-rk-muted">aligned</span>
+        </div>
+      </div>
+
+      <p className="text-[12px] text-rk-muted leading-snug">
+        {isFew
+          ? S.payoff.closestMatchFew
+          : S.payoff.closestMatchDetail(
+              match.handle,
+              match.agreedCount,
+              match.totalCount
+            )}
+      </p>
+    </div>
+  );
+}
+
+// ── Featured (hottest take + closest match) ───────────────────────────────────
+
+export function PayoffFeatured({ data }: PayoffPageProps) {
+  if (!data) return null;
+  const { hottestTake, closestMatch, alignment } = data;
+  if (!hottestTake && !closestMatch) return null;
+
+  // "few rankers" = 1-3 others besides the current user
+  const isFewRankers = alignment.rankerCount - 1 < 4;
+
+  const cardCount = [hottestTake, closestMatch].filter(Boolean).length;
+
+  return (
+    <div
+      className={`grid gap-3 ${
+        cardCount === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
+      }`}
+    >
+      {hottestTake && <HottestTakeCard take={hottestTake} />}
+      {closestMatch && (
+        <ClosestMatchCard match={closestMatch} isFew={isFewRankers} />
+      )}
+    </div>
+  );
+}
+
+// ── Extras row ────────────────────────────────────────────────────────────────
+
+export function PayoffExtras({ extras }: { extras: PayoffData["extras"] }) {
+  const tiles = [
+    {
+      icon: <Flame size={16} className="text-rk-accent" />,
+      value: extras.contrarianPicks,
+      label: S.payoff.contrarianLabel,
+    },
+    {
+      icon: <Check size={16} className="text-rk-accent" />,
+      value: extras.perfectMatchCount,
+      label: S.payoff.perfectMatchLabel,
+    },
+    {
+      icon: <Trophy size={16} className="text-rk-accent" />,
+      value: extras.sTierCount,
+      label: S.payoff.sTierLabel,
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {tiles.map(({ icon, value, label }) => (
+        <div
+          key={label}
+          className="rounded-[12px] border border-rk-stroke bg-rk-surface p-4 flex flex-col items-center gap-2 text-center"
+        >
+          <div
+            className="w-9 h-9 rounded-[8px] flex items-center justify-center flex-shrink-0"
+            style={{
+              backgroundColor: "rgba(74,138,232,0.08)",
+              border: "1px solid rgba(74,138,232,0.16)",
+            }}
+          >
+            {icon}
+          </div>
+          <p
+            className="font-[600] text-rk-primary leading-none tabular-nums"
+            style={{ fontSize: 26 }}
+          >
+            {value}
+          </p>
+          <p className="text-[11px] text-rk-muted leading-tight">{label}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── CTAs ──────────────────────────────────────────────────────────────────────
+
+export function PayoffCtas({
+  data,
+  isFirst,
+  isComplete,
+  backHref,
+}: PayoffPageProps & { isComplete: boolean }) {
+  const [shareOpen, setShareOpen] = useState(false);
+
+  if (!data) return null;
+
+  const shareToken = data.shareToken;
+  const rankHref = `${backHref}/s`;
+  const shareLabel =
+    isFirst && isComplete ? S.payoff.ctaShareFirst : S.payoff.ctaShare;
+
+  return (
+    <>
+      <div className="flex flex-col gap-3">
+        {/* Share CTA — only when the list has sharing enabled */}
+        {shareToken && (
+          <button
+            onClick={() => setShareOpen(true)}
+            className="w-full py-2.5 rounded-[10px] text-[14px] font-[500] bg-rk-accent text-white hover:opacity-90 transition-opacity cursor-pointer"
+          >
+            {shareLabel}
+          </button>
+        )}
+
+        {/* Comparison CTA */}
+        <Link
+          href={backHref}
+          className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] border border-rk-stroke text-rk-secondary text-center hover:border-rk-secondary hover:text-rk-primary transition-colors"
+        >
+          {S.payoff.ctaCompare}
+        </Link>
+
+        {/* Finish ranking — partial submissions only */}
+        {!isComplete && (
+          <Link
+            href={rankHref}
+            className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] text-rk-muted text-center hover:text-rk-secondary transition-colors"
+          >
+            {S.payoff.ctaFinish} →
+          </Link>
+        )}
+      </div>
+
+      {shareToken && (
+        <ShareCardModal
+          token={shareToken}
+          template="hot-takes"
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+// ── Anon nudge ────────────────────────────────────────────────────────────────
+
+function PayoffAnonNudge() {
+  const dispatch = useAppDispatch();
+  return (
+    <div className="flex justify-center">
+      <button
+        onClick={() => dispatch(uiActions.openAuthModal())}
+        className="text-[12px] text-rk-muted hover:text-rk-secondary transition-colors italic"
+      >
+        {S.payoff.ctaSignup}
+      </button>
+    </div>
+  );
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+
+function PayoffFoot() {
+  return (
+    <div className="flex justify-center pt-2 pb-8">
+      <Link
+        href="/s"
+        className="text-[12px] text-rk-tertiary hover:text-rk-muted transition-colors"
+      >
+        {S.payoff.browseLists}
+      </Link>
+    </div>
+  );
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
+
+export default function PayoffPage(props: PayoffPageProps) {
+  const { data, isLoading, isError, backHref, isFirst, isAnon } = props;
+
+  const isComplete = data?.completion.isComplete ?? false;
+  const title = isFirst
+    ? isComplete
+      ? S.payoff.titleFirstComplete
+      : S.payoff.titleFirstPartial
+    : isComplete
+    ? S.payoff.titleResubmitComplete
+    : S.payoff.titleResubmitPartial;
+
+  if (isError) {
+    return (
+      <div className="fixed inset-0 z-10 bg-rk-page flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3 text-center px-4">
+          <p className="text-rk-primary text-[17px] font-[500]">
+            {S.payoff.noRankingFound}
+          </p>
+          <Link
+            href={backHref}
+            className="mt-2 px-4 py-2 text-[13px] font-[500] border border-rk-stroke text-rk-secondary rounded-[8px] hover:text-rk-primary transition-colors"
+          >
+            Back to list
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+      <PayoffNav backHref={backHref} />
+
+      <div className="px-4 sm:px-8 py-8 max-w-2xl mx-auto flex flex-col gap-8">
+        {isLoading ? (
+          <PayoffSkeleton />
+        ) : (
+          <>
+            <PayoffHero {...props} title={title} />
+            {data && (
+              <>
+                <PayoffFeatured {...props} />
+                <PayoffExtras extras={data.extras} />
+                <PayoffCtas {...props} isComplete={isComplete} />
+                {isAnon && <PayoffAnonNudge />}
+                {!isAnon && <PayoffFoot />}
+              </>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}

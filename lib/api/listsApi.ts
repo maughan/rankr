@@ -2,17 +2,40 @@ import { baseApi } from "./baseApi";
 import { ListPreview, TierList, TierItem } from "@/app/types";
 import { createNewList, processResponseData } from "@/lib/helpers";
 
-export interface SpicyTake {
-  itemName: string;
-  userTier: string;
-  crowdTier: string;
-  delta: number;
-  rankerCount: number;
+export interface SubmitRankingsResponse {
+  isFirstSubmit: boolean;
 }
 
-export interface SubmitRankingsResponse {
-  rankings: unknown[];
-  spicy: SpicyTake | null;
+export interface PayoffData {
+  completion: { rankedCount: number; totalCount: number; isComplete: boolean };
+  alignment: {
+    pct: number;
+    withinOneTier: number;
+    perfectMatches: number;
+    rankerCount: number;
+  };
+  hottestTake: {
+    itemId: number;
+    itemName: string;
+    yourTier: string;
+    crowdMeanTier: string;
+    delta: number;
+    pctOfRankersDisagree: number;
+  } | null;
+  closestMatch: {
+    userId: number;
+    handle: string;
+    avatarColor: string;
+    alignmentPct: number;
+    agreedCount: number;
+    totalCount: number;
+  } | null;
+  extras: {
+    contrarianPicks: number;
+    perfectMatchCount: number;
+    sTierCount: number;
+  };
+  shareToken: string | null;
 }
 
 export interface SharedListItem {
@@ -260,6 +283,14 @@ export const listsApi = baseApi.injectEndpoints({
     >({
       query: (token) => `/r/${token}/creator-ranking`,
     }),
+
+    getPayoff: builder.query<PayoffData, number>({
+      query: (listId) => `/s/${listId}/payoff`,
+    }),
+
+    getAnonPayoff: builder.query<PayoffData, string>({
+      query: (token) => `/r/${token}/payoff`,
+    }),
   }),
 });
 
@@ -283,4 +314,6 @@ export const {
   useGetSharedListQuery,
   useGetMyRankingQuery,
   useGetCreatorRankingQuery,
+  useGetPayoffQuery,
+  useGetAnonPayoffQuery,
 } = listsApi;
