@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import Image from "next/image";
 import {
   Pencil,
-  LayoutGrid,
   Lock,
   Share2,
   EyeOff,
@@ -61,7 +60,7 @@ import ShareModal from "./ShareModal";
 import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
 import { ImageKitLoader, getUserFromToken } from "@/lib/helpers";
 import { selectRankersByListId } from "@/lib/selectors";
-import { Tier, TierItem } from "@/app/types";
+import { TierItem } from "@/app/types";
 import TierComparison from "../../components/tierComparison";
 import { nameToColor } from "@/lib/itemColor";
 import EmptyState from "@/app/components/EmptyState";
@@ -75,6 +74,7 @@ import {
   CategoryColor,
 } from "@/lib/categoryIcons";
 import ImageKit from "imagekit-javascript";
+import LandingFooter from "@/app/landing/LandingFooter";
 
 // ── Tier label colours from spec ────────────────────────────────────────────
 
@@ -386,7 +386,7 @@ export default function ListDetail({
 
   if (isError) {
     return (
-      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
             <Link
@@ -425,7 +425,7 @@ export default function ListDetail({
 
   if (isLoading || !list) {
     return (
-      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
         {/* Top bar — real chrome */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
@@ -529,7 +529,7 @@ export default function ListDetail({
   };
 
   return (
-    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
         <div className="flex justify-between items-center h-12">
@@ -967,6 +967,8 @@ export default function ListDetail({
           </button>
         )}
       </div>
+
+      <LandingFooter />
 
       {/* ── Bulk add modal ────────────────────────────────────────────────── */}
       <Modal

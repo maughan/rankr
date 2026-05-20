@@ -35,7 +35,7 @@ export async function GET() {
     });
 
     return NextResponse.json({ lists });
-  } catch (e) {
+  } catch {
     return NextResponse.error();
   }
 }

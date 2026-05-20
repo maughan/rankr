@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { resolveListParam } from "@/lib/server/resolveList";
 import { listUrl } from "@/lib/listUrl";
 import RankClient from "./RankClient";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 type Props = { params: Promise<{ id: string }> };
 

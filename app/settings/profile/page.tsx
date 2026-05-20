@@ -5,7 +5,6 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { useAppDispatch } from "@/lib/hooks";
-import { uiActions } from "@/lib/store/uiSlice";
 import { baseApi } from "@/lib/api/baseApi";
 import { S } from "@/app/content/strings";
 

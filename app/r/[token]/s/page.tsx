@@ -182,7 +182,7 @@ export default function AnonRankPage() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
             <div className="flex items-center gap-2">
@@ -284,7 +284,7 @@ export default function AnonRankPage() {
   const unranked = list.items.filter((item) => !placedIds.has(item.id));
 
   return (
-    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
       <DndContext onDragEnd={handleDragEnd}>
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">

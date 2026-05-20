@@ -97,7 +97,7 @@ export default function SharedListPage() {
   // ── Loading ───────────────────────────────────────────────────────────────
   if (isLoading || isFetching) {
     return (
-      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
             <div className="flex items-center gap-2">
@@ -145,7 +145,7 @@ export default function SharedListPage() {
   // ── Not found / not shareable ────────────────────────────────────────────
   if (isError || !list) {
     return (
-      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
             <div className="flex items-center gap-2">
@@ -199,7 +199,7 @@ export default function SharedListPage() {
   const unranked = list.items.filter((item) => !rankedIds.has(item.id));
 
   return (
-    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
         <div className="flex justify-between items-center h-12">

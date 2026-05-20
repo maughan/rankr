@@ -194,7 +194,7 @@ export async function POST(req: Request) {
     });
 
     return Response.json("Success", { status: 200 });
-  } catch (e) {
+  } catch {
     return Response.error();
   }
 }
@@ -253,7 +253,7 @@ export async function PATCH(req: Request) {
     });
 
     return NextResponse.json({ message: "Success" }, { status: 200 });
-  } catch (e) {
+  } catch {
     return Response.error();
   }
 }

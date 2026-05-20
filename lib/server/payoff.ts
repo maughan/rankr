@@ -44,7 +44,6 @@ interface ComputePayoffParams {
 }
 
 export async function computePayoff({
-  listId: _listId,
   items,
   tiers,
   userRankings,

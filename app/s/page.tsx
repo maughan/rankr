@@ -2,11 +2,10 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import Link from "next/link";
-import { formatDistanceStrict } from "date-fns";
 import { toast } from "sonner";
 import ImageKit from "imagekit-javascript";
 import Image from "next/image";
-import { LayoutGrid, EyeClosed } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import {
   IconStack2,
   IconBurger,
@@ -41,7 +40,6 @@ import { ImageKitLoader, getUserFromToken } from "@/lib/helpers";
 import Modal from "../components/modal";
 import EmptyState from "../components/EmptyState";
 import NavAvatar from "../components/NavAvatar";
-import { TopTierItem } from "@/app/types";
 import { S } from "@/app/content/strings";
 import {
   ICON_NAMES,
@@ -50,8 +48,6 @@ import {
   CategoryIcon,
   CategoryColor,
 } from "@/lib/categoryIcons";
-import { nameToColor } from "@/lib/itemColor";
-import { listUrl } from "@/lib/listUrl";
 
 // ── Icon registry ─────────────────────────────────────────────────────────────
 
@@ -257,7 +253,7 @@ export default function Lists() {
   };
 
   return (
-    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
         <div className="flex justify-between items-center h-12">

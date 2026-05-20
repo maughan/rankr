@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
     const hashPass = await argon2.hash(password);
 
-    const updatedUser = await prisma.user.update({
+    await prisma.user.update({
       where: {
         email,
       },

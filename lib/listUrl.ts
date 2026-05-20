@@ -19,7 +19,7 @@ export function isValidShortId(s: string): boolean {
 const SLUG_MAX = 60;
 
 export function slugify(name: string): string {
-  let s = name
+  const s = name
     .normalize("NFD")               // decompose accented chars
     .replace(/[̀-ͯ]/g, "") // strip combining diacritics
     .toLowerCase()
