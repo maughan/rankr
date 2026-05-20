@@ -48,6 +48,7 @@ import {
   CategoryIcon,
   CategoryColor,
 } from "@/lib/categoryIcons";
+import LandingFooter from "../landing/LandingFooter";
 
 // ── Icon registry ─────────────────────────────────────────────────────────────
 
@@ -253,7 +254,7 @@ export default function Lists() {
   };
 
   return (
-    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
+    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
         <div className="flex justify-between items-center h-12">
@@ -302,7 +303,7 @@ export default function Lists() {
       </div>
 
       {/* ── Content ───────────────────────────────────────────────────────── */}
-      <div className="px-4 sm:px-8 py-6 max-w-[750px] mx-auto">
+      <div className="px-4 sm:px-8 py-6 max-w-[750px] mx-auto sm:pb-24">
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {([0, 1, 2, 3, 4, 5] as const).map((i) => (
@@ -322,6 +323,8 @@ export default function Lists() {
           />
         )}
       </div>
+
+      <LandingFooter />
 
       {/* ── Create list modal ─────────────────────────────────────────────── */}
       <Modal
