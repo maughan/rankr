@@ -29,7 +29,10 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 
-import { useGetListsQuery, useCreateListMutation } from "@/lib/api/listsApi";
+import { useCreateListMutation } from "@/lib/api/listsApi";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { etagFetch } from "@/lib/query/fetchers";
+import type { ListPreview } from "@/app/types";
 import ListCardSkeleton from "./ListCardSkeleton";
 import ListCard from "../components/list/ListCard";
 import UpdatingToast from "../components/UpdatingToast";
@@ -185,14 +188,20 @@ function ListsContent({
 export default function Lists() {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryClient = useQueryClient();
+  const listsKey = ["lists"] as const;
 
   const {
     data: lists = [],
-    isLoading,
+    isPending,
     isFetching,
     isError,
     refetch,
-  } = useGetListsQuery();
+  } = useQuery<ListPreview[]>({
+    queryKey: listsKey,
+    queryFn: () => etagFetch<ListPreview[]>("/api/s", listsKey, queryClient),
+    staleTime: 30_000,
+  });
   const [createList, { isLoading: isCreating }] = useCreateListMutation();
 
   const { modals, editList } = useAppSelector((state) => state.ui);
@@ -245,6 +254,7 @@ export default function Lists() {
 
     try {
       await createList(editList).unwrap();
+      queryClient.invalidateQueries({ queryKey: listsKey });
       dispatch(uiActions.closeCreateListModal());
       toast.success(S.lists.created);
     } catch (e) {
@@ -304,7 +314,7 @@ export default function Lists() {
 
       {/* ── Content ───────────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-8 py-6 max-w-[750px] mx-auto sm:pb-24">
-        {isLoading ? (
+        {isPending ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {([0, 1, 2, 3, 4, 5] as const).map((i) => (
               <ListCardSkeleton key={i} variant={(i % 3) as 0 | 1 | 2} />

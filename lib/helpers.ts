@@ -161,6 +161,8 @@ export const fetchUserRankings = (list: TierList, user: number) => {
 };
 
 export const getUserFromToken = () => {
+  if (typeof document === "undefined") return { username: "", id: 0, email: "" };
+
   const token = document.cookie
     .split("; ")
     .find((row) => row.startsWith("auth_token="))

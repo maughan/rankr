@@ -4,27 +4,38 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatDistanceStrict } from "date-fns";
 import { LayoutGrid } from "lucide-react";
-import { useGetProfileQuery } from "@/lib/api/profileApi";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import type { MutualsInfo, ProfileResponse } from "@/lib/api/profileApi";
+import { etagFetch } from "@/lib/query/fetchers";
+import FollowButton from "@/app/components/FollowButton";
+import UserAvatar from "@/app/components/UserAvatar";
+import FollowListModal from "./FollowListModal";
 import ListCard from "@/app/components/list/ListCard";
 import NavAvatar from "@/app/components/NavAvatar";
-import { nameToColor } from "@/lib/itemColor";
 import { getUserFromToken } from "@/lib/helpers";
 import { useAppDispatch } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import type { ListPreview, ListVisibility } from "@/app/types";
 
-// ── Avatar ────────────────────────────────────────────────────────────────────
+// ── Mutuals line ──────────────────────────────────────────────────────────────
 
-function Avatar({ username, size = 64 }: { username: string; size?: number }) {
-  const color = nameToColor(username);
-  const initial = username[0]?.toUpperCase() ?? "?";
+function MutualsLine({ mutuals }: { mutuals: MutualsInfo }) {
+  const names = mutuals.sample.map((u) => `@${u.username}`);
+  const extra = mutuals.total - names.length;
+
+  let text: string;
+  if (names.length === 1 && extra === 0) {
+    text = `Followed by ${names[0]}`;
+  } else if (names.length === 2 && extra === 0) {
+    text = `Followed by ${names[0]} and ${names[1]}`;
+  } else if (extra === 0) {
+    text = `Followed by ${names[0]}, ${names[1]}, and ${names[2]}`;
+  } else {
+    text = `Followed by ${names[0]}, ${names[1]}, and ${extra} other${extra !== 1 ? "s" : ""} you follow`;
+  }
+
   return (
-    <div
-      className="rounded-full flex items-center justify-center text-white font-[600] flex-shrink-0 select-none"
-      style={{ width: size, height: size, backgroundColor: color, fontSize: size * 0.4 }}
-    >
-      {initial}
-    </div>
+    <p className="text-[12px] text-rk-muted leading-snug">{text}</p>
   );
 }
 
@@ -36,49 +47,107 @@ function ProfileHero({
   bio,
   createdAt,
   listCount,
+  followerCount,
+  followingCount,
   isOwner,
+  viewerFollowsThem,
+  theyFollowViewer,
+  viewerHasBlocked,
+  viewerIsBlocked,
+  mutuals,
+  onFollowersClick,
+  onFollowingClick,
 }: {
   username: string;
   displayName: string | null;
   bio: string | null;
   createdAt: string;
   listCount: number;
+  followerCount: number;
+  followingCount: number;
   isOwner: boolean;
+  viewerFollowsThem: boolean;
+  theyFollowViewer: boolean;
+  viewerHasBlocked: boolean;
+  viewerIsBlocked: boolean;
+  mutuals: MutualsInfo | null;
+  onFollowersClick: () => void;
+  onFollowingClick: () => void;
 }) {
   const name = displayName ?? username;
   const memberSince = formatDistanceStrict(new Date(createdAt), new Date(), { addSuffix: false });
 
   return (
     <div className="flex flex-col sm:flex-row gap-5 items-start sm:items-center py-8">
-      <Avatar username={username} size={72} />
+      <UserAvatar username={username} size={72} />
       <div className="flex flex-col gap-1.5 flex-1 min-w-0">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-[22px] font-[600] text-rk-primary leading-tight">
-            {name}
-          </h1>
-          {isOwner && (
-            <Link
-              href="/settings/profile"
-              className="text-[12px] text-rk-muted border border-rk-stroke rounded-[6px] px-2 py-0.5 hover:border-rk-secondary hover:text-rk-secondary transition-colors"
-            >
-              Edit profile
-            </Link>
+        {/* Name row */}
+        <div className="flex items-start sm:items-center gap-3 flex-wrap justify-between">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-[22px] font-[600] text-rk-primary leading-tight">{name}</h1>
+            {isOwner && (
+              <Link
+                href="/settings/profile"
+                className="text-[12px] text-rk-muted border border-rk-stroke rounded-[6px] px-2 py-0.5 hover:border-rk-secondary hover:text-rk-secondary transition-colors"
+              >
+                Edit profile
+              </Link>
+            )}
+            {theyFollowViewer && !isOwner && (
+              <span className="text-[11px] text-rk-muted bg-rk-surface border border-rk-stroke rounded-[4px] px-1.5 py-0.5 leading-none">
+                Follows you
+              </span>
+            )}
+          </div>
+          {!isOwner && (
+            <FollowButton
+              username={username}
+              initialFollowing={viewerFollowsThem}
+              initialBlocked={viewerHasBlocked}
+              viewerIsBlocked={viewerIsBlocked}
+            />
           )}
         </div>
+
+        {/* @handle */}
         {displayName && (
           <p className="text-[13px] text-rk-muted">@{username}</p>
         )}
+
+        {/* Bio */}
         {bio && (
           <p className="text-[14px] text-rk-secondary leading-snug max-w-lg">{bio}</p>
         )}
-        <div className="flex items-center gap-3 mt-0.5">
+
+        {/* Mutuals social proof */}
+        {mutuals && !isOwner && !viewerHasBlocked && !viewerIsBlocked && (
+          <MutualsLine mutuals={mutuals} />
+        )}
+
+        {/* Stats strip */}
+        <div className="flex items-center gap-3 mt-0.5 flex-wrap">
           <span className="text-[12px] text-rk-tertiary">
-            <span className="text-rk-secondary font-[500]">{listCount}</span> list{listCount !== 1 ? "s" : ""}
+            <span className="text-rk-secondary font-[500]">{listCount}</span>{" "}
+            list{listCount !== 1 ? "s" : ""}
           </span>
           <span className="text-rk-tertiary text-[11px]">·</span>
-          <span className="text-[12px] text-rk-tertiary">
-            Member for {memberSince}
-          </span>
+          <button
+            onClick={onFollowersClick}
+            className="text-[12px] text-rk-tertiary hover:text-rk-secondary transition-colors"
+          >
+            <span className="text-rk-secondary font-[500]">{followerCount.toLocaleString()}</span>{" "}
+            follower{followerCount !== 1 ? "s" : ""}
+          </button>
+          <span className="text-rk-tertiary text-[11px]">·</span>
+          <button
+            onClick={onFollowingClick}
+            className="text-[12px] text-rk-tertiary hover:text-rk-secondary transition-colors"
+          >
+            <span className="text-rk-secondary font-[500]">{followingCount.toLocaleString()}</span>{" "}
+            following
+          </button>
+          <span className="text-rk-tertiary text-[11px]">·</span>
+          <span className="text-[12px] text-rk-tertiary">Member for {memberSince}</span>
         </div>
       </div>
     </div>
@@ -164,8 +233,16 @@ function ProfileSkeleton() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function ProfileClient({ username }: { username: string }) {
-  const { data, isLoading, isError } = useGetProfileQuery(username);
+  const queryClient = useQueryClient();
+  const queryKey = ["profile", username] as const;
+  const { data, isPending, isError } = useQuery<ProfileResponse>({
+    queryKey,
+    queryFn: () =>
+      etagFetch<ProfileResponse>(`/api/u/${username}`, queryKey, queryClient),
+    staleTime: 60_000,
+  });
   const [activeTab, setActiveTab] = useState<Tab>("all");
+  const [followModal, setFollowModal] = useState<"followers" | "following" | null>(null);
   const dispatch = useAppDispatch();
   const viewer = getUserFromToken();
   const isLoggedIn = viewer.id !== 0;
@@ -195,7 +272,7 @@ export default function ProfileClient({ username }: { username: string }) {
     </div>
   );
 
-  if (isLoading) {
+  if (isPending) {
     return (
       <div className="min-h-screen bg-rk-page">
         {nav}
@@ -217,7 +294,16 @@ export default function ProfileClient({ username }: { username: string }) {
     );
   }
 
-  const { user, lists, isOwner } = data;
+  const {
+    user,
+    lists,
+    isOwner,
+    viewerFollowsThem,
+    theyFollowViewer,
+    viewerHasBlocked,
+    viewerIsBlocked,
+    mutuals,
+  } = data;
 
   const tabs = isOwner ? OWNER_TABS : VISITOR_TABS;
   const currentTab = isOwner ? activeTab : "public";
@@ -239,8 +325,25 @@ export default function ProfileClient({ username }: { username: string }) {
           bio={user.bio}
           createdAt={user.createdAt}
           listCount={isOwner ? lists.length : lists.filter((l) => l.visibility === "public").length}
+          followerCount={user.follower_count}
+          followingCount={user.following_count}
           isOwner={isOwner}
+          viewerFollowsThem={viewerFollowsThem}
+          theyFollowViewer={theyFollowViewer}
+          viewerHasBlocked={viewerHasBlocked}
+          viewerIsBlocked={viewerIsBlocked}
+          mutuals={mutuals}
+          onFollowersClick={() => setFollowModal("followers")}
+          onFollowingClick={() => setFollowModal("following")}
         />
+
+        {followModal && (
+          <FollowListModal
+            username={user.username}
+            initialTab={followModal}
+            onClose={() => setFollowModal(null)}
+          />
+        )}
 
         {/* Tabs — only shown to owner (visitor always sees public lists) */}
         {isOwner && (

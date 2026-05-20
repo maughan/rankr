@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 import { ICON_NAMES_SET, COLOR_NAMES_SET } from "@/lib/categoryIcons";
 import { generateShortId, slugify } from "@/lib/listUrl";
+import { computeETag, checkETagMatch } from "@/lib/server/etag";
 
 function verifyToken(token: string) {
   return jwt.verify(token, process.env.JWT_SECRET!) as unknown as {
@@ -12,7 +13,7 @@ function verifyToken(token: string) {
   };
 }
 
-export async function GET() {
+export async function GET(_req: Request) {
   try {
     // Soft auth: include pin data when a valid token is present, but don't require it
     let viewerId: number | null = null;
@@ -136,7 +137,10 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(result);
+    const etag = computeETag(result);
+    if (checkETagMatch(_req, etag)) return new Response(null, { status: 304 });
+
+    return NextResponse.json(result, { headers: { ETag: etag } });
   } catch (e) {
     return NextResponse.json({ error: e }, { status: 500 });
   }

@@ -12,6 +12,7 @@ import {
   useDisableShareMutation,
   useUpdateShareMutation,
 } from "@/lib/api/listsApi";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props {
   listId: number;
@@ -20,6 +21,9 @@ interface Props {
 }
 
 export default function ShareModal({ listId, open, onClose }: Props) {
+  const queryClient = useQueryClient();
+  const listKey = ["list", listId] as const;
+
   const { data: stats, isLoading } = useGetShareStatsQuery(listId, {
     skip: !open,
   });
@@ -39,6 +43,7 @@ export default function ShareModal({ listId, open, onClose }: Props) {
   const handleEnable = async () => {
     try {
       await enableShare(listId).unwrap();
+      queryClient.invalidateQueries({ queryKey: listKey });
     } catch {
       toast.error(S.share.linkCreateFailed);
     }
@@ -47,6 +52,7 @@ export default function ShareModal({ listId, open, onClose }: Props) {
   const handleDisable = async () => {
     try {
       await disableShare(listId).unwrap();
+      queryClient.invalidateQueries({ queryKey: listKey });
     } catch {
       toast.error(S.share.linkDisableFailed);
     }
@@ -55,6 +61,7 @@ export default function ShareModal({ listId, open, onClose }: Props) {
   const handleRotate = async () => {
     try {
       await updateShare({ listId, rotate: true }).unwrap();
+      queryClient.invalidateQueries({ queryKey: listKey });
       setCopied(false);
       toast.success(S.share.linkRotated);
     } catch {
@@ -69,6 +76,7 @@ export default function ShareModal({ listId, open, onClose }: Props) {
         listId,
         anonymous_rankings_enabled: !stats.anonymous_rankings_enabled,
       }).unwrap();
+      queryClient.invalidateQueries({ queryKey: listKey });
     } catch {
       toast.error(S.share.settingsUpdateFailed);
     }

@@ -8,7 +8,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { X, Pencil } from "lucide-react";
 
-import { useGetListQuery, useSubmitRankingsMutation } from "@/lib/api/listsApi";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { processResponseData } from "@/lib/helpers";
+import type { SubmitRankingsResponse } from "@/lib/api/listsApi";
 import { S } from "@/app/content/strings";
 import Skeleton from "@/app/components/Skeleton";
 import { TierRowSkeleton } from "../skeletons";
@@ -104,10 +106,38 @@ export default function RankClient({
   const router = useRouter();
 
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
+  const listKey = ["list", listId] as const;
 
-  const { data: list, isLoading } = useGetListQuery(listId);
-  const [submitRankings, { isLoading: isSubmitting }] =
-    useSubmitRankingsMutation();
+  const { data: list } = useQuery({
+    queryKey: listKey,
+    queryFn: async () => {
+      const res = await fetch(`/api/s/${listId}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+      return processResponseData([raw])[0];
+    },
+    staleTime: 30_000,
+  });
+  const { mutateAsync: submitRankings, isPending: isSubmitting } = useMutation<
+    SubmitRankingsResponse,
+    Error,
+    object[]
+  >({
+    mutationFn: (userRankings) =>
+      fetch("/api/rankings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userRankings),
+      }).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      }),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: listKey });
+      queryClient.invalidateQueries({ queryKey: ["lists"] });
+    },
+  });
 
   const { rankings, modals, selectedItems, openTier, imageModalUrl } =
     useAppSelector((state) => state.ui);
@@ -172,7 +202,7 @@ export default function RankClient({
         list.id
       );
 
-      const result = await submitRankings(userRankings).unwrap();
+      const result = await submitRankings(userRankings);
 
       dispatch(uiActions.clearRankings());
       router.push(
@@ -184,9 +214,9 @@ export default function RankClient({
     }
   };
 
-  if (isLoading || !list) {
+  if (!list) {
     return (
-      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
+      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
         {/* Top bar — real chrome */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
@@ -248,7 +278,7 @@ export default function RankClient({
   }
 
   return (
-    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
+    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
       <DndContext onDragEnd={handleDragEnd}>
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
