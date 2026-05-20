@@ -386,7 +386,7 @@ export default function ListDetail({
 
   if (isError) {
     return (
-      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
+      <div className=" z-10 bg-rk-page overflow-y-auto sm:pb-24">
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
             <Link
@@ -425,7 +425,7 @@ export default function ListDetail({
 
   if (isLoading || !list) {
     return (
-      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
+      <div className=" z-10 bg-rk-page overflow-y-auto sm:pb-24">
         {/* Top bar — real chrome */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
@@ -529,7 +529,7 @@ export default function ListDetail({
   };
 
   return (
-    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
+    <div className=" z-10 bg-rk-page overflow-y-auto sm:pb-24">
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
         <div className="flex justify-between items-center h-12">
@@ -967,8 +967,6 @@ export default function ListDetail({
           </button>
         )}
       </div>
-
-      <LandingFooter />
 
       {/* ── Bulk add modal ────────────────────────────────────────────────── */}
       <Modal

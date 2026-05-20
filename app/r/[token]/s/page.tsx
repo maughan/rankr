@@ -15,6 +15,7 @@ import { TierRowSkeleton } from "@/app/s/[id]/skeletons";
 import Draggable from "@/app/Draggable";
 import Droppable from "@/app/Droppable";
 import { ImageKitLoader } from "@/lib/helpers";
+import LandingFooter from "@/app/landing/LandingFooter";
 
 const TIER_STYLE: Record<string, { bg: string; text: string }> = {
   S: { bg: "#C44545", text: "#ffffff" },
@@ -284,18 +285,40 @@ export default function AnonRankPage() {
   const unranked = list.items.filter((item) => !placedIds.has(item.id));
 
   return (
-    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
-      <DndContext onDragEnd={handleDragEnd}>
-        {/* ── Top bar ─────────────────────────────────────────────────────── */}
-        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
-          <div className="flex justify-between items-center h-12">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-              <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-                tierstack.dev
-              </span>
+    <>
+      <div className="inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
+        <DndContext onDragEnd={handleDragEnd}>
+          {/* ── Top bar ─────────────────────────────────────────────────────── */}
+          <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+            <div className="flex justify-between items-center h-12">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+                <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+                  tierstack.dev
+                </span>
+              </div>
+              <div className="hidden sm:flex justify-between items-center gap-2">
+                <Link
+                  href={`/r/${token}`}
+                  className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+                >
+                  Back
+                </Link>
+                <button
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
+                  ) : (
+                    <Pencil size={12} strokeWidth={2.5} />
+                  )}
+                  Submit
+                </button>
+              </div>
             </div>
-            <div className="hidden sm:flex justify-between items-center gap-2">
+            <div className="flex sm:hidden items-center justify-between gap-2 pb-3">
               <Link
                 href={`/r/${token}`}
                 className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
@@ -316,138 +339,118 @@ export default function AnonRankPage() {
               </button>
             </div>
           </div>
-          <div className="flex sm:hidden items-center justify-between gap-2 pb-3">
-            <Link
-              href={`/r/${token}`}
-              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
-            >
-              Back
-            </Link>
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
-            >
-              {isSubmitting ? (
-                <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
-              ) : (
-                <Pencil size={12} strokeWidth={2.5} />
-              )}
-              Submit
-            </button>
-          </div>
-        </div>
 
-        {/* ── Content ─────────────────────────────────────────────────────── */}
-        <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
-          <div>
-            <p
-              className="text-rk-primary font-[500] leading-tight"
-              style={{ fontSize: 22, letterSpacing: "-0.4px" }}
-            >
-              {list.title}
-            </p>
-            {list.description && (
-              <p className="text-[12px] text-rk-muted mt-0.5">
-                {list.description}
+          {/* ── Content ─────────────────────────────────────────────────────── */}
+          <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
+            <div>
+              <p
+                className="text-rk-primary font-[500] leading-tight"
+                style={{ fontSize: 22, letterSpacing: "-0.4px" }}
+              >
+                {list.title}
               </p>
-            )}
-          </div>
+              {list.description && (
+                <p className="text-[12px] text-rk-muted mt-0.5">
+                  {list.description}
+                </p>
+              )}
+            </div>
 
-          {/* Tier rows */}
-          <div className="flex flex-col gap-[6px]">
-            {list.tiers.map((tier) => {
-              if (tier.value === 0) return null;
+            {/* Tier rows */}
+            <div className="flex flex-col gap-[6px]">
+              {list.tiers.map((tier) => {
+                if (tier.value === 0) return null;
 
-              const style = TIER_STYLE[tier.title] ?? {
-                bg: tier.color,
-                text: "#000000",
-              };
-              const items = (tierItems[tier.id] ?? [])
-                .map((id) => list.items.find((i) => i.id === id))
-                .filter((i): i is SharedListItem => !!i);
+                const style = TIER_STYLE[tier.title] ?? {
+                  bg: tier.color,
+                  text: "#000000",
+                };
+                const items = (tierItems[tier.id] ?? [])
+                  .map((id) => list.items.find((i) => i.id === id))
+                  .filter((i): i is SharedListItem => !!i);
 
-              return (
-                <div
-                  key={tier.id}
-                  className="flex border border-rk-stroke"
-                  style={{ borderRadius: 10 }}
-                >
+                return (
                   <div
-                    className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px]"
-                    style={{
-                      backgroundColor: style.bg,
-                      minHeight: 76,
-                      borderTopLeftRadius: 9,
-                      borderBottomLeftRadius: 9,
-                    }}
+                    key={tier.id}
+                    className="flex border border-rk-stroke"
+                    style={{ borderRadius: 10 }}
                   >
-                    <span
-                      className={`text-[26px] font-[500] leading-none select-none${
-                        pulsingTiers.has(tier.id) ? " rk-tier-pulse" : ""
-                      }`}
-                      style={{ color: style.text, display: "inline-block" }}
+                    <div
+                      className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px]"
+                      style={{
+                        backgroundColor: style.bg,
+                        minHeight: 76,
+                        borderTopLeftRadius: 9,
+                        borderBottomLeftRadius: 9,
+                      }}
                     >
-                      {tier.title}
-                    </span>
-                    <span
-                      className="text-[10px] leading-none"
-                      style={{ color: style.text, opacity: 0.65 }}
-                    >
-                      {items.length}
-                    </span>
-                  </div>
-                  <Droppable
-                    id={tier.id}
-                    className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
-                    style={{
-                      backgroundColor: "#0F1828",
-                      borderTopRightRadius: 9,
-                      borderBottomRightRadius: 9,
-                    }}
-                  >
-                    {items.map((item) => (
-                      <Draggable
-                        key={item.id}
-                        id={item.id}
-                        url={item?.img || ""}
+                      <span
+                        className={`text-[26px] font-[500] leading-none select-none${
+                          pulsingTiers.has(tier.id) ? " rk-tier-pulse" : ""
+                        }`}
+                        style={{ color: style.text, display: "inline-block" }}
                       >
-                        <ItemCard
-                          item={item}
-                          isJustDropped={justDroppedId === item.id}
-                        />
-                      </Draggable>
-                    ))}
-                  </Droppable>
-                </div>
-              );
-            })}
-          </div>
+                        {tier.title}
+                      </span>
+                      <span
+                        className="text-[10px] leading-none"
+                        style={{ color: style.text, opacity: 0.65 }}
+                      >
+                        {items.length}
+                      </span>
+                    </div>
+                    <Droppable
+                      id={tier.id}
+                      className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
+                      style={{
+                        backgroundColor: "#0F1828",
+                        borderTopRightRadius: 9,
+                        borderBottomRightRadius: 9,
+                      }}
+                    >
+                      {items.map((item) => (
+                        <Draggable
+                          key={item.id}
+                          id={item.id}
+                          url={item?.img || ""}
+                        >
+                          <ItemCard
+                            item={item}
+                            isJustDropped={justDroppedId === item.id}
+                          />
+                        </Draggable>
+                      ))}
+                    </Droppable>
+                  </div>
+                );
+              })}
+            </div>
 
-          {/* Unranked pool */}
-          <div>
-            <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
-              Unranked
-            </p>
-            <Droppable
-              id={-1}
-              className="flex flex-wrap gap-2 min-h-[96px] content-start p-3"
-              style={{
-                borderRadius: 9,
-              }}
-            >
-              {unranked.map((item) => (
-                <Draggable key={item.id} id={item.id} url={item?.img || ""}>
-                  <ItemCard
-                    item={item}
-                    isJustDropped={justDroppedId === item.id}
-                  />
-                </Draggable>
-              ))}
-            </Droppable>
+            {/* Unranked pool */}
+            <div>
+              <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
+                Unranked
+              </p>
+              <Droppable
+                id={-1}
+                className="flex flex-wrap gap-2 min-h-[96px] content-start p-3"
+                style={{
+                  borderRadius: 9,
+                }}
+              >
+                {unranked.map((item) => (
+                  <Draggable key={item.id} id={item.id} url={item?.img || ""}>
+                    <ItemCard
+                      item={item}
+                      isJustDropped={justDroppedId === item.id}
+                    />
+                  </Draggable>
+                ))}
+              </Droppable>
+            </div>
           </div>
-        </div>
-      </DndContext>
-    </div>
+        </DndContext>
+      </div>
+    </>
   );
 }

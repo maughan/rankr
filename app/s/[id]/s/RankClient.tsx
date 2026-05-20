@@ -23,6 +23,7 @@ import {
 } from "@/lib/helpers";
 import { TierItem } from "@/app/types";
 import NavAvatar from "@/app/components/NavAvatar";
+import LandingFooter from "@/app/landing/LandingFooter";
 
 // ── Tier label colours ────────────────────────────────────────────────────────
 
@@ -425,85 +426,7 @@ export default function RankClient({
         </div>
       </DndContext>
 
-      {/* ── Tier item picker modal ─────────────────────────────────────────── */}
-      {modals.createTier && (
-        <>
-          <div className="fixed inset-0 z-[998] bg-black/50" />
-          <div className="fixed inset-0 z-[999] flex items-center justify-center px-4">
-            <div
-              className="max-h-[90%] w-full sm:w-[480px] overflow-auto relative rounded-[10px]"
-              style={{
-                backgroundColor: "#142036",
-                border: "1px solid #1E2C44",
-              }}
-            >
-              <div className="p-6 flex flex-col gap-4">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    {openTier && (
-                      <div
-                        className="w-9 h-9 rounded-[8px] flex items-center justify-center flex-shrink-0"
-                        style={{
-                          backgroundColor:
-                            TIER_STYLE[openTier.title]?.bg ?? openTier.color,
-                        }}
-                      >
-                        <span
-                          className="text-[18px] font-[500] leading-none select-none"
-                          style={{
-                            color:
-                              TIER_STYLE[openTier.title]?.text ?? "#000000",
-                          }}
-                        >
-                          {openTier.title}
-                        </span>
-                      </div>
-                    )}
-                    <p className="text-rk-primary text-[17px] font-[500]">
-                      Select items
-                    </p>
-                  </div>
-                  <X
-                    size={16}
-                    className="cursor-pointer text-rk-muted hover:text-rk-primary transition-colors"
-                    onClick={() => dispatch(uiActions.closeTierModal())}
-                  />
-                </div>
-
-                {/* Items grid */}
-                <div className="flex flex-wrap gap-2">
-                  {list.items.map((item: TierItem) => (
-                    <div
-                      key={item.id}
-                      className={`rounded-[8px] overflow-hidden cursor-pointer transition-all ${
-                        selectedItems.includes(item.id)
-                          ? "ring-2 ring-rk-accent"
-                          : "ring-1 ring-rk-stroke hover:ring-rk-muted"
-                      }`}
-                      onClick={() =>
-                        dispatch(uiActions.toggleSelectItem({ id: item.id }))
-                      }
-                    >
-                      <ItemCard item={item} />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Save */}
-                <div className="flex justify-end">
-                  <button
-                    className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-                    onClick={() => dispatch(uiActions.saveTierModal())}
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <LandingFooter />
 
       {/* ── Legacy image zoom modal ──────────────────────────────────────────── */}
       {modals.imageModal && (

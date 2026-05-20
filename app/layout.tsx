@@ -66,7 +66,7 @@ export default function RootLayout({
           <AuthModal />
           <PasswordModal />
           {children}
-          <div className="sm:fixed sm:bottom-0 sm:left-0 sm:right-0 z-[60]">
+          <div className="sm:bottom-0 sm:left-0 sm:right-0 z-[60]">
             <FooterWrapper />
           </div>
           <Analytics />

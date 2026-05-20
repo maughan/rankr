@@ -7,7 +7,6 @@ import { listUrl } from "@/lib/listUrl";
 import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from "@/app/siteConfig";
 import { JsonLd } from "@/app/components/JsonLd";
 import ListDetail from "./ListDetail";
-import LandingFooter from "@/app/landing/LandingFooter";
 
 // Pre-render the 100 most recently active public lists at build time.
 // All other lists fall through to on-demand rendering.
