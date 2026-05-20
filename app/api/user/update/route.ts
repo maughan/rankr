@@ -99,7 +99,7 @@ export async function POST(req: Request) {
     });
 
     return Response.json({ success: true });
-  } catch (e) {
+  } catch {
     return Response.error();
   }
 }

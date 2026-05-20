@@ -21,8 +21,7 @@ import {
   ImageKitLoader,
   processRankingData,
 } from "@/lib/helpers";
-import { Tier, TierItem } from "@/app/types";
-import { nameToColor } from "@/lib/itemColor";
+import { TierItem } from "@/app/types";
 import NavAvatar from "@/app/components/NavAvatar";
 
 // ── Tier label colours ────────────────────────────────────────────────────────
@@ -113,7 +112,7 @@ export default function RankClient({
     useAppSelector((state) => state.ui);
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState(0);
+  const [, setCurrentUserId] = useState(0);
   const [justDroppedId, setJustDroppedId] = useState<number | null>(null);
   const [pulsingTiers, setPulsingTiers] = useState<Set<number>>(new Set());
 
@@ -186,7 +185,7 @@ export default function RankClient({
 
   if (isLoading || !list) {
     return (
-      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+      <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
         {/* Top bar — real chrome */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
@@ -248,7 +247,7 @@ export default function RankClient({
   }
 
   return (
-    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
       <DndContext onDragEnd={handleDragEnd}>
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">

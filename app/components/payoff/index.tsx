@@ -3,10 +3,13 @@
 import { useState } from "react";
 import Link from "next/link";
 import { X, Flame, Sparkles, Check, Trophy, ArrowRight } from "lucide-react";
+import { IconCoffee } from "@tabler/icons-react";
+import { track } from "@vercel/analytics";
 import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
 import Skeleton from "@/app/components/Skeleton";
 import { PayoffData } from "@/lib/api/listsApi";
 import { S } from "@/app/content/strings";
+import { KOFI_URL } from "@/app/siteConfig";
 import { useAppDispatch } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 
@@ -616,6 +619,69 @@ function PayoffFoot() {
   );
 }
 
+// ── Support card ──────────────────────────────────────────────────────────────
+
+function SupportCard() {
+  const [visible, setVisible] = useState(true);
+
+  if (!visible || !KOFI_URL) return null;
+
+  const handleDismiss = () => setVisible(false);
+
+  const handleClick = () => track("support_cta_click");
+
+  return (
+    <div
+      className="rounded-[12px] border p-4 flex items-start gap-3"
+      style={{
+        backgroundColor: "rgba(239,159,39,0.06)",
+        borderColor: "rgba(239,159,39,0.2)",
+      }}
+    >
+      <div
+        className="flex-shrink-0 w-9 h-9 rounded-[8px] flex items-center justify-center"
+        style={{
+          backgroundColor: "rgba(239,159,39,0.12)",
+          border: "1px solid rgba(239,159,39,0.22)",
+        }}
+      >
+        <IconCoffee size={18} style={{ color: "#EF9F27" }} strokeWidth={1.75} />
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-[600] text-rk-primary leading-snug">
+          {S.support.cardHeading}
+        </p>
+        <p className="text-[11px] text-rk-muted mt-0.5 leading-snug">
+          {S.support.cardBody}
+        </p>
+        <a
+          href={KOFI_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleClick}
+          className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-[12px] font-[500] transition-opacity hover:opacity-80"
+          style={{
+            border: "1px solid rgba(239,159,39,0.4)",
+            color: "#EF9F27",
+          }}
+        >
+          <IconCoffee size={13} strokeWidth={2} />
+          {S.support.cardCta}
+        </a>
+      </div>
+
+      <button
+        onClick={handleDismiss}
+        aria-label="Dismiss"
+        className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-[5px] text-rk-muted hover:text-rk-secondary hover:bg-rk-surface transition-colors"
+      >
+        <X size={12} strokeWidth={2} />
+      </button>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function PayoffPage(props: PayoffPageProps) {
@@ -649,7 +715,7 @@ export default function PayoffPage(props: PayoffPageProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
+    <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
       <PayoffNav backHref={backHref} />
 
       <div className="px-4 sm:px-8 py-8 max-w-2xl mx-auto flex flex-col gap-8">
@@ -663,6 +729,7 @@ export default function PayoffPage(props: PayoffPageProps) {
                 <PayoffFeatured {...props} />
                 <PayoffExtras extras={data.extras} />
                 <PayoffCtas {...props} isComplete={isComplete} />
+                <SupportCard />
                 {isAnon && <PayoffAnonNudge />}
                 {!isAnon && <PayoffFoot />}
               </>

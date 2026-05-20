@@ -148,7 +148,8 @@ async function fetchData(params: URLSearchParams): Promise<HotTakesData> {
 
   takes.sort((a, b) => b.absDelta - a.absDelta);
 
-  const topTakes = takes.slice(0, 3).map(({ absDelta: _, ...rest }) => rest);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const topTakes = takes.slice(0, 3).map(({ absDelta, ...rest }) => rest);
 
   if (!topTakes.length)
     throw new ShareCardError(400, "No contrarian picks found");

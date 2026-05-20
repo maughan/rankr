@@ -9,7 +9,6 @@ import ComparisonFeatureSection from "@/app/landing/ComparisonFeatureSection";
 import FeaturedListsSection from "@/app/landing/FeaturedListsSection";
 import StatsBanner from "@/app/landing/StatsBanner";
 import FinalCtaSection from "@/app/landing/FinalCtaSection";
-import LandingFooter from "@/app/landing/LandingFooter";
 
 const TITLE = `${SITE_NAME} — Tier lists. But actually fun.`;
 const DESCRIPTION =
@@ -53,7 +52,6 @@ export default function LandingPage() {
         <StatsBanner />
         <FeaturedListsSection />
         <FinalCtaSection />
-        <LandingFooter />
       </main>
     </>
   );

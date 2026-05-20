@@ -186,6 +186,14 @@ export const S = {
     usernameFormat: "3–20 characters: letters, numbers, underscores only.",
   },
 
+  // ── Support ───────────────────────────────────────────────────────────────
+  support: {
+    cardHeading: "Enjoying tierstack?",
+    cardBody: "It's free and always will be. A coffee helps keep it that way.",
+    cardCta: "Buy us a coffee",
+    footerLinkLabel: "Support tierstack",
+  },
+
   // ── Landing (source of truth — re-exported via app/landing/content.ts) ────
   landing: {
     eyebrow: "Tier lists. But actually fun.",

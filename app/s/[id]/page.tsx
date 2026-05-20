@@ -7,6 +7,20 @@ import { listUrl } from "@/lib/listUrl";
 import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from "@/app/siteConfig";
 import { JsonLd } from "@/app/components/JsonLd";
 import ListDetail from "./ListDetail";
+import LandingFooter from "@/app/landing/LandingFooter";
+
+// Pre-render the 100 most recently active public lists at build time.
+// All other lists fall through to on-demand rendering.
+export async function generateStaticParams() {
+  const lists = (await (prisma.list as any).findMany({
+    where: { visibility: "public" },
+    select: { short_id: true, slug: true },
+    orderBy: { updatedAt: "desc" },
+    take: 100,
+  })) as { short_id: string; slug: string }[];
+
+  return lists.map((list) => ({ id: `${list.slug}-${list.short_id}` }));
+}
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -25,7 +39,7 @@ const getListMeta = cache(async (param: string) => {
   const result = await resolveListParam(param);
   if (result.kind === "notfound") return null;
 
-  const list = await (prisma.list as any).findUnique({
+  const list = (await (prisma.list as any).findUnique({
     where: { short_id: result.list.short_id },
     select: {
       title: true,
@@ -40,7 +54,7 @@ const getListMeta = cache(async (param: string) => {
         orderBy: { createdAt: "asc" },
       },
     },
-  }) as ListMeta | null;
+  })) as ListMeta | null;
 
   return list ? { result, list } : null;
 });
@@ -55,7 +69,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const canonical = `${SITE_URL}${listUrl(result.list)}`;
 
   const title = `${list.title} — ${SITE_NAME}`;
-  const description = list.description ||
+  const description =
+    list.description ||
     `${list._count.items} items ranked S to F. ${list._count.rankings} people have submitted rankings. Compare yours.`;
 
   return {
@@ -69,7 +84,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "website",
       url: canonical,
       images: isPublic
-        ? [{ url: `/api/og/list?id=${list.short_id}`, width: 1200, height: 675 }]
+        ? [
+            {
+              url: `/api/og/list?id=${list.short_id}`,
+              width: 1200,
+              height: 675,
+            },
+          ]
         : undefined,
     },
     twitter: {

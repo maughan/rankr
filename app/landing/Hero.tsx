@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import LandingNav from "./LandingNav";
 import HeroCta from "./HeroCta";
-import { COPY, HERO_LIST_TOKEN } from "./content";
+import { COPY } from "./content";
 
 const TIER_STYLE: Record<string, { text: string }> = {
   S: { text: "#ffffff" },

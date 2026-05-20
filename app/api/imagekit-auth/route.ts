@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-const generateUploadParams = (fileName: string, folder: string) => {
+const generateUploadParams = () => {
   const token = crypto.randomBytes(16).toString("hex"); // random string
   const expire = Math.floor(Date.now() / 1000) + 60 * 5; // 5 min expiry
 
@@ -14,10 +14,7 @@ const generateUploadParams = (fileName: string, folder: string) => {
 };
 
 export async function GET() {
-  const fileName = `${crypto.randomBytes(16).toString("hex")}.png`;
-  const folder = "/s";
-
-  const { token, expire, signature } = generateUploadParams(fileName, folder);
+  const { token, expire, signature } = generateUploadParams();
 
   return Response.json({ token, expire, signature });
 }
