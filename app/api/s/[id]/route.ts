@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { computeETag, checkETagMatch } from "@/lib/server/etag";
 
 export async function GET(
   _req: Request,
@@ -30,7 +31,10 @@ export async function GET(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json(list);
+    const etag = computeETag(list);
+    if (checkETagMatch(_req, etag)) return new Response(null, { status: 304 });
+
+    return NextResponse.json(list, { headers: { ETag: etag } });
   } catch (e) {
     return NextResponse.json({ error: e }, { status: 500 });
   }

@@ -10,6 +10,7 @@ import RouteChangeHandler from "./RouteChangeHandler";
 import AuthModal from "./components/authModal";
 import PasswordModal from "./components/passwordModal";
 import FooterWrapper from "./components/FooterWrapper";
+import QueryProvider from "./components/QueryProvider";
 import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from "./siteConfig";
 
 const geistSans = Geist({
@@ -62,15 +63,17 @@ export default function RootLayout({
       >
         <Toaster position="top-right" expand richColors />
         <StoreProvider>
-          <RouteChangeHandler />
-          <AuthModal />
-          <PasswordModal />
-          {children}
-          <div className="sm:bottom-0 sm:left-0 sm:right-0 z-[60]">
-            <FooterWrapper />
-          </div>
-          <Analytics />
-          <SpeedInsights />
+          <QueryProvider>
+            <RouteChangeHandler />
+            <AuthModal />
+            <PasswordModal />
+            {children}
+            <div className="sm:bottom-0 sm:left-0 sm:right-0 z-[60]">
+              <FooterWrapper />
+            </div>
+            <Analytics />
+            <SpeedInsights />
+          </QueryProvider>
         </StoreProvider>
       </body>
     </html>

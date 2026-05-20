@@ -6,8 +6,7 @@ import Image from "next/image";
 import { Upload, Trash2 } from "lucide-react";
 import Modal from "@/app/components/modal";
 import { TierItem } from "@/app/types";
-import { useAppDispatch } from "@/lib/hooks";
-import { baseApi } from "@/lib/api/baseApi";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useUpdateItemMutation,
   useDeleteItemImageMutation,
@@ -32,7 +31,8 @@ export default function EditItemModal({
   onClose,
   onDeleteRequest,
 }: Props) {
-  const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
+  const listKey = ["list", listId] as const;
   const [screen, setScreen] = useState<Screen>("edit");
   const [name, setName] = useState(item.name ?? "");
   const [shortLabel, setShortLabel] = useState(item.short_label ?? "");
@@ -69,6 +69,7 @@ export default function EditItemModal({
         name: trimmedName,
         short_label: shortLabel.trim(),
       }).unwrap();
+      queryClient.invalidateQueries({ queryKey: listKey });
       toast.success(S.items.updated);
       onClose();
     } catch (err: any) {
@@ -99,9 +100,7 @@ export default function EditItemModal({
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error ?? "Upload failed");
       }
-      dispatch(
-        baseApi.util.invalidateTags([{ type: "List" as const, id: listId }])
-      );
+      queryClient.invalidateQueries({ queryKey: listKey });
       toast.success(S.items.imageAdded);
     } catch (err: any) {
       toast.error(err?.message ?? S.items.imageUploadFailed);
@@ -126,6 +125,7 @@ export default function EditItemModal({
   const handleRemoveImage = async () => {
     try {
       await deleteItemImage({ listId, itemId: item.id }).unwrap();
+      queryClient.invalidateQueries({ queryKey: listKey });
       toast.success(S.items.imageRemoved);
     } catch {
       toast.error(S.items.imageRemoveFailed);

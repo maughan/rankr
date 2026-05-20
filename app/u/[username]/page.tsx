@@ -1,7 +1,12 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { resolveProfileParam } from "@/lib/server/resolveProfile";
+import { getProfileData } from "@/lib/server/profileData";
+import { getServerQueryClient } from "@/lib/query/client";
 import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from "@/app/siteConfig";
 import { JsonLd } from "@/app/components/JsonLd";
 import ProfileClient from "./ProfileClient";
@@ -9,6 +14,16 @@ import ProfileClient from "./ProfileClient";
 type Props = { params: Promise<{ username: string }> };
 
 const getProfile = cache(resolveProfileParam);
+
+function softAuth(token: string | undefined): number | null {
+  if (!token) return null;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    return decoded.sub ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
@@ -63,6 +78,18 @@ export default async function ProfilePage({ params }: Props) {
   const { profile } = result;
   const profileUrl = `${SITE_URL}/u/${profile.username.toLowerCase()}`;
 
+  // Read auth cookie server-side so the prefetch is viewer-aware.
+  // This produces identical data to what the client would fetch,
+  // preventing a mismatch that would trigger a background refetch on hydration.
+  const cookieStore = await cookies();
+  const viewerId = softAuth(cookieStore.get("auth_token")?.value);
+
+  const queryClient = getServerQueryClient();
+  await queryClient.prefetchQuery({
+    queryKey: ["profile", profile.username],
+    queryFn: () => getProfileData(profile.username, viewerId),
+  });
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
@@ -75,7 +102,9 @@ export default async function ProfilePage({ params }: Props) {
   return (
     <>
       <JsonLd data={jsonLd} />
-      <ProfileClient username={profile.username} />
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <ProfileClient username={profile.username} />
+      </HydrationBoundary>
     </>
   );
 }

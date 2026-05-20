@@ -8,11 +8,12 @@ import { ImageIcon, Users } from "lucide-react";
 import EmptyState from "@/app/components/EmptyState";
 import { S } from "@/app/content/strings";
 import {
-  useGetSharedListQuery,
   useGetMyRankingQuery,
   useGetCreatorRankingQuery,
+  SharedList,
   SharedListItem,
 } from "@/lib/api/listsApi";
+import { useQuery } from "@tanstack/react-query";
 import Skeleton from "@/app/components/Skeleton";
 import { TierRowSkeleton } from "@/app/s/[id]/skeletons";
 import AnonComparison from "@/app/components/anonComparison";
@@ -77,11 +78,15 @@ export default function SharedListPage() {
   const { token } = useParams<{ token: string }>();
   const {
     data: list,
-    isLoading,
-    isFetching,
     isError,
-  } = useGetSharedListQuery(token, {
-    refetchOnMountOrArgChange: true,
+  } = useQuery<SharedList>({
+    queryKey: ["sharedList", token],
+    queryFn: async () => {
+      const res = await fetch(`/api/r/${token}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    },
+    staleTime: 30_000,
   });
   const { data: myRanking } = useGetMyRankingQuery(token, {
     refetchOnMountOrArgChange: true,
@@ -95,7 +100,7 @@ export default function SharedListPage() {
   >(null);
 
   // ── Loading ───────────────────────────────────────────────────────────────
-  if (isLoading || isFetching) {
+  if (!list && !isError) {
     return (
       <div className="z-10 bg-rk-page overflow-y-auto sm:pb-24">
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">

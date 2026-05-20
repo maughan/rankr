@@ -40,11 +40,12 @@ import {
 } from "@tabler/icons-react";
 
 import {
-  useGetListQuery,
   useCreateItemsMutation,
   useUpdateListMutation,
   useDeleteItemMutation,
 } from "@/lib/api/listsApi";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { processResponseData } from "@/lib/helpers";
 import EditItemModal from "./EditItemModal";
 import Skeleton from "@/app/components/Skeleton";
 import {
@@ -209,8 +210,19 @@ export default function ListDetail({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
+  const listKey = ["list", listId] as const;
 
-  const { data: list, isLoading, isError, refetch } = useGetListQuery(listId);
+  const { data: list, isPending, isError, refetch } = useQuery({
+    queryKey: listKey,
+    queryFn: async () => {
+      const res = await fetch(`/api/s/${listId}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+      return processResponseData([raw])[0];
+    },
+    staleTime: 30_000,
+  });
   const [createItems, { isLoading: isCreating }] = useCreateItemsMutation();
   const [saveList, { isLoading: isSaving }] = useUpdateListMutation();
   const [deleteItem] = useDeleteItemMutation();
@@ -306,6 +318,7 @@ export default function ListDetail({
 
     try {
       await saveList({ id: listId, data: editList }).unwrap();
+      queryClient.invalidateQueries({ queryKey: listKey });
       dispatch(uiActions.closeEditListModal());
       toast.success(S.lists.updated);
     } catch (e) {
@@ -344,6 +357,8 @@ export default function ListDetail({
 
     try {
       await createItems({ listId, names }).unwrap();
+      queryClient.invalidateQueries({ queryKey: listKey });
+      queryClient.invalidateQueries({ queryKey: ["lists"] });
       setPendingItems([]);
       toast.success(S.items.addedCount(names.length));
     } catch (err) {
@@ -365,6 +380,8 @@ export default function ListDetail({
     const timeoutId = setTimeout(async () => {
       try {
         await deleteItem({ listId, itemId: item.id }).unwrap();
+        queryClient.invalidateQueries({ queryKey: listKey });
+        queryClient.invalidateQueries({ queryKey: ["lists"] });
       } catch {
         setPendingDeleteId(null);
         toast.error(S.items.removeFailed(item.name ?? "item"));
@@ -423,7 +440,7 @@ export default function ListDetail({
     );
   }
 
-  if (isLoading || !list) {
+  if (!list) {
     return (
       <div className=" z-10 bg-rk-page overflow-y-auto sm:pb-24">
         {/* Top bar — real chrome */}

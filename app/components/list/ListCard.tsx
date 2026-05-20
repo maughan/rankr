@@ -5,8 +5,9 @@ import Image from "next/image";
 import { formatDistanceStrict } from "date-fns";
 import { EyeClosed } from "lucide-react";
 import { listUrl } from "@/lib/listUrl";
-import { ImageKitLoader } from "@/lib/helpers";
+import { ImageKitLoader, processResponseData } from "@/lib/helpers";
 import type { ListPreview, TopTierItem } from "@/app/types";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function ListCard({
   list,
@@ -15,8 +16,23 @@ export default function ListCard({
   list: ListPreview;
   currentUserId: number;
 }) {
+  const queryClient = useQueryClient();
+
+  const handleMouseEnter = () => {
+    const key = ["list", list.id] as const;
+    queryClient.prefetchQuery({
+      queryKey: key,
+      queryFn: async () => {
+        const res = await fetch(`/api/s/${list.id}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return processResponseData([await res.json()])[0];
+      },
+      staleTime: 30_000,
+    });
+  };
+
   return (
-    <div className="relative">
+    <div className="relative" onMouseEnter={handleMouseEnter}>
       <Link href={listUrl(list)}>
         <div className="bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors">
           {list.img ? (
