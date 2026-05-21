@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { formatDistanceStrict } from "date-fns";
 import { toast } from "sonner";
@@ -60,7 +60,6 @@ import Modal from "../../components/modal";
 import ShareModal from "./ShareModal";
 import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
 import { ImageKitLoader, getUserFromToken } from "@/lib/helpers";
-import { selectRankersByListId } from "@/lib/selectors";
 import { TierItem } from "@/app/types";
 import TierComparison from "../../components/tierComparison";
 import { nameToColor } from "@/lib/itemColor";
@@ -230,7 +229,20 @@ export default function ListDetail({
   const { modals, imageModalUrl, filteredListRankings, userfilter, editList } =
     useAppSelector((state) => state.ui);
 
-  const users = useAppSelector(selectRankersByListId(listId));
+  const users = useMemo(() => {
+    if (!list) return [];
+    const usersMap = new Map<number, string>();
+    list.items.forEach((item: any) => {
+      item.rankings?.forEach((ranking: any) => {
+        if (!ranking.user) return;
+        usersMap.set(ranking.user.id, ranking.user.username);
+      });
+    });
+    const currentUser = getUserFromToken();
+    return Array.from(usersMap.entries())
+      .map(([id, username]) => ({ id, username }))
+      .filter((u) => u.id !== currentUser.id);
+  }, [list]);
 
   const [addItemsOpen, setAddItemsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
