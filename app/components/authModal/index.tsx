@@ -3,6 +3,7 @@
 import { FormEvent, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
@@ -15,6 +16,8 @@ type Tab = "login" | "signup";
 export default function AuthModal() {
   const dispatch = useAppDispatch();
   const open = useAppSelector((s) => s.ui.modals.auth);
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [tab, setTab] = useState<Tab>("login");
   const [loading, setLoading] = useState(false);
@@ -37,6 +40,7 @@ export default function AuthModal() {
   const handleSuccess = () => {
     dispatch(uiActions.closeAuthModal());
     dispatch(baseApi.util.resetApiState());
+    if (pathname === "/") router.push("/s");
   };
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {

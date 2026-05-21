@@ -10,6 +10,7 @@ import { X, Pencil } from "lucide-react";
 
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { processResponseData } from "@/lib/helpers";
+import { listsApi } from "@/lib/api/listsApi";
 import type { SubmitRankingsResponse } from "@/lib/api/listsApi";
 import { S } from "@/app/content/strings";
 import Skeleton from "@/app/components/Skeleton";
@@ -26,6 +27,7 @@ import {
 import { TierItem } from "@/app/types";
 import NavAvatar from "@/app/components/NavAvatar";
 import LandingFooter from "@/app/landing/LandingFooter";
+import { SubmissionLoader } from "@/app/components/SubmissionLoader";
 
 // ── Tier label colours ────────────────────────────────────────────────────────
 
@@ -134,7 +136,6 @@ export default function RankClient({
         return r.json();
       }),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: listKey });
       queryClient.invalidateQueries({ queryKey: ["lists"] });
     },
   });
@@ -144,6 +145,7 @@ export default function RankClient({
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [, setCurrentUserId] = useState(0);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [justDroppedId, setJustDroppedId] = useState<number | null>(null);
   const [pulsingTiers, setPulsingTiers] = useState<Set<number>>(new Set());
 
@@ -191,8 +193,15 @@ export default function RankClient({
     return () => clearTimeout(dropTimer);
   };
 
+  useEffect(() => {
+    return () => {
+      dispatch(uiActions.clearRankings());
+    };
+  }, []);
+
   const handleRankSubmit = async () => {
     if (!list) return;
+    setIsRedirecting(true);
 
     try {
       const { id: userId, username } = getUserFromToken();
@@ -202,15 +211,25 @@ export default function RankClient({
         list.id
       );
 
-      const result = await submitRankings(userRankings);
+      const minDwell = new Promise<void>((r) => setTimeout(r, 1200));
+      const [result] = await Promise.all([
+        submitRankings(userRankings),
+        minDwell,
+      ]);
 
-      dispatch(uiActions.clearRankings());
+      try {
+        await dispatch(listsApi.endpoints.getPayoff.initiate(listId)).unwrap();
+      } catch {
+        // Navigate anyway — submitted page will handle its own loading state
+      }
+
       router.push(
         `${listHref}/submitted${result.isFirstSubmit ? "?first=1" : ""}`
       );
     } catch (e) {
       console.error(e);
       toast.error(S.rankings.saveFailed);
+      setIsRedirecting(false);
     }
   };
 
@@ -303,10 +322,10 @@ export default function RankClient({
                 </Link>
                 <button
                   onClick={handleRankSubmit}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isRedirecting}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || isRedirecting ? (
                     <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
                   ) : (
                     <Pencil size={12} strokeWidth={2.5} />
@@ -325,7 +344,7 @@ export default function RankClient({
             </Link>
             <button
               onClick={handleRankSubmit}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isRedirecting}
               className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {isSubmitting ? (
@@ -490,6 +509,7 @@ export default function RankClient({
           </div>
         </>
       )}
+      {isRedirecting && <SubmissionLoader />}
     </div>
   );
 }

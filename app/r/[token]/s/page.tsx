@@ -8,8 +8,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Pencil } from "lucide-react";
 
-import { useGetSharedListQuery, SharedListItem } from "@/lib/api/listsApi";
+import {
+  useGetSharedListQuery,
+  listsApi,
+  SharedListItem,
+} from "@/lib/api/listsApi";
+import { useAppDispatch } from "@/lib/hooks";
 import { S } from "@/app/content/strings";
+import { SubmissionLoader } from "@/app/components/SubmissionLoader";
 import Skeleton from "@/app/components/Skeleton";
 import { TierRowSkeleton } from "@/app/s/[id]/skeletons";
 import Draggable from "@/app/Draggable";
@@ -83,12 +89,14 @@ function ItemCard({
 export default function AnonRankPage() {
   const router = useRouter();
   const { token } = useParams<{ token: string }>();
+  const dispatch = useAppDispatch();
 
   const { data: list, isLoading, isError } = useGetSharedListQuery(token);
 
   // tierId → itemId[] — starts empty (all items unranked)
   const [tierItems, setTierItems] = useState<Record<number, number[]>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [justDroppedId, setJustDroppedId] = useState<number | null>(null);
   const [pulsingTiers, setPulsingTiers] = useState<Set<number>>(new Set());
 
@@ -150,33 +158,51 @@ export default function AnonRankPage() {
       return;
     }
 
+    setIsRedirecting(true);
     setIsSubmitting(true);
     try {
-      const res = await fetch(`/api/r/${token}/rank`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const minDwell = new Promise<void>((r) => setTimeout(r, 1200));
+      const [res] = await Promise.all([
+        fetch(`/api/r/${token}/rank`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        }),
+        minDwell,
+      ]);
+      setIsSubmitting(false);
 
       if (res.status === 429) {
         toast.error(S.rankings.submitRateLimit);
+        setIsRedirecting(false);
         return;
       }
       if (res.status === 403) {
         toast.error(S.rankings.submitAnonDisabled);
+        setIsRedirecting(false);
         return;
       }
       if (!res.ok) {
         toast.error(S.rankings.submitFailed);
+        setIsRedirecting(false);
         return;
       }
 
       const { isFirstSubmit } = await res.json();
+
+      try {
+        await dispatch(
+          listsApi.endpoints.getAnonPayoff.initiate(token)
+        ).unwrap();
+      } catch {
+        // Navigate anyway — submitted page will handle its own loading state
+      }
+
       router.push(`/r/${token}/submitted${isFirstSubmit ? "?first=1" : ""}`);
     } catch {
       toast.error(S.rankings.submitError);
-    } finally {
       setIsSubmitting(false);
+      setIsRedirecting(false);
     }
   };
 
@@ -306,10 +332,10 @@ export default function AnonRankPage() {
                 </Link>
                 <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isRedirecting}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || isRedirecting ? (
                     <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
                   ) : (
                     <Pencil size={12} strokeWidth={2.5} />
@@ -327,7 +353,7 @@ export default function AnonRankPage() {
               </Link>
               <button
                 onClick={handleSubmit}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isRedirecting}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
@@ -450,6 +476,7 @@ export default function AnonRankPage() {
             </div>
           </div>
         </DndContext>
+        {isRedirecting && <SubmissionLoader />}
       </div>
     </>
   );

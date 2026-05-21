@@ -74,6 +74,19 @@ export const S = {
       `${item}: you said ${userTier}, the crowd says ${crowdTier}. (${n} rankers)`,
   },
 
+  // ── Submission loader ─────────────────────────────────────────────────────
+  submissionLoader: {
+    narratorMessages: [
+      "Tallying your hot takes…",
+      "Asking 142 strangers if you're right…",
+      "Calculating how wrong you are…",
+      "Finding your taste twin…",
+      "Measuring your spice level…",
+      "Consulting the consensus…",
+    ],
+    shuffleCaption: "Sorting the verdict…",
+  },
+
   // ── Share ─────────────────────────────────────────────────────────────────
   share: {
     linkCreateFailed: "Couldn't create the link.",
