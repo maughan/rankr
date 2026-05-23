@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useMemo } from "react";
+import React, { useRef, useEffect, useState, useMemo, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceStrict } from "date-fns";
 import { toast } from "sonner";
@@ -75,6 +76,31 @@ import {
 } from "@/lib/categoryIcons";
 import ImageKit from "imagekit-javascript";
 import LandingFooter from "@/app/landing/LandingFooter";
+import PublishingLoader from "@/app/components/PublishingLoader";
+import PublishCelebration from "@/app/components/PublishCelebration";
+
+// ── Invite param reader — isolated in Suspense so useSearchParams doesn't
+//    block static prerendering of the parent page. ──────────────────────────
+
+function InviteParamReader({
+  listId,
+  onToken,
+}: {
+  listId: number;
+  onToken: () => void;
+}) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const token = searchParams.get("invite");
+    if (!token) return;
+    const maxAge = 60 * 60 * 24 * 365;
+    document.cookie = `rankr_invite_${listId}=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    onToken();
+    // Run once per listId mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listId]);
+  return null;
+}
 
 // ── Tier label colours from spec ────────────────────────────────────────────
 
@@ -259,7 +285,32 @@ export default function ListDetail({
   const [editItem, setEditItem] = useState<TierItem | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const deleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [visibilityWarning, setVisibilityWarning] = useState<
+    "hidden-suggest-draft" | "public-to-private-anon" | null
+  >(null);
+  const [isPublishingList, setIsPublishingList] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const isListOwner = list?.createdBy.id === currentUserId;
+
+  const totalRankingCount = useMemo(() => {
+    if (!list) return 0;
+    return list.items.reduce(
+      (acc: number, item: any) =>
+        acc + (item.rankings?.filter((r: any) => r.value !== 0).length ?? 0),
+      0
+    );
+  }, [list]);
+
+  const anonRankingCount = useMemo(() => {
+    if (!list) return 0;
+    return list.items.reduce(
+      (acc: number, item: any) =>
+        acc +
+        (item.rankings?.filter((r: any) => r.value !== 0 && !r.user).length ??
+          0),
+      0
+    );
+  }, [list]);
 
   useEffect(() => {
     if (!modals.auth) {
@@ -274,6 +325,7 @@ export default function ListDetail({
       dispatch(uiActions.filterRankingsByUser({ user: null, list }));
     }
   }, [list, dispatch]);
+
 
   const handleFilterByUser = (userId: number | null) => {
     if (!list) return;
@@ -325,17 +377,60 @@ export default function ListDetail({
     );
   };
 
+  const handleVisibilityChange = (newVis: string) => {
+    const currentVis = list?.visibility ?? "draft";
+    if (newVis === "hidden" && totalRankingCount === 0) {
+      setVisibilityWarning("hidden-suggest-draft");
+    } else if (
+      newVis === "private" &&
+      currentVis === "public" &&
+      anonRankingCount > 0
+    ) {
+      setVisibilityWarning("public-to-private-anon");
+    } else {
+      setVisibilityWarning(null);
+    }
+    dispatch(uiActions.updateListMeta({ visibility: newVis as any }));
+  };
+
   const handleSaveList = async () => {
     if (!editList.title || !editList.description) return;
 
-    try {
-      await saveList({ id: listId, data: editList }).unwrap();
-      queryClient.invalidateQueries({ queryKey: listKey });
+    const isPublishingNow =
+      editList.visibility === "public" && list?.visibility !== "public";
+
+    if (isPublishingNow) {
       dispatch(uiActions.closeEditListModal());
-      toast.success(S.lists.updated);
-    } catch (e) {
+      setVisibilityWarning(null);
+      setIsPublishingList(true);
+    }
+
+    try {
+      const minDwell = isPublishingNow
+        ? new Promise<void>((r) => setTimeout(r, 1200))
+        : Promise.resolve();
+      await Promise.all([
+        saveList({ id: listId, data: editList }).unwrap(),
+        minDwell,
+      ]);
+      queryClient.invalidateQueries({ queryKey: listKey });
+
+      if (isPublishingNow) {
+        setIsPublishingList(false);
+        setShowCelebration(true);
+      } else {
+        dispatch(uiActions.closeEditListModal());
+        setVisibilityWarning(null);
+        toast.success(S.lists.updated);
+      }
+    } catch (e: any) {
       console.error(e);
-      toast.error(S.lists.updateFailed);
+      setIsPublishingList(false);
+      if (e?.status === 409) {
+        toast.error(S.visibility.draftBlockedByRankings);
+      } else {
+        toast.error(S.lists.updateFailed);
+      }
     }
   };
 
@@ -558,6 +653,23 @@ export default function ListDetail({
   };
 
   return (
+    <>
+    {/* useSearchParams must be inside Suspense to avoid blocking static prerender */}
+    <Suspense>
+      <InviteParamReader listId={listId} onToken={refetch} />
+    </Suspense>
+    {isPublishingList && <PublishingLoader />}
+    {showCelebration && (
+      <PublishCelebration
+        listTitle={list?.title ?? ""}
+        listHref={listHref}
+        onDismiss={() => setShowCelebration(false)}
+        onShare={() => {
+          setShowCelebration(false);
+          setShareOpen(true);
+        }}
+      />
+    )}
     <div className=" z-10 bg-rk-page overflow-y-auto sm:pb-24">
       {/* ── Top bar ───────────────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
@@ -728,15 +840,13 @@ export default function ListDetail({
               <div className="flex gap-1 items-center">
                 {list.visibility === "public" ? (
                   <Eye size={11} className="text-rk-tertiary" />
+                ) : list.visibility === "private" ? (
+                  <Lock size={11} className="text-rk-tertiary" />
                 ) : (
                   <EyeOff size={11} className="text-rk-tertiary" />
                 )}
-                <p className="text-[11px] text-rk-tertiary">
-                  {list.visibility === "public"
-                    ? "Visible"
-                    : list.visibility === "hidden"
-                    ? "Hidden"
-                    : "Draft"}
+                <p className="text-[11px] text-rk-tertiary capitalize">
+                  {list.visibility === "public" ? "Visible" : list.visibility}
                 </p>
               </div>
               <Dot />
@@ -756,6 +866,32 @@ export default function ListDetail({
             </div>
           </div>
         </div>
+
+        {/* ── Hidden read-only banner ───────────────────────────────────── */}
+        {list.visibility === "hidden" && (
+          <div
+            className="flex items-center justify-between gap-3 px-4 py-3 rounded-[10px] border"
+            style={{ backgroundColor: "#0F1828", borderColor: "#1E2C44" }}
+          >
+            <p className="text-[13px] text-rk-secondary">
+              {isListOwner
+                ? S.hidden.creatorBanner
+                : S.hidden.rankerBanner}
+            </p>
+            {isListOwner && (
+              <button
+                onClick={() => {
+                  // Open edit modal then pre-select "public" visibility
+                  handleEditList();
+                  dispatch(uiActions.updateListMeta({ visibility: "public" }));
+                }}
+                className="flex-shrink-0 text-[12px] font-[500] text-rk-accent hover:opacity-80 transition-opacity cursor-pointer whitespace-nowrap"
+              >
+                {S.hidden.creatorCta}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* ── Filter / compare pills ─────────────────────────────────────── */}
         {(!!users.length || hasMyRankings) && (
@@ -1042,6 +1178,7 @@ export default function ListDetail({
       {/* ── Share modal ──────────────────────────────────────────────────── */}
       <ShareModal
         listId={listId}
+        visibility={list?.visibility ?? "draft"}
         open={shareOpen}
         onClose={() => setShareOpen(false)}
       />
@@ -1087,7 +1224,10 @@ export default function ListDetail({
 
       <Modal
         open={modals.editList}
-        handleClose={() => dispatch(uiActions.closeEditListModal())}
+        handleClose={() => {
+          dispatch(uiActions.closeEditListModal());
+          setVisibilityWarning(null);
+        }}
       >
         <div className="p-6 flex flex-col gap-4">
           <p className="text-rk-primary text-[17px] font-[500]">Edit list</p>
@@ -1215,20 +1355,48 @@ export default function ListDetail({
             <span className="text-[13px] text-rk-secondary">Visibility</span>
             <select
               value={editList.visibility}
-              onChange={(e) =>
-                dispatch(
-                  uiActions.updateListMeta({
-                    visibility: e.target.value as "public" | "hidden" | "draft",
-                  })
-                )
-              }
+              onChange={(e) => handleVisibilityChange(e.target.value)}
               className="text-[13px] text-rk-primary bg-rk-bg border border-rk-stroke rounded-[6px] px-2 py-1"
             >
               <option value="draft">Draft</option>
               <option value="public">Public</option>
+              <option value="private">Private</option>
               <option value="hidden">Hidden</option>
             </select>
           </label>
+
+          {visibilityWarning === "hidden-suggest-draft" && (
+            <div className="rounded-[8px] border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 flex flex-col gap-1.5">
+              <p className="text-[12px] text-amber-400 leading-snug">
+                {S.visibility.hiddenNoRankings}
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  dispatch(uiActions.updateListMeta({ visibility: "draft" }));
+                  setVisibilityWarning(null);
+                }}
+                className="text-[12px] font-[500] text-amber-400 underline self-start cursor-pointer"
+              >
+                {S.visibility.hiddenNoRankingsCta}
+              </button>
+            </div>
+          )}
+
+          {visibilityWarning === "public-to-private-anon" && (
+            <div className="rounded-[8px] border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 flex flex-col gap-1.5">
+              <p className="text-[12px] text-amber-400 leading-snug">
+                {S.visibility.publicToPrivateAnon(anonRankingCount)}
+              </p>
+              <button
+                type="button"
+                onClick={() => setVisibilityWarning(null)}
+                className="text-[12px] font-[500] text-amber-400 underline self-start cursor-pointer"
+              >
+                {S.visibility.publicToPrivateAnonCta}
+              </button>
+            </div>
+          )}
 
           <label className="flex items-center justify-between">
             <div className="flex flex-col gap-0.5">
@@ -1255,7 +1423,10 @@ export default function ListDetail({
 
           <div className="flex justify-end gap-2">
             <button
-              onClick={() => dispatch(uiActions.closeCreateListModal())}
+              onClick={() => {
+                dispatch(uiActions.closeEditListModal());
+                setVisibilityWarning(null);
+              }}
               className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary transition-colors"
             >
               Cancel
@@ -1274,5 +1445,6 @@ export default function ListDetail({
         </div>
       </Modal>
     </div>
+    </>
   );
 }

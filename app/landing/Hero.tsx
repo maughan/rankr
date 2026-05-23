@@ -175,6 +175,10 @@ export default async function Hero() {
             {COPY.headline}
           </h1>
 
+          <p className="text-[20px] font-bold text-rk-primary leading-tight tracking-tight">
+            {COPY.tagline}
+          </p>
+
           <p className="text-[16px] text-rk-secondary leading-relaxed max-w-[400px]">
             {COPY.subhead}
           </p>

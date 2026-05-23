@@ -11,6 +11,7 @@ enum ListVisibility {
   public
   hidden
   draft
+  private
 }
 
 model Tier {
@@ -63,6 +64,8 @@ model User {
   followers            Follow[]              @relation("Following")
   blocking             Block[]               @relation("Blocker")
   blockedBy            Block[]               @relation("Blocked")
+  invitesReceived      ListInvite[]          @relation("InvitedUser")
+  invitesSent          ListInvite[]          @relation("InvitedBy")
 }
 
 model Follow {
@@ -133,10 +136,15 @@ model List {
   // Editorial curation
   is_featured                Boolean   @default(false)
 
+  // Publish tracking
+  has_been_published         Boolean   @default(false)
+  published_at               DateTime?
+
   items    Item[]        @relation("ItemToList")
   tiers    Tier[]        @relation("ListToTier")
   pins     UserListPin[]
   rankings Ranking[]
+  invites  ListInvite[]
 }
 
 model UserListPin {
@@ -149,6 +157,23 @@ model UserListPin {
   list List @relation(fields: [listId], references: [id])
 
   @@unique([userId, listId])
+}
+
+model ListInvite {
+  id            Int      @id @default(autoincrement())
+  listId        Int
+  invite_token  String    @unique
+  invitedUserId Int?
+  invitedById   Int
+  createdAt     DateTime  @default(now())
+  revoked_at    DateTime?
+
+  list        List  @relation(fields: [listId], references: [id], onDelete: Cascade)
+  invitedUser User? @relation("InvitedUser", fields: [invitedUserId], references: [id], onDelete: SetNull)
+  invitedBy   User  @relation("InvitedBy",   fields: [invitedById],   references: [id], onDelete: Cascade)
+
+  @@index([listId])
+  @@index([invitedUserId])
 }
 
 model Ranking {

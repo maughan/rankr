@@ -86,6 +86,18 @@ export interface ShareResponse {
   share_url: string;
 }
 
+export interface Invite {
+  id: number;
+  invite_url: string;
+  created_at: string;
+}
+
+export interface CreateInviteResponse {
+  id: number;
+  invite_url: string;
+  created_at: string;
+}
+
 export const listsApi = baseApi.injectEndpoints({
   overrideExisting: true,
   endpoints: (builder) => ({
@@ -291,6 +303,27 @@ export const listsApi = baseApi.injectEndpoints({
     getAnonPayoff: builder.query<PayoffData, string>({
       query: (token) => `/r/${token}/payoff`,
     }),
+
+    getInvites: builder.query<Invite[], number>({
+      query: (listId) => `/s/${listId}/invites`,
+      providesTags: (_r, _e, listId) => [{ type: "Invites" as const, id: listId }],
+    }),
+
+    createInvite: builder.mutation<CreateInviteResponse, number>({
+      query: (listId) => ({
+        url: `/s/${listId}/invites`,
+        method: "POST",
+      }),
+      invalidatesTags: (_r, _e, listId) => [{ type: "Invites" as const, id: listId }],
+    }),
+
+    revokeInvite: builder.mutation<void, { listId: number; inviteId: number }>({
+      query: ({ listId, inviteId }) => ({
+        url: `/s/${listId}/invites/${inviteId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: (_r, _e, { listId }) => [{ type: "Invites" as const, id: listId }],
+    }),
   }),
 });
 
@@ -316,4 +349,7 @@ export const {
   useGetCreatorRankingQuery,
   useGetPayoffQuery,
   useGetAnonPayoffQuery,
+  useGetInvitesQuery,
+  useCreateInviteMutation,
+  useRevokeInviteMutation,
 } = listsApi;

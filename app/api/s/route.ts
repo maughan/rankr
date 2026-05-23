@@ -221,8 +221,15 @@ export async function PATCH(req: Request) {
 
     const data = await req.json();
 
-    const ownsList = await prisma.list.findFirst({
+    const ownsList = await (prisma.list as any).findFirst({
       where: { id: data.id, createdById: user.id },
+      select: {
+        id: true,
+        visibility: true,
+        is_shareable: true,
+        has_been_published: true,
+        items: { select: { id: true } },
+      },
     });
 
     if (!ownsList) {
@@ -232,8 +239,39 @@ export async function PATCH(req: Request) {
       );
     }
 
+    // Transition rule: block regression to draft once rankings exist
+    if (data.visibility === "draft" && ownsList.visibility !== "draft") {
+      const itemIds = ownsList.items.map((i: { id: number }) => i.id);
+      if (itemIds.length > 0) {
+        const rankingCount = await prisma.ranking.count({
+          where: {
+            OR: [
+              { itemId: { in: itemIds } },
+              { listId: data.id, is_anonymous: true },
+            ],
+          },
+        });
+        if (rankingCount > 0) {
+          return NextResponse.json(
+            {
+              message:
+                "Cannot revert to draft after rankings have been submitted.",
+            },
+            { status: 409 }
+          );
+        }
+      }
+    }
+
+    const isPublishing =
+      data.visibility === "public" && ownsList.visibility !== "public";
+    const isLeavingPublic =
+      data.visibility &&
+      data.visibility !== "public" &&
+      ownsList.visibility === "public";
+
     // category_icon/category_color require `prisma generate` after the migration
-    await prisma.list.update({
+    await (prisma.list as any).update({
       where: { id: data.id, createdById: user.id },
       data: {
         title: data.title,
@@ -242,6 +280,19 @@ export async function PATCH(req: Request) {
         description: data.description,
         img: data.img,
         ...(data.visibility && { visibility: data.visibility }),
+        // Kill share link when leaving public
+        ...(isLeavingPublic &&
+          ownsList.is_shareable && {
+            is_shareable: false,
+            share_token: null,
+            share_token_created_at: null,
+          }),
+        // Record first publish timestamp
+        ...(isPublishing &&
+          !ownsList.has_been_published && {
+            has_been_published: true,
+            published_at: new Date(),
+          }),
         ...(data.category_icon &&
           ICON_NAMES_SET.has(data.category_icon) && {
             category_icon: data.category_icon,
@@ -257,7 +308,8 @@ export async function PATCH(req: Request) {
     });
 
     return NextResponse.json({ message: "Success" }, { status: 200 });
-  } catch {
+  } catch (e) {
+    console.log("ERR", e);
     return Response.error();
   }
 }

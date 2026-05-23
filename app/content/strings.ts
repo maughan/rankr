@@ -56,7 +56,7 @@ export const S = {
     imageRemoved: "Image removed.",
     imageRemoveFailed: "Couldn't remove the image.",
     imageTypeError: "JPEG, PNG, or WebP only.",
-    imageSizeError: "File's too big — 5 MB max.",
+    imageSizeError: "File's too big - 5 MB max.",
   },
 
   // ── Rankings ──────────────────────────────────────────────────────────────
@@ -70,7 +70,12 @@ export const S = {
     submitAnonDisabled: "Anonymous rankings are off for this list.",
     submitError: "Something went wrong. Try again.",
     spicyHeading: "That's a take.",
-    spicyDetail: (item: string, userTier: string, crowdTier: string, n: number) =>
+    spicyDetail: (
+      item: string,
+      userTier: string,
+      crowdTier: string,
+      n: number
+    ) =>
       `${item}: you said ${userTier}, the crowd says ${crowdTier}. (${n} rankers)`,
   },
 
@@ -104,8 +109,7 @@ export const S = {
     linkNotFound: "Link not found",
     linkNotFoundDetail: "This link may have been disabled or rotated.",
     anonDisabledTitle: "Rankings closed.",
-    anonDisabledDetail:
-      "The creator has turned off anonymous submissions.",
+    anonDisabledDetail: "The creator has turned off anonymous submissions.",
   },
 
   // ── Empty states ──────────────────────────────────────────────────────────
@@ -139,10 +143,10 @@ export const S = {
     eyebrow: "ranking submitted",
 
     // Page title — four states: first/re × complete/partial
-    titleFirstComplete:    "Done.",
-    titleFirstPartial:     "Saved.",
+    titleFirstComplete: "Done.",
+    titleFirstPartial: "Saved.",
     titleResubmitComplete: "Updated.",
-    titleResubmitPartial:  "Hot reload.",
+    titleResubmitPartial: "Hot reload.",
 
     // Subtitle
     subtitleComplete: (n: number, total: number) =>
@@ -159,7 +163,11 @@ export const S = {
 
     // Hottest take card
     hottestTakeEyebrow: "your hottest take",
-    hottestTakeSupportLine: (tier: string, pct: number, dir: "above" | "below") =>
+    hottestTakeSupportLine: (
+      tier: string,
+      pct: number,
+      dir: "above" | "below"
+    ) =>
       dir === "above"
         ? `${pct}% of rankers put it in ${tier}-tier or lower`
         : `${pct}% of rankers put it in ${tier}-tier or higher`,
@@ -176,17 +184,64 @@ export const S = {
     sTierLabel: "in your S-tier",
 
     // CTAs
-    ctaShare:      "Share my hot takes",
+    ctaShare: "Share my hot takes",
     ctaShareFirst: "Share your ranking",
-    ctaCompare:    "See the full comparison",
-    ctaFinish:     "Finish ranking",
-    ctaSignup:     "Save your ranking to come back later",
+    ctaCompare: "See the full comparison",
+    ctaFinish: "Finish ranking",
+    ctaSignup: "Save your ranking to come back later",
 
     // Footer
     browseLists: "Browse more lists",
 
     // No data
     noRankingFound: "No ranking found for this list.",
+  },
+
+  // ── Publish flow ─────────────────────────────────────────────────────────
+  publish: {
+    loaderMessages: [
+      "Publishing your list…",
+      "Opening the gates…",
+      "Making it live…",
+      "Letting the world in…",
+    ],
+    celebrationTitle: "Your list is live.",
+    celebrationSubhead: (title: string) =>
+      `"${title}" is now public. Time to let people argue about it.`,
+    celebrationCta: "Start ranking",
+    celebrationShare: "Share it",
+    celebrationDismiss: "View list",
+  },
+
+  // ── Hidden list banners ───────────────────────────────────────────────────
+  hidden: {
+    creatorBanner: "Archived. Rankings are frozen.",
+    creatorCta: "Make it live again",
+    rankerBanner: "This list is archived. Your ranking is still here.",
+  },
+
+  // ── Invites ───────────────────────────────────────────────────────────────
+  invites: {
+    createFailed: "Couldn't create invite link.",
+    revokeFailed: "Couldn't remove invite.",
+    sectionLabel: "Invite links",
+    sectionHint: "Anyone with an invite link can view and rank this private list.",
+    createCta: "Create invite link",
+    removeLabel: "Remove",
+    emptyHint: "No active invite links.",
+    newLinkLabel: "New link",
+  },
+
+  // ── Visibility transitions ────────────────────────────────────────────────
+  visibility: {
+    hiddenNoRankings:
+      "No rankings yet — draft keeps it private without locking anything in.",
+    hiddenNoRankingsCta: "Switch to Draft",
+    publicToPrivateAnon: (n: number) =>
+      `${n} anonymous submission${n !== 1 ? "s" : ""} exist. Switching to private stops new ones — existing rankings are kept.`,
+    publicToPrivateAnonCta: "Got it",
+    draftBlockedByRankings:
+      "Can't revert to draft — rankings have already been submitted.",
   },
 
   // ── Profile settings ──────────────────────────────────────────────────────
@@ -210,7 +265,8 @@ export const S = {
   // ── Landing (source of truth — re-exported via app/landing/content.ts) ────
   landing: {
     eyebrow: "Tier lists. But actually fun.",
-    headline: "Your taste,\npeer-reviewed.",
+    headline: "The tier list maker\nfor people with opinions",
+    tagline: "Your taste, peer-reviewed.",
     subhead:
       "Make stacks. See who agrees, who's dead wrong, and what the crowd actually thinks. Compare your ranking against anyone.",
     ctaPrimary: "Start ranking",
@@ -222,23 +278,104 @@ export const S = {
     finalCta: "Start your first stack",
     finalUnderline: "No credit card. No spam. Just tier lists.",
     footerTagline: "Tier lists. But actually fun.",
+    footerMaker: "Tier list maker",
+    footerBrowse: "Browse tier lists",
+    // SEO metadata — keyword-first, brand last
+    seoTitle: "Tier List Maker - Create, Rank & Share Tier Lists · tierstack",
+    seoDescription:
+      "Make a tier list, rank anything S to F, and see how the crowd ranks it. A free tier list maker built for sharing.",
   },
 
   landingFeatures: [
     {
       icon: "◈",
       title: "Rank anything",
-      body: "Movies, food, people, places — if it has an opinion, it belongs in a stack.",
+      body: "Movies, food, people, places. If it has an opinion, it belongs in a stack.",
     },
     {
       icon: "⇄",
       title: "Compare rankings",
-      body: "Share your stack and get a head-to-head alignment score. 100% means you're twins.",
+      body: "Share your stack and get a head-to-head alignment score. 100% find your taste twin.",
     },
     {
       icon: "🔥",
       title: "Find the hot takes",
-      body: "See what the crowd ranked highest — and exactly where you went your own way.",
+      body: "See what the crowd ranked highest, and exactly where you went your own way.",
     },
   ] as const,
+
+  // ── SEO content block (landing page, below the fold) ─────────────────────
+  seoContent: {
+    whatHeading: "What is a tier list?",
+    what: 'A tier list ranks things by letter grade, S at the top, F at the bottom. The format came out of gaming communities as a way to sort characters by power level, but it works for anything you have opinions about: movies, albums, fast food, programming languages, reality TV contestants. If it\'s rankable, it belongs in a tier list. (You\'ll see it spelled "tierlist" as one word and "tier list" as two, same thing, different keyboards.)',
+    howHeading: "How to make a tier list on tierstack",
+    steps: [
+      {
+        step: "Create a list",
+        detail:
+          "Name it, pick a category icon, and add the items you want to rank. Give each one a name, a colour, or upload an image.",
+      },
+      {
+        step: "Drag items into tiers",
+        detail:
+          "Move items from the unranked pool into S through F. Nothing is locked in until you submit.",
+      },
+      {
+        step: "Share the link",
+        detail:
+          "Generate a shareable link. Anyone can rank the same list, anonymously or with an account.",
+      },
+      {
+        step: "See the verdict",
+        detail:
+          "The payoff screen shows your alignment score against the crowd, your most contrarian pick, and the person who ranked most like you.",
+      },
+    ],
+  },
+
+  // ── /tier-list-maker dedicated page ──────────────────────────────────────
+  tierListMakerPage: {
+    seoTitle: "Free Tier List Maker - Create & Share Tier Lists · tierstack",
+    seoDescription:
+      "tierstack is a free tier list maker. Build a tier list for anything, share it with a link, and see how the crowd ranked it.",
+    h1: "Free tier list maker",
+    intro:
+      "Build a tier list for anything, movies, food, music, games. Share it with one link and see exactly how the crowd ranked it, who agreed with you, and where your takes were genuinely spicy.",
+    featuresHeading: "Everything a tier list needs",
+    howHeading: "How it works",
+    steps: [
+      {
+        step: "Create",
+        detail: "Start a new list. Add items, names, colours, or images.",
+      },
+      {
+        step: "Rank",
+        detail:
+          "Drag items into S through F tiers until your ranking looks right.",
+      },
+      {
+        step: "Share",
+        detail: "One link. Anyone can rank — no account needed.",
+      },
+      {
+        step: "Compare",
+        detail:
+          "See the crowd ranking, your alignment score, and your hottest takes.",
+      },
+    ],
+    differentiatorHeading: "Not just a tier list builder",
+    differentiator:
+      "Most tier list tools are solo, you rank, you screenshot, you post. tierstack is built around comparison. Submit your ranking and immediately see where you land against everyone who ranked before you: an alignment score, your most contrarian pick, and the person whose taste most closely matches yours.",
+    ctaLabel: "Make a tier list",
+  },
+
+  // ── /browse page ──────────────────────────────────────────────────────────
+  browsePage: {
+    seoTitle: "Browse Tier Lists - Popular & Recent · tierstack",
+    seoDescription:
+      "Browse public tier lists on tierstack. Find popular rankings on movies, music, food, games, and more.",
+    h1: "Browse tier lists",
+    subtitle: "Public lists, ranked by the community.",
+    empty: "No public lists yet - check back soon.",
+  },
 };

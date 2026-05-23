@@ -20,6 +20,7 @@ export async function POST(req: Request, { params }: Params) {
     where: { share_token: token },
     select: {
       id: true,
+      visibility: true,
       is_shareable: true,
       anonymous_rankings_enabled: true,
       items: { select: { id: true } },
@@ -27,6 +28,8 @@ export async function POST(req: Request, { params }: Params) {
   });
 
   if (!list || !list.is_shareable) return new Response(null, { status: 404 });
+  // Share-token submissions are only valid for public lists
+  if (list.visibility !== "public") return new Response(null, { status: 404 });
   if (!list.anonymous_rankings_enabled) {
     return NextResponse.json(
       { error: "Anonymous rankings are disabled for this list." },

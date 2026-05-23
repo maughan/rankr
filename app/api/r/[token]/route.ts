@@ -12,6 +12,9 @@ export async function GET(_req: Request, { params }: Params) {
 
   if (!data) return new Response(null, { status: 404 });
   if (!data.is_shareable) return new Response(null, { status: 404 });
+  // Share links only work on public lists — leaving public disables is_shareable atomically,
+  // but guard here too in case of any data inconsistency.
+  if (data.visibility !== "public") return new Response(null, { status: 404 });
 
   const etag = computeETag(data);
   if (checkETagMatch(_req, etag)) return new Response(null, { status: 304 });

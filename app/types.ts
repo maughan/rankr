@@ -1,4 +1,4 @@
-export type ListVisibility = "public" | "hidden" | "draft";
+export type ListVisibility = "public" | "hidden" | "draft" | "private";
 
 export interface TopTierItem {
   id: number;

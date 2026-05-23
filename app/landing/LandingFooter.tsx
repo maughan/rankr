@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { IconCoffee } from "@tabler/icons-react";
 import { COPY } from "./content";
 import { S } from "@/app/content/strings";
@@ -15,6 +16,21 @@ export default function LandingFooter() {
         </span>
         <span className="hidden sm:block text-[11px] text-rk-muted">{COPY.footerTagline}</span>
       </div>
+
+      <nav className="hidden sm:flex items-center gap-4">
+        <Link
+          href="/tier-list-maker"
+          className="text-[11px] text-rk-muted hover:text-rk-secondary transition-colors"
+        >
+          {COPY.footerMaker}
+        </Link>
+        <Link
+          href="/browse"
+          className="text-[11px] text-rk-muted hover:text-rk-secondary transition-colors"
+        >
+          {COPY.footerBrowse}
+        </Link>
+      </nav>
 
       <div className="flex items-center gap-4">
         {KOFI_URL && (
