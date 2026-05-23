@@ -2,7 +2,7 @@ import { FEATURES } from "./content";
 
 export default function ComparisonFeatureSection() {
   return (
-    <section className="px-6 py-20 sm:px-10 lg:pt-0 max-w-6xl mx-auto w-full">
+    <section className="px-6 py-20 sm:px-10 max-w-6xl mx-auto w-full sm:pt-10">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {FEATURES.map((f) => (
           <div

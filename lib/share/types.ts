@@ -17,7 +17,12 @@ export const FORMATS: Record<Format, FormatSpec> = {
 
 // ── Template registry ─────────────────────────────────────────────────────────
 
-export const KNOWN_TEMPLATES = ["head-to-head", "hot-takes"] as const;
+export const KNOWN_TEMPLATES = [
+  "head-to-head",
+  "hot-takes",
+  "taste-nemesis",
+  "divisive-item",
+] as const;
 export type TemplateName = (typeof KNOWN_TEMPLATES)[number];
 
 // Each template file exports one object conforming to this interface.
@@ -51,6 +56,30 @@ export interface HotTakesData {
     yourTier: string;
     crowdTier: string;
     delta: number; // positive = you ranked higher than crowd
+  }>;
+  shareUrl: string;
+}
+
+export interface TasteNemesisData {
+  listName: string;
+  nemesisHandle: string;
+  nemesisAvatarColor: string;
+  alignmentPct: number;
+  disagreedCount: number;
+  totalCount: number;
+  shareUrl: string;
+}
+
+export interface DivisiveItemData {
+  listName: string;
+  itemName: string;
+  rankerCount: number;
+  /** Per-tier distribution — ordered S→F. Only tiers with value > 0. */
+  distribution: Array<{
+    tierTitle: string;
+    tierValue: number;
+    count: number;
+    maxCount: number; // for normalizing histogram bar heights
   }>;
   shareUrl: string;
 }

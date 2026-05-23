@@ -143,10 +143,6 @@ export default function TierListMakerPage() {
             {S.landing.finalUnderline}
           </p>
         </section>
-
-        <div className="mt-auto">
-          <LandingFooter />
-        </div>
       </div>
     </>
   );

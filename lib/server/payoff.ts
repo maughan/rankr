@@ -1,6 +1,28 @@
 // Server-only. Never import from client components.
 import { prisma } from "@/lib/prisma";
 import { nameToColor } from "@/lib/itemColor";
+import { MIN_OTHER_AUTHED_RANKERS_FOR_NEMESIS } from "@/lib/insightsConfig";
+
+/**
+ * Scores the overlap between a viewer's rankings and one other ranker's.
+ * "Within" means the tier values differ by at most 1 (≈ adjacent tiers).
+ * "Agreed" means exact same tier value.
+ * Exported so the scoring rule can be unit-tested in isolation.
+ */
+export function scoreRankerPair(
+  userValueMap: Map<number, number>,
+  theirValues: Map<number, number>
+): { within: number; agreed: number; both: number } {
+  let within = 0, agreed = 0, both = 0;
+  for (const [itemId, myValue] of userValueMap) {
+    const theirValue = theirValues.get(itemId);
+    if (theirValue === undefined) continue;
+    both++;
+    if (Math.abs(myValue - theirValue) <= 1) within++;
+    if (myValue === theirValue) agreed++;
+  }
+  return { within, agreed, both };
+}
 
 export interface PayoffData {
   completion: { rankedCount: number; totalCount: number; isComplete: boolean };
@@ -24,6 +46,14 @@ export interface PayoffData {
     avatarColor: string;
     alignmentPct: number;
     agreedCount: number;
+    totalCount: number;
+  } | null;
+  tasteNemesis: {
+    userId: number;
+    handle: string;
+    avatarColor: string;
+    alignmentPct: number;
+    disagreedCount: number;
     totalCount: number;
   } | null;
   extras: {
@@ -190,15 +220,11 @@ export async function computePayoff({
     .slice(0, 500);
 
   let bestPct = -1;
+  let worstPct = Infinity;
+  let farthestMatch: PayoffData["tasteNemesis"] = null;
+
   for (const [uid, { username, values: theirValues }] of rankerEntries) {
-    let within = 0, agreed = 0, both = 0;
-    for (const [itemId, myValue] of userValueMap) {
-      const theirValue = theirValues.get(itemId);
-      if (theirValue === undefined) continue;
-      both++;
-      if (Math.abs(myValue - theirValue) <= 1) within++;
-      if (myValue === theirValue) agreed++;
-    }
+    const { within, agreed, both } = scoreRankerPair(userValueMap, theirValues);
     if (both === 0) continue;
     const pct = Math.round((within / both) * 100);
     if (pct > bestPct) {
@@ -212,7 +238,27 @@ export async function computePayoff({
         totalCount: both,
       };
     }
+    if (pct < worstPct) {
+      worstPct = pct;
+      farthestMatch = {
+        userId: uid,
+        handle: username,
+        avatarColor: nameToColor(username),
+        alignmentPct: pct,
+        disagreedCount: both - agreed,
+        totalCount: both,
+      };
+    }
   }
+
+  // Gate: require enough other authed rankers; also exclude when the
+  // farthest match is the same person as the closest match (only 1 candidate).
+  const tasteNemesis: PayoffData["tasteNemesis"] =
+    rankerEntries.length >= MIN_OTHER_AUTHED_RANKERS_FOR_NEMESIS &&
+    farthestMatch !== null &&
+    farthestMatch.userId !== closestMatch?.userId
+      ? farthestMatch
+      : null;
 
   // ── Extras ────────────────────────────────────────────────────────────────
   let contrarianPicks = 0;
@@ -234,6 +280,7 @@ export async function computePayoff({
     alignment: { pct: alignmentPct, withinOneTier, perfectMatches, rankerCount },
     hottestTake,
     closestMatch,
+    tasteNemesis,
     extras: { contrarianPicks, perfectMatchCount, sTierCount },
     shareToken,
   };

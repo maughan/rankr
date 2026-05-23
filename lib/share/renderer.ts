@@ -3,10 +3,14 @@ import { getFontConfig } from "./font";
 import { FORMATS, Format, TemplateName, TemplateModule } from "./types";
 import { headToHead } from "./templates/head-to-head";
 import { hotTakes } from "./templates/hot-takes";
+import { tasteNemesis } from "./templates/taste-nemesis";
+import { divisiveItem } from "./templates/divisive-item";
 
 const TEMPLATES: Record<TemplateName, TemplateModule> = {
   "head-to-head": headToHead,
   "hot-takes": hotTakes,
+  "taste-nemesis": tasteNemesis,
+  "divisive-item": divisiveItem,
 };
 
 export async function renderCard(
