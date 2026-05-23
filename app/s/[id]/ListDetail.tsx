@@ -16,6 +16,8 @@ import {
   SquarePen,
   Undo2,
   ImageIcon,
+  Flame,
+  Zap,
 } from "lucide-react";
 import {
   IconStack2,
@@ -78,6 +80,12 @@ import ImageKit from "imagekit-javascript";
 import LandingFooter from "@/app/landing/LandingFooter";
 import PublishingLoader from "@/app/components/PublishingLoader";
 import PublishCelebration from "@/app/components/PublishCelebration";
+import {
+  MIN_RANKERS_FOR_INSIGHTS,
+  MIN_ITEM_RANKERS_FOR_BADGE,
+  classifyAgreement,
+  type AgreementTier,
+} from "@/lib/insightsConfig";
 
 // ── Invite param reader — isolated in Suspense so useSearchParams doesn't
 //    block static prerendering of the parent page. ──────────────────────────
@@ -151,6 +159,40 @@ function CategoryIconDisplay({
 }
 
 // ── Item card ────────────────────────────────────────────────────────────────
+
+function AgreementBadge({ pct, tier }: { pct: number; tier: AgreementTier }) {
+  const base = "flex items-center gap-0.5 px-1.5 py-0.5 rounded-[5px] text-[9px] font-[600] leading-none w-full justify-center";
+
+  if (tier === "unique") {
+    return (
+      <div className={base} style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#F87171" }}>
+        <Zap size={8} />
+        <span>only you</span>
+      </div>
+    );
+  }
+  if (tier === "rare") {
+    return (
+      <div className={base} style={{ backgroundColor: "rgba(239,68,68,0.12)", color: "#F87171" }}>
+        <Flame size={8} />
+        <span>{pct}% · rare</span>
+      </div>
+    );
+  }
+  if (tier === "mid") {
+    return (
+      <div className={base} style={{ backgroundColor: "rgba(148,163,184,0.10)", color: "#94A3B8" }}>
+        <span>{pct}% agree</span>
+      </div>
+    );
+  }
+  // high
+  return (
+    <div className={base} style={{ backgroundColor: "rgba(134,239,172,0.12)", color: "#86EFAC" }}>
+      <span>{pct}% agree</span>
+    </div>
+  );
+}
 
 function ItemCard({ item, onEdit }: { item: TierItem; onEdit?: () => void }) {
   const editable = !!onEdit;
@@ -273,7 +315,7 @@ export default function ListDetail({
   const [addItemsOpen, setAddItemsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareCardTemplate, setShareCardTemplate] = useState<
-    "head-to-head" | "hot-takes" | null
+    "head-to-head" | "hot-takes" | "divisive-item" | null
   >(null);
   const [itemsText, setItemsText] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -311,6 +353,102 @@ export default function ListDetail({
       0
     );
   }, [list]);
+
+  // Count distinct rankers across all items for insight gating.
+  const distinctRankerCount = useMemo(() => {
+    if (!list) return 0;
+    const userIds = new Set<number>();
+    let hasAnon = false;
+    for (const item of list.items) {
+      for (const r of item.rankings as any[]) {
+        if (r.value !== 0) {
+          if (r.user?.id) userIds.add(r.user.id);
+          else hasAnon = true;
+        }
+      }
+    }
+    return userIds.size + (hasAnon ? 1 : 0);
+  }, [list]);
+
+  // Most divisive item — highest SD of tier index across all rankers.
+  const divisiveItem = useMemo(() => {
+    if (!list || !list.items.length) return null;
+    if (distinctRankerCount < MIN_RANKERS_FOR_INSIGHTS) return null;
+
+    const sortedTiers = [...list.tiers]
+      .filter((t) => t.value > 0)
+      .sort((a, b) => b.value - a.value);
+    if (sortedTiers.length < 2) return null;
+
+    const tierValueToIdx = new Map(sortedTiers.map((t, i) => [t.value, i]));
+
+    let best: {
+      itemId: number;
+      itemName: string;
+      sd: number;
+      distribution: { title: string; color: string; count: number }[];
+      totalRankers: number;
+    } | null = null;
+
+    for (const item of list.items) {
+      const nonZero = (item.rankings as any[]).filter((r) => r.value !== 0);
+      if (nonZero.length < MIN_ITEM_RANKERS_FOR_BADGE) continue;
+
+      const indices = nonZero
+        .map((r: any) => tierValueToIdx.get(r.value) ?? -1)
+        .filter((i) => i >= 0);
+      if (indices.length < 2) continue;
+
+      const mean = indices.reduce((s: number, v: number) => s + v, 0) / indices.length;
+      const variance =
+        indices.reduce((s: number, v: number) => s + (v - mean) ** 2, 0) /
+        indices.length;
+      const sd = Math.sqrt(variance);
+
+      if (!best || sd > best.sd) {
+        const distribution = sortedTiers.map((tier) => ({
+          title: tier.title,
+          color: (TIER_STYLE[tier.title] ?? { bg: tier.color }).bg,
+          count: nonZero.filter((r: any) => r.value === tier.value).length,
+        }));
+        best = {
+          itemId: item.id,
+          itemName: item.name ?? "?",
+          sd,
+          distribution,
+          totalRankers: nonZero.length,
+        };
+      }
+    }
+
+    return best;
+  }, [list, distinctRankerCount]);
+
+  // Per-item agreement data — only when viewing own ranking with enough rankers.
+  const agreementByItemId = useMemo<Map<number, { pct: number; tier: AgreementTier } | null>>(() => {
+    const empty = new Map<number, { pct: number; tier: AgreementTier } | null>();
+    if (!list || !currentUserId || userfilter !== currentUserId) return empty;
+    if (distinctRankerCount < MIN_RANKERS_FOR_INSIGHTS) return empty;
+
+    const result = new Map<number, { pct: number; tier: AgreementTier } | null>();
+    for (const item of list.items) {
+      const allRankings = (item.rankings as any[]).filter((r) => r.value !== 0);
+      if (allRankings.length < MIN_ITEM_RANKERS_FOR_BADGE) {
+        result.set(item.id, null);
+        continue;
+      }
+      const myRanking = allRankings.find((r) => r.user?.id === currentUserId);
+      if (!myRanking) {
+        result.set(item.id, null);
+        continue;
+      }
+      const matches = allRankings.filter((r) => r.value === myRanking.value).length;
+      const pct = Math.round((matches / allRankings.length) * 100);
+      const tier = classifyAgreement(pct, allRankings.length);
+      result.set(item.id, { pct, tier });
+    }
+    return result;
+  }, [list, currentUserId, userfilter, distinctRankerCount]);
 
   useEffect(() => {
     if (!modals.auth) {
@@ -619,6 +757,63 @@ export default function ListDetail({
             <TierRowSkeleton tier="F" count={1} />
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // ── Divisive item callout ────────────────────────────────────────────────
+
+  function DivisiveItemCallout() {
+    if (!divisiveItem) return null;
+    const { itemName, distribution, totalRankers } = divisiveItem;
+    const maxCount = Math.max(...distribution.map((d) => d.count), 1);
+    const BAR_MAX_H = 40; // px
+
+    return (
+      <div
+        className="rounded-[10px] border border-rk-stroke bg-rk-surface p-4 flex flex-col gap-3"
+      >
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col gap-1 min-w-0">
+            <p className="text-[10px] font-[500] text-rk-tertiary uppercase tracking-widest">
+              {S.divisive.eyebrow}
+            </p>
+            <p className="text-[15px] font-[600] text-rk-primary leading-snug truncate">
+              {itemName}
+            </p>
+          </div>
+          {list?.is_shareable && list?.share_token && (
+            <button
+              onClick={() => setShareCardTemplate("divisive-item")}
+              className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 text-[11px] font-[500] text-rk-muted border border-rk-stroke rounded-[6px] hover:text-rk-secondary hover:border-rk-secondary transition-colors cursor-pointer"
+            >
+              <ImageIcon size={11} />
+              Share
+            </button>
+          )}
+        </div>
+
+        {/* Histogram */}
+        <div className="flex items-end gap-1.5">
+          {distribution.map((d) => (
+            <div key={d.title} className="flex flex-col items-center gap-1 flex-1">
+              <div
+                className="w-full rounded-t-[3px]"
+                style={{
+                  height: Math.max(2, Math.round((d.count / maxCount) * BAR_MAX_H)),
+                  backgroundColor: d.count > 0 ? d.color : "rgba(255,255,255,0.06)",
+                  opacity: d.count > 0 ? 1 : 0.4,
+                  minWidth: 8,
+                }}
+              />
+              <span className="text-[10px] font-[600] text-rk-tertiary">{d.title}</span>
+            </div>
+          ))}
+        </div>
+
+        <p className="text-[11px] text-rk-muted leading-snug">
+          {S.divisive.caption(totalRankers)}
+        </p>
       </div>
     );
   }
@@ -999,6 +1194,9 @@ export default function ListDetail({
           />
         )}
 
+        {/* ── Divisive item callout — aggregate view only ──────────────── */}
+        {!userfilter && <DivisiveItemCallout />}
+
         {/* ── Tier rows — always shown, driven by filteredListRankings ──── */}
         {list.items.length > 0 && (
           <div className="flex flex-col gap-[6px]">
@@ -1042,13 +1240,15 @@ export default function ListDetail({
                     className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
                     style={{ backgroundColor: "#0F1828", borderRadius: 9 }}
                   >
-                    {tierItems.map((item) => (
-                      <ItemCard
-                        key={item.id}
-                        item={item}
-                        onEdit={getOnEdit(item)}
-                      />
-                    ))}
+                    {tierItems.map((item) => {
+                      const badge = agreementByItemId.get(item.id);
+                      return (
+                        <div key={item.id} className="flex flex-col items-stretch gap-1" style={{ width: 70 }}>
+                          <ItemCard item={item} onEdit={getOnEdit(item)} />
+                          {badge && <AgreementBadge pct={badge.pct} tier={badge.tier} />}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -1119,6 +1319,15 @@ export default function ListDetail({
               <ImageIcon size={13} />
               Share hot takes
             </button>
+            {divisiveItem && (
+              <button
+                onClick={() => setShareCardTemplate("divisive-item")}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+              >
+                <ImageIcon size={13} />
+                {S.divisive.shareLabel}
+              </button>
+            )}
           </div>
         )}
 

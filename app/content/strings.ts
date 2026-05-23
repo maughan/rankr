@@ -138,7 +138,22 @@ export const S = {
     },
   },
 
+  // ── Divisive item ─────────────────────────────────────────────────────────
+  divisive: {
+    eyebrow: "most divisive",
+    caption: (n: number) =>
+      `${n} ranker${n !== 1 ? "s" : ""}. Zero consensus.`,
+    shareLabel: "Share most divisive",
+  },
+
   // ── Payoff screen ─────────────────────────────────────────────────────────
+  nemesis: {
+    eyebrow: "taste nemesis",
+    detail: (handle: string, n: number, total: number) =>
+      `@${handle} disagrees with you on ${n} of ${total} items.`,
+    shareLabel: "Share your nemesis",
+  },
+
   payoff: {
     eyebrow: "ranking submitted",
 

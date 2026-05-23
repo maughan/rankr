@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { X, Flame, Sparkles, Check, Trophy, ArrowRight } from "lucide-react";
-import { IconCoffee } from "@tabler/icons-react";
+import { X, Flame, Sparkles, Check, Trophy, ArrowRight, Zap } from "lucide-react";
+import { IconCoffee, IconSwords } from "@tabler/icons-react";
 import { track } from "@vercel/analytics";
 import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
 import Skeleton from "@/app/components/Skeleton";
@@ -451,17 +451,78 @@ function ClosestMatchCard({
   );
 }
 
-// ── Featured (hottest take + closest match) ───────────────────────────────────
+// ── Taste nemesis card ────────────────────────────────────────────────────────
+
+function TasteNemesisCard({
+  nemesis,
+}: {
+  nemesis: NonNullable<PayoffData["tasteNemesis"]>;
+}) {
+  return (
+    <div className="rounded-[12px] border bg-rk-surface p-4 flex flex-col gap-3 justify-center items-center"
+      style={{ borderColor: "rgba(240,149,149,0.25)" }}>
+      <div className="flex items-center gap-1.5">
+        <IconSwords size={12} style={{ color: "#F09595" }} strokeWidth={1.75} />
+        <p
+          className="text-[11px] font-[500] uppercase tracking-widest"
+          style={{ color: "#F09595" }}
+        >
+          {S.nemesis.eyebrow}
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {/* Me */}
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-[600] text-white flex-shrink-0"
+          style={{ backgroundColor: "#4A8AE8" }}
+        >
+          me
+        </div>
+
+        <Zap size={13} style={{ color: "#F09595" }} className="flex-shrink-0" />
+
+        {/* Nemesis */}
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-[14px] font-[600] text-white flex-shrink-0"
+          style={{ backgroundColor: nemesis.avatarColor }}
+        >
+          {(nemesis.handle[0] ?? "?").toUpperCase()}
+        </div>
+
+        <div className="flex flex-col leading-none gap-1">
+          <span
+            className="font-[700] tabular-nums leading-none"
+            style={{ fontSize: 26, color: "#F09595" }}
+          >
+            {nemesis.alignmentPct}%
+          </span>
+          <span className="text-[11px] text-rk-muted">aligned</span>
+        </div>
+      </div>
+
+      <p className="text-[12px] text-rk-muted leading-snug">
+        {S.nemesis.detail(
+          nemesis.handle,
+          nemesis.disagreedCount,
+          nemesis.totalCount
+        )}
+      </p>
+    </div>
+  );
+}
+
+// ── Featured (hottest take + closest match + nemesis) ─────────────────────────
 
 export function PayoffFeatured({ data }: PayoffPageProps) {
   if (!data) return null;
-  const { hottestTake, closestMatch, alignment } = data;
-  if (!hottestTake && !closestMatch) return null;
+  const { hottestTake, closestMatch, tasteNemesis, alignment } = data;
+  if (!hottestTake && !closestMatch && !tasteNemesis) return null;
 
   // "few rankers" = 1-3 others besides the current user
   const isFewRankers = alignment.rankerCount - 1 < 4;
 
-  const cardCount = [hottestTake, closestMatch].filter(Boolean).length;
+  const cardCount = [hottestTake, closestMatch, tasteNemesis].filter(Boolean).length;
 
   return (
     <div
@@ -473,6 +534,7 @@ export function PayoffFeatured({ data }: PayoffPageProps) {
       {closestMatch && (
         <ClosestMatchCard match={closestMatch} isFew={isFewRankers} />
       )}
+      {tasteNemesis && <TasteNemesisCard nemesis={tasteNemesis} />}
     </div>
   );
 }
@@ -536,6 +598,7 @@ export function PayoffCtas({
   backHref,
 }: PayoffPageProps & { isComplete: boolean }) {
   const [shareOpen, setShareOpen] = useState(false);
+  const [nemesisShareOpen, setNemesisShareOpen] = useState(false);
 
   if (!data) return null;
 
@@ -547,13 +610,28 @@ export function PayoffCtas({
   return (
     <>
       <div className="flex flex-col gap-3">
-        {/* Share CTA — only when the list has sharing enabled */}
+        {/* Share hot-takes CTA — only when the list has sharing enabled */}
         {shareToken && (
           <button
             onClick={() => setShareOpen(true)}
             className="w-full py-2.5 rounded-[10px] text-[14px] font-[500] bg-rk-accent text-white hover:opacity-90 transition-opacity cursor-pointer"
           >
             {shareLabel}
+          </button>
+        )}
+
+        {/* Share nemesis CTA — only when nemesis + sharing both exist */}
+        {shareToken && data.tasteNemesis && (
+          <button
+            onClick={() => setNemesisShareOpen(true)}
+            className="w-full py-2.5 rounded-[10px] text-[14px] font-[500] border hover:opacity-90 transition-opacity cursor-pointer"
+            style={{
+              borderColor: "rgba(240,149,149,0.35)",
+              color: "#F09595",
+              backgroundColor: "rgba(240,149,149,0.06)",
+            }}
+          >
+            {S.nemesis.shareLabel}
           </button>
         )}
 
@@ -582,6 +660,14 @@ export function PayoffCtas({
           template="hot-takes"
           open={shareOpen}
           onClose={() => setShareOpen(false)}
+        />
+      )}
+      {shareToken && data.tasteNemesis && (
+        <ShareCardModal
+          token={shareToken}
+          template="taste-nemesis"
+          open={nemesisShareOpen}
+          onClose={() => setNemesisShareOpen(false)}
         />
       )}
     </>

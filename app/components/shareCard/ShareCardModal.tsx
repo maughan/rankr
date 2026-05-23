@@ -5,7 +5,7 @@ import { Download, Share2, Copy, Check, ImageOff } from "lucide-react";
 import Modal from "@/app/components/modal";
 
 type Format = "square" | "wide" | "story";
-type TemplateName = "head-to-head" | "hot-takes";
+type TemplateName = "head-to-head" | "hot-takes" | "taste-nemesis" | "divisive-item";
 type ImgState = "loading" | "loaded" | "error";
 
 interface Props {
@@ -30,11 +30,15 @@ const ASPECT: Record<Format, string> = {
 const TEMPLATE_TITLES: Record<TemplateName, string> = {
   "head-to-head": "Your results",
   "hot-takes": "Hot takes",
+  "taste-nemesis": "Your nemesis",
+  "divisive-item": "Most divisive",
 };
 
 const DEFAULT_ERROR: Record<TemplateName, string> = {
   "head-to-head": "Complete your ranking to generate this card.",
   "hot-takes": "Not enough data to generate hot takes yet.",
+  "taste-nemesis": "Not enough rankers to identify a nemesis yet.",
+  "divisive-item": "Not enough rankers to find a divisive item yet.",
 };
 
 export default function ShareCardModal({ token, template, open, onClose }: Props) {

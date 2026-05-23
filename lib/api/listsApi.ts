@@ -30,6 +30,14 @@ export interface PayoffData {
     agreedCount: number;
     totalCount: number;
   } | null;
+  tasteNemesis: {
+    userId: number;
+    handle: string;
+    avatarColor: string;
+    alignmentPct: number;
+    disagreedCount: number;
+    totalCount: number;
+  } | null;
   extras: {
     contrarianPicks: number;
     perfectMatchCount: number;
