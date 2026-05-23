@@ -142,6 +142,7 @@ export default function AuthModal() {
               type="email"
               name="email"
               placeholder="Email"
+              autoComplete="email"
               required
               autoFocus
             />
@@ -152,6 +153,7 @@ export default function AuthModal() {
                 type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
+                autoComplete="current-password"
                 required
               />
               <button
@@ -193,6 +195,7 @@ export default function AuthModal() {
               type="email"
               name="email"
               placeholder="Email"
+              autoComplete="email"
               required
               autoFocus
             />
@@ -202,6 +205,7 @@ export default function AuthModal() {
               type="text"
               name="username"
               placeholder="Username"
+              autoComplete="username"
               required
             />
 
@@ -211,6 +215,7 @@ export default function AuthModal() {
                 type={showPassword ? "text" : "password"}
                 name="password"
                 placeholder="Password"
+                autoComplete="new-password"
                 pattern="(?=.*[A-Z])(?=.*\d).{8,}"
                 title="At least 8 characters, one uppercase letter, one number"
                 required
