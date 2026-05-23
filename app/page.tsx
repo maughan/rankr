@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from "./siteConfig";
+import { SITE_URL, TWITTER_HANDLE } from "./siteConfig";
 import { JsonLd } from "./components/JsonLd";
+import { S } from "./content/strings";
 
 export const revalidate = 3600; // rebuild hero + featured data hourly
 
@@ -9,10 +10,10 @@ import ComparisonFeatureSection from "@/app/landing/ComparisonFeatureSection";
 import FeaturedListsSection from "@/app/landing/FeaturedListsSection";
 import StatsBanner from "@/app/landing/StatsBanner";
 import FinalCtaSection from "@/app/landing/FinalCtaSection";
+import SeoContentSection from "@/app/landing/SeoContentSection";
 
-const TITLE = `${SITE_NAME} — Tier lists. But actually fun.`;
-const DESCRIPTION =
-  "Build tier lists on anything. Share them with friends and see exactly where you agree — and where you clash.";
+const TITLE = S.landing.seoTitle;
+const DESCRIPTION = S.landing.seoDescription;
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
 const webAppJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: SITE_NAME,
+  name: "tierstack.dev",
   url: SITE_URL,
   description: DESCRIPTION,
   applicationCategory: "Lifestyle",
@@ -52,6 +53,7 @@ export default function LandingPage() {
         <StatsBanner />
         <FeaturedListsSection />
         <FinalCtaSection />
+        <SeoContentSection />
       </main>
     </>
   );

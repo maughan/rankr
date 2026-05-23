@@ -156,13 +156,14 @@ function ProfileHero({
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-type Tab = "all" | "public" | "hidden" | "draft";
+type Tab = "all" | "public" | "private" | "hidden" | "draft";
 
 const OWNER_TABS: { key: Tab; label: string }[] = [
-  { key: "all",    label: "All"         },
-  { key: "public", label: "Public"      },
-  { key: "hidden", label: "Hidden"      },
-  { key: "draft",  label: "Unpublished" },
+  { key: "all",     label: "All"     },
+  { key: "public",  label: "Public"  },
+  { key: "private", label: "Private" },
+  { key: "hidden",  label: "Hidden"  },
+  { key: "draft",   label: "Draft"   },
 ];
 
 const VISITOR_TABS: { key: Tab; label: string }[] = [
@@ -310,9 +311,10 @@ export default function ProfileClient({ username }: { username: string }) {
   const visibleLists = filterLists(lists, currentTab);
 
   const tabEmptyMsg =
-    currentTab === "draft"   ? "No unpublished lists."
-    : currentTab === "hidden"  ? "No hidden lists."
-    : currentTab === "public"  ? (isOwner ? "No public lists yet." : "No public lists.")
+    currentTab === "draft"    ? "No drafts."
+    : currentTab === "private"  ? "No private lists."
+    : currentTab === "hidden"   ? "No hidden lists."
+    : currentTab === "public"   ? (isOwner ? "No public lists yet." : "No public lists.")
     : "No lists yet.";
 
   return (

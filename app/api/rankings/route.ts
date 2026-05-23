@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { getAuthedViewer } from "@/lib/server/auth";
+import { readViewerCtx, fetchAccessOpts, canRank } from "@/lib/server/listAccess";
 
 interface RankingInput {
   itemId: number;
@@ -13,21 +13,19 @@ export async function PUT(req: Request) {
   try {
     const body: RankingInput[] = await req.json();
 
-    const biscuits = await cookies();
-    const token = biscuits.get("auth_token")?.value;
-    if (!token) return new Response(null, { status: 401 });
+    const viewer = await getAuthedViewer();
+    if (!viewer) return new Response(null, { status: 401 });
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.sub },
-      select: { tokenVersion: true },
-    });
-    if (!user || user.tokenVersion !== decoded.tokenVersion) {
-      return new Response(null, { status: 401 });
-    }
+    const listId = body[0]?.listId;
+    if (!listId) return new Response(null, { status: 400 });
+
+    const viewerCtx = await readViewerCtx(viewer.id, listId);
+    const access = await fetchAccessOpts(listId, viewerCtx);
+    if (!access) return new Response(null, { status: 404 });
+    if (!canRank(access, viewerCtx)) return new Response(null, { status: 403 });
 
     const list = await prisma.list.findUnique({
-      where: { id: body[0].listId },
+      where: { id: listId },
       include: { items: { select: { id: true } } },
     });
 
@@ -35,12 +33,12 @@ export async function PUT(req: Request) {
 
     // Detect first submission (before delete)
     const prevCount = await prisma.ranking.count({
-      where: { itemId: { in: listItemIds }, userId: decoded.sub },
+      where: { itemId: { in: listItemIds }, userId: viewer.id },
     });
     const isFirstSubmit = prevCount === 0;
 
     await prisma.ranking.deleteMany({
-      where: { itemId: { in: listItemIds }, userId: decoded.sub },
+      where: { itemId: { in: listItemIds }, userId: viewer.id },
     });
 
     await Promise.all(

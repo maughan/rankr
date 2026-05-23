@@ -25,7 +25,7 @@ export interface AggregatedList {
   title: string;
   description: string;
   img: string | null;
-  visibility: "public" | "hidden" | "draft";
+  visibility: "public" | "hidden" | "draft" | "private";
   is_shareable: boolean;
   anonymous_rankings_enabled: boolean;
   createdAt: Date;
