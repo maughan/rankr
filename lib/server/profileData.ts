@@ -16,6 +16,8 @@ export async function getProfileData(
       createdAt: true,
       follower_count: true,
       following_count: true,
+      archetype: true,
+      archetype_stats: true,
     },
   }) as {
     id: number;
@@ -25,6 +27,8 @@ export async function getProfileData(
     createdAt: Date;
     follower_count: number;
     following_count: number;
+    archetype: string | null;
+    archetype_stats: unknown;
   } | null;
 
   if (!user) return null;
@@ -108,8 +112,10 @@ export async function getProfileData(
     const rankerSet = new Set<number>();
     const creatorRankMap = new Map<number, number>();
     let lastActivity: Date | null = null;
+    let rankingCount = 0;
 
     for (const item of list.items) {
+      rankingCount += item.rankings.length;
       for (const r of item.rankings) {
         rankerSet.add(r.userId);
         if (!lastActivity || r.updatedAt > lastActivity) lastActivity = r.updatedAt;
@@ -151,6 +157,7 @@ export async function getProfileData(
       category_color: list.category_color,
       item_count: list.items.length,
       ranker_count: rankerSet.size,
+      ranking_count: rankingCount,
       last_activity_at: (lastActivity ?? list.updatedAt).toISOString(),
       pinned: false,
       top_tier_items: topItems,
@@ -167,6 +174,8 @@ export async function getProfileData(
       createdAt: user.createdAt.toISOString(),
       follower_count: user.follower_count,
       following_count: user.following_count,
+      archetype: (user.archetype ?? null) as import("@/lib/insightsConfig").ArchetypeSlug | null,
+      archetype_stats: (user.archetype_stats ?? null) as import("@/lib/insightsConfig").ArchetypeStats | null,
     },
     lists,
     isOwner,

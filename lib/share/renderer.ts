@@ -5,12 +5,14 @@ import { headToHead } from "./templates/head-to-head";
 import { hotTakes } from "./templates/hot-takes";
 import { tasteNemesis } from "./templates/taste-nemesis";
 import { divisiveItem } from "./templates/divisive-item";
+import { archetypeCard } from "./templates/archetype";
 
 const TEMPLATES: Record<TemplateName, TemplateModule> = {
   "head-to-head": headToHead,
   "hot-takes": hotTakes,
   "taste-nemesis": tasteNemesis,
   "divisive-item": divisiveItem,
+  "archetype": archetypeCard,
 };
 
 export async function renderCard(

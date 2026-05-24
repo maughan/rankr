@@ -44,7 +44,7 @@ export async function PUT(req: Request) {
     await Promise.all(
       body.map((d) =>
         prisma.ranking.create({
-          data: { itemId: d.itemId, userId: d.userId, value: d.value },
+          data: { itemId: d.itemId, userId: d.userId, value: d.value, listId: d.listId },
         })
       )
     );

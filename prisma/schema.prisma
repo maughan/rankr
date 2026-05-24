@@ -14,6 +14,16 @@ enum ListVisibility {
   private
 }
 
+enum ArchetypeSlug {
+  contrarian
+  oracle
+  purist
+  diplomat
+  enthusiast
+  critic
+  wildcard
+}
+
 model Tier {
   id    Int    @id @default(autoincrement())
   title String
@@ -55,6 +65,9 @@ model User {
   createdAt            DateTime              @default(now())
   follower_count       Int                   @default(0)
   following_count      Int                   @default(0)
+  archetype            ArchetypeSlug?
+  archetype_stats      Json?
+  archetype_computed_at DateTime?
   lists                List[]
   rankings             Ranking[]
   items                Item[]

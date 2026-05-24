@@ -393,4 +393,87 @@ export const S = {
     subtitle: "Public lists, ranked by the community.",
     empty: "No public lists yet - check back soon.",
   },
+
+  // ── Taste archetype ───────────────────────────────────────────────────────
+  //
+  // One entry per archetype. All UI copy derives from here — the badge,
+  // the detail sheet, and the share card all read from this map.
+  // Add / tune copy here; never hardcode archetype strings in components.
+  //
+  // statLine() receives the most relevant signal value, formatted for humans
+  // (e.g. a whole-number percentage). Keep it to one tight clause — it runs
+  // below the archetype name in the badge.
+  //
+  archetypes: {
+    contrarian: {
+      name: "The Contrarian",
+      desc: "The crowd zigs, you zag. Your rankings consistently land furthest from consensus — by design or by instinct, you call it differently.",
+      tagline: "The crowd is usually wrong.",
+      color: "#EF4444",   // red
+      icon: "ti-bolt",
+      statLine: (pct: number) => `disagrees with the crowd ${pct}% of the time`,
+      shareLabel: "Share my archetype",
+    },
+    oracle: {
+      name: "The Oracle",
+      desc: "Eerily in tune with the crowd. Your rankings mirror consensus so closely it's almost eerie — you just know what's good.",
+      tagline: "You just know.",
+      color: "#4A8AE8",   // blue (accent)
+      icon: "ti-brain",
+      statLine: (pct: number) => `aligned with the crowd ${pct}% of the time`,
+      shareLabel: "Share my archetype",
+    },
+    purist: {
+      name: "The Purist",
+      desc: "No half measures. Things are either S-tier or they belong at the bottom — middle ground is for people who haven't made up their mind.",
+      tagline: "Strong opinions. Strongly held.",
+      color: "#C44545",   // S-tier red
+      icon: "ti-star",
+      statLine: (pct: number) => `puts ${pct}% of items in the top or bottom tier`,
+      shareLabel: "Share my archetype",
+    },
+    diplomat: {
+      name: "The Diplomat",
+      desc: "You see nuance where others see extremes. Most things land somewhere in the middle — because most things genuinely deserve it.",
+      tagline: "It's complicated.",
+      color: "#5DCAA5",   // teal (C-tier)
+      icon: "ti-heart",
+      statLine: (pct: number) => `keeps ${pct}% of rankings in the middle tiers`,
+      shareLabel: "Share my archetype",
+    },
+    enthusiast: {
+      name: "The Enthusiast",
+      desc: "Everything deserves a fair shot — and most things earn it. Your rankings skew high because you genuinely find the good in things.",
+      tagline: "Love the game. Love the players.",
+      color: "#E08C2C",   // amber (A-tier)
+      icon: "ti-rocket",
+      statLine: (pct: number) => `ranks ${pct}% of items above the crowd average`,
+      shareLabel: "Share my archetype",
+    },
+    critic: {
+      name: "The Critic",
+      desc: "High standards. Very high standards. S-tier is reserved for the genuinely exceptional — and you're not easily impressed.",
+      tagline: "Someone has to keep the bar up.",
+      color: "#85B7EB",   // D-tier blue
+      icon: "ti-movie",
+      statLine: (pct: number) => `ranks ${pct}% of items below the crowd average`,
+      shareLabel: "Share my archetype",
+    },
+    wildcard: {
+      name: "The Wildcard",
+      desc: "No discernible pattern. No predictable bias. Just pure, unfiltered gut feel — a different list, a different person.",
+      tagline: "Completely unpredictable.",
+      color: "#AFA9EC",   // F-tier purple
+      icon: "ti-mood-happy",
+      statLine: (_pct?: number) => `impossible to predict`,
+      shareLabel: "Share my archetype",
+    },
+  } as const,
+
+  // ── Archetype forming state (own profile, not yet enough data) ────────────
+  archetypeForming: {
+    heading: "Your type is still forming.",
+    subhead: "Rank across a few more lists to unlock your taste archetype.",
+    cta: "Browse lists",
+  },
 };

@@ -5,11 +5,11 @@ import { Download, Share2, Copy, Check, ImageOff } from "lucide-react";
 import Modal from "@/app/components/modal";
 
 type Format = "square" | "wide" | "story";
-type TemplateName = "head-to-head" | "hot-takes" | "taste-nemesis" | "divisive-item";
+type TemplateName = "head-to-head" | "hot-takes" | "taste-nemesis" | "divisive-item" | "archetype";
 type ImgState = "loading" | "loaded" | "error";
 
 interface Props {
-  token: string;
+  token?: string; // omit for user-scoped templates (archetype) — userId resolved server-side
   template: TemplateName;
   open: boolean;
   onClose: () => void;
@@ -32,6 +32,7 @@ const TEMPLATE_TITLES: Record<TemplateName, string> = {
   "hot-takes": "Hot takes",
   "taste-nemesis": "Your nemesis",
   "divisive-item": "Most divisive",
+  "archetype": "My taste archetype",
 };
 
 const DEFAULT_ERROR: Record<TemplateName, string> = {
@@ -39,6 +40,7 @@ const DEFAULT_ERROR: Record<TemplateName, string> = {
   "hot-takes": "Not enough data to generate hot takes yet.",
   "taste-nemesis": "Not enough rankers to identify a nemesis yet.",
   "divisive-item": "Not enough rankers to find a divisive item yet.",
+  "archetype": "Rank more lists to unlock your archetype card.",
 };
 
 export default function ShareCardModal({ token, template, open, onClose }: Props) {
@@ -49,7 +51,8 @@ export default function ShareCardModal({ token, template, open, onClose }: Props
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [cacheBust, setCacheBust] = useState(() => Date.now());
 
-  const imgUrl = `/api/share/${template}?token=${encodeURIComponent(token)}&format=${format}&t=${cacheBust}`;
+  const tokenParam = token ? `&token=${encodeURIComponent(token)}` : "";
+  const imgUrl = `/api/share/${template}?format=${format}${tokenParam}&t=${cacheBust}`;
 
   // New cache-bust key on every open so stale images are never shown
   useEffect(() => {

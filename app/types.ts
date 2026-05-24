@@ -24,6 +24,7 @@ export interface ListPreview {
   category_color: string;
   item_count: number;
   ranker_count: number;
+  ranking_count: number;
   last_activity_at: string;
   pinned: boolean;
   top_tier_items: TopTierItem[];
