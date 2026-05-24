@@ -28,7 +28,7 @@ async function fetchData(params: URLSearchParams): Promise<DivisiveItemData> {
       id: true,
       title: true,
       is_shareable: true,
-      tiers: { select: { id: true, title: true, value: true } },
+      tiers: { select: { id: true, title: true, value: true, color: true } },
       items: { select: { id: true, name: true } },
     },
   });
@@ -37,7 +37,7 @@ async function fetchData(params: URLSearchParams): Promise<DivisiveItemData> {
 
   const itemIds = (list.items as { id: number }[]).map((i) => i.id);
 
-  const sortedTiers = [...(list.tiers as { title: string; value: number }[])]
+  const sortedTiers = [...(list.tiers as { title: string; value: number; color: string }[])]
     .filter((t) => t.value !== 0)
     .sort((a, b) => b.value - a.value);
 
@@ -127,6 +127,7 @@ async function fetchData(params: URLSearchParams): Promise<DivisiveItemData> {
 
   const distribution = sortedTiers.map((tier) => ({
     tierTitle: tier.title,
+    tierColor: tier.color,
     tierValue: tier.value,
     count: best!.valueDist.get(tier.value) ?? 0,
     maxCount: Math.max(...sortedTiers.map((t) => best!.valueDist.get(t.value) ?? 0), 1),
@@ -265,13 +266,13 @@ function Histogram({
         display: "flex",
         alignItems: "flex-end",
         gap: t.barGap,
+        width: "100%",
       }}
     >
       {distribution.map((d) => {
-        const colors = TIER_COLORS[d.tierTitle.toUpperCase()] ?? {
-          bg: "#334155",
-          text: "#fff",
-        };
+        // Prefer known TIER_COLORS, fall back to the tier's own DB color.
+        const knownColor = TIER_COLORS[d.tierTitle.toUpperCase()];
+        const barColor = knownColor?.bg ?? d.tierColor;
         const barH =
           d.count > 0
             ? Math.max(Math.round((d.count / d.maxCount) * t.barMaxH), 4)
@@ -282,6 +283,7 @@ function Histogram({
             key={d.tierTitle}
             style={{
               display: "flex",
+              flex: 1,
               flexDirection: "column",
               alignItems: "center",
               gap: Math.round(t.barLabelFont * 0.35),
@@ -289,17 +291,17 @@ function Histogram({
           >
             <div
               style={{
-                width: t.barWidth,
+                width: "100%",
                 height: barH,
-                backgroundColor: d.count > 0 ? colors.bg : "rgba(255,255,255,0.06)",
-                borderRadius: `${Math.round(t.barWidth * 0.08)}px ${Math.round(t.barWidth * 0.08)}px 0 0`,
+                backgroundColor: d.count > 0 ? barColor : "rgba(255,255,255,0.06)",
+                borderRadius: `4px 4px 0 0`,
               }}
             />
             <span
               style={{
                 fontSize: t.barLabelFont,
                 fontWeight: 700,
-                color: d.count > 0 ? colors.bg : COLORS.tertiary,
+                color: d.count > 0 ? barColor : COLORS.tertiary,
                 lineHeight: 1,
               }}
             >
@@ -413,13 +415,10 @@ function WideCard({ data }: { data: DivisiveItemData }) {
         fontFamily: "Geist",
       }}
     >
-      {/* Zone A — brand left, pill + footer right */}
+      {/* Zone A — brand left, pill right */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Brand scale={t.brandScale} />
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 10 }}>
-          <DivisivePill t={t} />
-          <ShareFoot url={data.shareUrl} scale={t.footScale} />
-        </div>
+        <DivisivePill t={t} />
       </div>
 
       {/* Zone B — left: text; right: histogram */}
@@ -448,6 +447,9 @@ function WideCard({ data }: { data: DivisiveItemData }) {
           <Histogram distribution={data.distribution} t={t} />
         </div>
       </div>
+
+      {/* Zone C — footer bottom left */}
+      <ShareFoot url={data.shareUrl} scale={t.footScale} />
     </div>
   );
 }

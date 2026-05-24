@@ -332,6 +332,11 @@ export const listsApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_r, _e, { listId }) => [{ type: "Invites" as const, id: listId }],
     }),
+
+    deleteList: builder.mutation<{ success: boolean }, number>({
+      query: (listId) => ({ url: `/s/${listId}`, method: "DELETE" }),
+      invalidatesTags: ["Lists", "Profile"],
+    }),
   }),
 });
 
@@ -360,4 +365,5 @@ export const {
   useGetInvitesQuery,
   useCreateInviteMutation,
   useRevokeInviteMutation,
+  useDeleteListMutation,
 } = listsApi;

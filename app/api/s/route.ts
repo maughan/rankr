@@ -68,9 +68,11 @@ export async function GET(_req: Request) {
       const creatorRankMap = new Map<number, number>(); // itemId → tier value
       let lastActivity: Date | null = null;
       const rankerSet = new Set<number>();
+      let rankingCount = 0;
       let userHasRanked = false;
 
       for (const item of list.items) {
+        rankingCount += item.rankings.length;
         for (const r of item.rankings) {
           rankerSet.add(r.userId);
           if (!lastActivity || r.updatedAt > lastActivity) {
@@ -130,6 +132,7 @@ export async function GET(_req: Request) {
         category_color: list.category_color,
         item_count: list.items.length,
         ranker_count: rankerSet.size,
+        ranking_count: rankingCount,
         last_activity_at: (lastActivity ?? list.updatedAt).toISOString(),
         pinned: viewerId !== null && (list.pins?.length ?? 0) > 0,
         top_tier_items: topItems,

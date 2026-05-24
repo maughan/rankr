@@ -1,5 +1,6 @@
 import { baseApi } from "./baseApi";
 import type { ListPreview } from "@/app/types";
+import type { ArchetypeSlug, ArchetypeStats } from "@/lib/insightsConfig";
 
 export interface MutualsInfo {
   sample: { username: string; display_name: string | null }[];
@@ -14,6 +15,8 @@ export interface ProfileUser {
   createdAt: string;
   follower_count: number;
   following_count: number;
+  archetype: ArchetypeSlug | null;
+  archetype_stats: ArchetypeStats | null;
 }
 
 export interface ProfileResponse {

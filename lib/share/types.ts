@@ -22,6 +22,7 @@ export const KNOWN_TEMPLATES = [
   "hot-takes",
   "taste-nemesis",
   "divisive-item",
+  "archetype",
 ] as const;
 export type TemplateName = (typeof KNOWN_TEMPLATES)[number];
 
@@ -70,6 +71,22 @@ export interface TasteNemesisData {
   shareUrl: string;
 }
 
+export interface ArchetypeCardData {
+  archetypeName: string;
+  tagline: string;
+  color: string;
+  statLine: string;
+  evidence: Array<{
+    itemName: string;
+    listName: string;
+    yourTier: string;
+    crowdTier: string;
+    delta: number;
+  }>;
+  rankedItemCount: number;
+  rankedListCount: number;
+}
+
 export interface DivisiveItemData {
   listName: string;
   itemName: string;
@@ -77,6 +94,7 @@ export interface DivisiveItemData {
   /** Per-tier distribution — ordered S→F. Only tiers with value > 0. */
   distribution: Array<{
     tierTitle: string;
+    tierColor: string; // raw color from DB, used when title isn't in TIER_COLORS
     tierValue: number;
     count: number;
     maxCount: number; // for normalizing histogram bar heights

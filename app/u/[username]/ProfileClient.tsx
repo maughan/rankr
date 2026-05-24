@@ -3,7 +3,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatDistanceStrict } from "date-fns";
-import { LayoutGrid } from "lucide-react";
+import { LayoutGrid, ChevronRight, Share2 } from "lucide-react";
+import {
+  IconBolt,
+  IconBrain,
+  IconStar,
+  IconHeart,
+  IconRocket,
+  IconMovie,
+  IconMoodHappy,
+} from "@tabler/icons-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { MutualsInfo, ProfileResponse } from "@/lib/api/profileApi";
 import { etagFetch } from "@/lib/query/fetchers";
@@ -12,10 +21,15 @@ import UserAvatar from "@/app/components/UserAvatar";
 import FollowListModal from "./FollowListModal";
 import ListCard from "@/app/components/list/ListCard";
 import NavAvatar from "@/app/components/NavAvatar";
+import Modal from "@/app/components/modal";
+import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
 import { getUserFromToken } from "@/lib/helpers";
 import { useAppDispatch } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import type { ListPreview, ListVisibility } from "@/app/types";
+import { S } from "@/app/content/strings";
+import { archetypeStatPct } from "@/lib/insightsConfig";
+import type { ArchetypeSlug, ArchetypeStats, ArchetypeReceipt } from "@/lib/insightsConfig";
 
 // ── Mutuals line ──────────────────────────────────────────────────────────────
 
@@ -36,6 +50,230 @@ function MutualsLine({ mutuals }: { mutuals: MutualsInfo }) {
 
   return (
     <p className="text-[12px] text-rk-muted leading-snug">{text}</p>
+  );
+}
+
+// ── Archetype helpers ─────────────────────────────────────────────────────────
+
+const TIER_COLORS: Record<string, string> = {
+  S: "#C44545", A: "#E08C2C", B: "#97C459", C: "#5DCAA5", D: "#85B7EB", F: "#AFA9EC",
+};
+
+const ARCHETYPE_ICONS: Record<ArchetypeSlug, React.ComponentType<{ size?: number; color?: string }>> = {
+  contrarian: IconBolt,
+  oracle:     IconBrain,
+  purist:     IconStar,
+  diplomat:   IconHeart,
+  enthusiast: IconRocket,
+  critic:     IconMovie,
+  wildcard:   IconMoodHappy,
+};
+
+function toThirdPerson(text: string): string {
+  return text
+    .replace(/\bYou're\b/g, "They're")
+    .replace(/\byou're\b/g, "they're")
+    .replace(/\bYour\b/g, "Their")
+    .replace(/\byour\b/g, "their")
+    .replace(/\bYou\b/g, "They")
+    .replace(/\byou\b/g, "they");
+}
+
+
+function TierChip({ label, color }: { label: string; color?: string }) {
+  const bg = color ?? TIER_COLORS[label.toUpperCase()] ?? "#334155";
+  return (
+    <div
+      className="w-7 h-7 rounded-[6px] flex items-center justify-center flex-shrink-0"
+      style={{ backgroundColor: `${bg}25`, border: `1px solid ${bg}60` }}
+    >
+      <span className="text-[11px] font-[700]" style={{ color: bg }}>{label}</span>
+    </div>
+  );
+}
+
+function ReceiptRow({ receipt, archetypeColor }: { receipt: ArchetypeReceipt; archetypeColor: string }) {
+  return (
+    <div className="flex items-center gap-3 p-2.5 rounded-[8px] bg-rk-page border border-rk-stroke">
+      <div className="flex-1 min-w-0">
+        <p className="text-[12px] font-[500] text-rk-primary truncate">{receipt.itemName}</p>
+        <p className="text-[11px] text-rk-muted truncate">on {receipt.listName}</p>
+      </div>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <TierChip label={receipt.yourTier} color={archetypeColor} />
+        <span className="text-[10px] text-rk-tertiary">vs</span>
+        <TierChip label={receipt.crowdTier} />
+      </div>
+    </div>
+  );
+}
+
+function ArchetypeSheet({
+  archetype,
+  stats,
+  isOwner,
+  open,
+  onClose,
+  onShare,
+}: {
+  archetype: ArchetypeSlug;
+  stats: ArchetypeStats;
+  isOwner: boolean;
+  open: boolean;
+  onClose: () => void;
+  onShare: () => void;
+}) {
+  const config = S.archetypes[archetype];
+  const Icon = ARCHETYPE_ICONS[archetype];
+  const pct = archetypeStatPct(archetype, stats.signals);
+  const desc = isOwner ? config.desc : toThirdPerson(config.desc);
+  const tagline = isOwner ? config.tagline : toThirdPerson(config.tagline);
+
+  return (
+    <Modal open={open} handleClose={onClose}>
+      <div className="p-6 pt-8 flex flex-col gap-5">
+        {/* Header */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-[10px] flex items-center justify-center flex-shrink-0"
+              style={{ backgroundColor: `${config.color}20` }}
+            >
+              <Icon size={20} color={config.color} />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-[10px] font-[600] text-rk-muted uppercase tracking-widest">
+                taste archetype
+              </p>
+              <p className="text-[18px] font-[700] leading-tight" style={{ color: config.color }}>
+                {config.name}
+              </p>
+            </div>
+          </div>
+          <p className="text-[14px] text-rk-secondary leading-relaxed">{desc}</p>
+          <p className="text-[12px] text-rk-muted italic">
+            "{tagline}"
+          </p>
+          <p className="text-[12px] text-rk-tertiary">
+            {(config.statLine as (pct?: number) => string)(pct)}
+            {" · "}
+            {stats.rankedItemCount} items across {stats.rankedListCount} list{stats.rankedListCount !== 1 ? "s" : ""}
+          </p>
+        </div>
+
+        {/* Evidence */}
+        {stats.evidence.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <p className="text-[10px] font-[600] text-rk-muted uppercase tracking-widest">
+              exhibit a — hottest takes
+            </p>
+            {stats.evidence.map((r, i) => (
+              <ReceiptRow key={i} receipt={r} archetypeColor={config.color} />
+            ))}
+          </div>
+        )}
+
+        {/* Share CTA — owner only */}
+        {isOwner && (
+          <button
+            onClick={onShare}
+            className="flex items-center justify-center gap-2 py-2.5 rounded-[8px] text-[13px] font-[600] text-white hover:opacity-90 transition-opacity cursor-pointer"
+            style={{ backgroundColor: config.color }}
+          >
+            <Share2 size={13} />
+            {config.shareLabel}
+          </button>
+        )}
+      </div>
+    </Modal>
+  );
+}
+
+function ArchetypeBadge({
+  archetype,
+  stats,
+  onClick,
+}: {
+  archetype: ArchetypeSlug;
+  stats: ArchetypeStats;
+  onClick: () => void;
+}) {
+  const config = S.archetypes[archetype];
+  const Icon = ARCHETYPE_ICONS[archetype];
+  const pct = archetypeStatPct(archetype, stats.signals);
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-full flex items-center gap-3 p-3 rounded-[10px] border bg-rk-surface hover:border-rk-secondary/40 transition-colors text-left cursor-pointer"
+      style={{ borderColor: `${config.color}40`, borderLeftColor: config.color, borderLeftWidth: 3 }}
+    >
+      <div
+        className="w-8 h-8 rounded-[8px] flex items-center justify-center flex-shrink-0"
+        style={{ backgroundColor: `${config.color}18` }}
+      >
+        <Icon size={15} color={config.color} />
+      </div>
+      <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+        <p className="text-[13px] font-[600] text-rk-primary leading-none">{config.name}</p>
+        <p className="text-[12px] text-rk-muted leading-none truncate">
+          {(config.statLine as (pct?: number) => string)(pct)}
+        </p>
+      </div>
+      <ChevronRight size={14} className="text-rk-tertiary flex-shrink-0" />
+    </button>
+  );
+}
+
+function FormingState() {
+  return (
+    <div className="p-4 rounded-[10px] border border-dashed border-rk-stroke flex flex-col gap-1.5">
+      <p className="text-[13px] font-[500] text-rk-secondary">{S.archetypeForming.heading}</p>
+      <p className="text-[12px] text-rk-muted">{S.archetypeForming.subhead}</p>
+      <Link href="/browse" className="text-[12px] text-rk-accent hover:underline mt-0.5 w-fit">
+        {S.archetypeForming.cta} →
+      </Link>
+    </div>
+  );
+}
+
+function ArchetypeSection({
+  archetype,
+  archetypeStats,
+  isOwner,
+}: {
+  archetype: ArchetypeSlug | null;
+  archetypeStats: ArchetypeStats | null;
+  isOwner: boolean;
+}) {
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [cardOpen, setCardOpen] = useState(false);
+
+  if (!archetype || !archetypeStats) {
+    return isOwner ? <FormingState /> : null;
+  }
+
+  return (
+    <>
+      <ArchetypeBadge
+        archetype={archetype}
+        stats={archetypeStats}
+        onClick={() => setSheetOpen(true)}
+      />
+      <ArchetypeSheet
+        archetype={archetype}
+        stats={archetypeStats}
+        isOwner={isOwner}
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onShare={() => { setSheetOpen(false); setCardOpen(true); }}
+      />
+      <ShareCardModal
+        template="archetype"
+        open={cardOpen}
+        onClose={() => setCardOpen(false)}
+      />
+    </>
   );
 }
 
@@ -338,6 +576,16 @@ export default function ProfileClient({ username }: { username: string }) {
           onFollowersClick={() => setFollowModal("followers")}
           onFollowingClick={() => setFollowModal("following")}
         />
+
+        {!viewerHasBlocked && !viewerIsBlocked && (
+          <div className="mb-5">
+            <ArchetypeSection
+              archetype={user.archetype}
+              archetypeStats={user.archetype_stats}
+              isOwner={isOwner}
+            />
+          </div>
+        )}
 
         {followModal && (
           <FollowListModal
