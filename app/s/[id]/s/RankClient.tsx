@@ -240,7 +240,7 @@ export default function RankClient({
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
             <Link
-              href={isLoggedIn ? "/s" : "/"}
+              href={isLoggedIn ? "/feed" : "/"}
               className="flex items-center gap-2"
             >
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
@@ -303,7 +303,7 @@ export default function RankClient({
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
             <Link
-              href={isLoggedIn ? "/s" : "/"}
+              href={isLoggedIn ? "/feed" : "/"}
               className="flex items-center gap-2"
             >
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />

@@ -134,7 +134,7 @@ export default function TierListMakerPage() {
         {/* Final CTA */}
         <section className="px-6 py-20 sm:px-10 flex flex-col items-center text-center gap-6">
           <Link
-            href="/s"
+            href="/feed"
             className="px-8 py-3.5 text-[15px] font-[600] bg-rk-accent text-white rounded-[10px] hover:opacity-90 transition-opacity"
           >
             {COPY.ctaLabel}

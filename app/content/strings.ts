@@ -269,6 +269,36 @@ export const S = {
     usernameFormat: "3–20 characters: letters, numbers, underscores only.",
   },
 
+  // ── Feed ─────────────────────────────────────────────────────────────────
+  feed: {
+    // Engagement items — N people stacked your list
+    engagementLabel: (n: number, listTitle: string) =>
+      `${n} ${n === 1 ? "person" : "people"} stacked "${listTitle}"`,
+    engagementWindow: "since your last visit",
+    engagementCta: "View results",
+
+    // New followers
+    newFollowersSingle: (handle: string) => `@${handle} followed you`,
+    newFollowersMany: (n: number) => `${n} new followers`,
+    newFollowersWindow: "since your last visit",
+    newFollowersCta: "View followers",
+
+    // Creator milestones
+    milestoneLabel: (n: number, listTitle: string) =>
+      `"${listTitle}" just hit ${n} ranking${n !== 1 ? "s" : ""}`,
+    milestoneCta: "See the results",
+
+    // Self re-engagement
+    reEngagementLabel: (n: number, listTitle: string) =>
+      `${n} new ranker${n !== 1 ? "s" : ""} on "${listTitle}" since you stacked it`,
+    reEngagementCta: "See how you compare",
+
+    // All-lists fallback
+    fallbackHeading: "You're all caught up.",
+    fallbackSubhead: "Here's what the community is ranking",
+    fallbackRankCta: "Rank it",
+  },
+
   // ── Support ───────────────────────────────────────────────────────────────
   support: {
     cardHeading: "Enjoying tierstack?",

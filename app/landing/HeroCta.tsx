@@ -19,7 +19,7 @@ export default function HeroCta() {
     <div className="flex items-center gap-3 mt-2">
       {isLoggedIn ? (
         <Link
-          href="/s"
+          href="/feed"
           className="px-6 py-3 text-[14px] font-[600] bg-rk-accent text-white rounded-[10px] hover:opacity-90 transition-opacity"
         >
           Go to app

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { IconFlame } from "@tabler/icons-react";
 import { S } from "@/app/content/strings";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 // Tunable: 0 = always TierShuffle, 1 = always Narrator
 const NARRATOR_WEIGHT = 0.5;
@@ -15,21 +16,6 @@ const TIER_CHIPS: { label: string; bg: string; text: string; delay: number }[] =
     { label: "C", bg: "#5DCAA5", text: "#04342C", delay: 0.36 },
     { label: "D", bg: "#AFA9EC", text: "#26215C", delay: 0.48 },
   ];
-
-function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return reduced;
-}
 
 function NarratorLoader() {
   const reducedMotion = useReducedMotion();

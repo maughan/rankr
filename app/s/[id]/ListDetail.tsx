@@ -652,7 +652,7 @@ export default function ListDetail({
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
             <Link
-              href={isLoggedIn ? "/s" : "/"}
+              href={isLoggedIn ? "/feed" : "/"}
               className="flex items-center gap-2"
             >
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
@@ -662,7 +662,7 @@ export default function ListDetail({
             </Link>
             <div className="hidden sm:flex items-center gap-2">
               <Link
-                href="/s"
+                href="/feed"
                 className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
               >
                 Back
@@ -671,7 +671,7 @@ export default function ListDetail({
           </div>
           <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
-              href="/s"
+              href="/feed"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
               Back
@@ -692,7 +692,7 @@ export default function ListDetail({
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
           <div className="flex justify-between items-center h-12">
             <Link
-              href={isLoggedIn ? "/s" : "/"}
+              href={isLoggedIn ? "/feed" : "/"}
               className="flex items-center gap-2"
             >
               <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
@@ -703,7 +703,7 @@ export default function ListDetail({
           </div>
           <div className="flex sm:hidden items-center justify-between gap-2 pb-3">
             <Link
-              href="/s"
+              href="/feed"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
               Back
@@ -722,7 +722,7 @@ export default function ListDetail({
 
         <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
           <Link
-            href="/s"
+            href="/feed"
             className="px-3 hidden sm:block py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
           >
             Back
@@ -871,7 +871,7 @@ export default function ListDetail({
         <div className="flex justify-between items-center h-12">
           {/* Logo */}
           <Link
-            href={isLoggedIn ? "/s" : "/"}
+            href={isLoggedIn ? "/feed" : "/"}
             className="flex items-center gap-2"
           >
             <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
@@ -919,7 +919,7 @@ export default function ListDetail({
         <div className="flex sm:hidden items-center justify-between pb-3">
           <div>
             <Link
-              href="/s"
+              href="/feed"
               className="px-3 gap-1.5 flex items-center py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
             >
               <Undo2 size={13} />
@@ -962,7 +962,7 @@ export default function ListDetail({
       <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
         <div className="flex items-center justify-end sm:justify-between">
           <Link
-            href="/s"
+            href="/feed"
             className="px-3 hidden sm:flex items-center gap-1.5 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
           >
             <Undo2 size={13} />

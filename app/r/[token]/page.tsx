@@ -113,7 +113,7 @@ export default function SharedListPage() {
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <Link
-                href="/s"
+                href="/feed"
                 className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
               >
                 Browse lists
@@ -122,7 +122,7 @@ export default function SharedListPage() {
           </div>
           <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
-              href="/s"
+              href="/feed"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
               Browse lists
@@ -161,7 +161,7 @@ export default function SharedListPage() {
             </div>
             <div className="hidden sm:flex items-center gap-2">
               <Link
-                href="/s"
+                href="/feed"
                 className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
               >
                 Browse lists
@@ -170,7 +170,7 @@ export default function SharedListPage() {
           </div>
           <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
-              href="/s"
+              href="/feed"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
               Browse lists
@@ -185,7 +185,7 @@ export default function SharedListPage() {
             {S.errors.linkNotFoundDetail}
           </p>
           <Link
-            href="/s"
+            href="/feed"
             className="mt-2 px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
           >
             Browse lists
@@ -216,7 +216,7 @@ export default function SharedListPage() {
           </div>
           <div className="hidden sm:flex items-center gap-2">
             <Link
-              href="/s"
+              href="/feed"
               className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
             >
               Browse lists
@@ -233,7 +233,7 @@ export default function SharedListPage() {
         </div>
         <div className="flex sm:hidden items-center gap-2 pb-3">
           <Link
-            href="/s"
+            href="/feed"
             className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
           >
             Browse lists
