@@ -310,6 +310,12 @@ export async function PATCH(req: Request) {
       },
     });
 
+    if (isPublishing) {
+      await prisma.activityEvent.create({
+        data: { actorId: user.id, type: "published", listId: data.id },
+      });
+    }
+
     return NextResponse.json({ message: "Success" }, { status: 200 });
   } catch (e) {
     console.log("ERR", e);

@@ -24,7 +24,7 @@ export default function LandingNav() {
       <div className="flex items-center gap-2">
         {isLoggedIn ? (
           <Link
-            href="/s"
+            href="/feed"
             className="text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] px-4 py-2 hover:opacity-90 transition-opacity"
           >
             Go to app

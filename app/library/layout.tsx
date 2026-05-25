@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
-  title: "Sign in",
   robots: { index: false, follow: false },
 };
 
-export default function LoginPage() {
-  redirect("/feed");
+export default function LibraryLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <>{children}</>;
 }

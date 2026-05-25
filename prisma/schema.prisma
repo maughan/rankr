@@ -24,6 +24,13 @@ enum ArchetypeSlug {
   wildcard
 }
 
+enum ActivityEventType {
+  published
+  ranked
+  hot_take
+  milestone
+}
+
 model Tier {
   id    Int    @id @default(autoincrement())
   title String
@@ -48,9 +55,10 @@ model Item {
   image_uploaded_at    DateTime?
   short_label_user_set Boolean   @default(false)
 
-  createdBy User      @relation(fields: [createdById], references: [id])
-  rankings  Ranking[]
-  lists     List[]    @relation("ItemToList")
+  createdBy      User            @relation(fields: [createdById], references: [id])
+  rankings       Ranking[]
+  lists          List[]          @relation("ItemToList")
+  activityEvents ActivityEvent[]
 }
 
 model User {
@@ -67,7 +75,8 @@ model User {
   following_count      Int                   @default(0)
   archetype            ArchetypeSlug?
   archetype_stats      Json?
-  archetype_computed_at DateTime?
+  archetype_computed_at  DateTime?
+  last_feed_visit_at     DateTime?
   lists                List[]
   rankings             Ranking[]
   items                Item[]
@@ -79,6 +88,7 @@ model User {
   blockedBy            Block[]               @relation("Blocked")
   invitesReceived      ListInvite[]          @relation("InvitedUser")
   invitesSent          ListInvite[]          @relation("InvitedBy")
+  activityEvents       ActivityEvent[]
 }
 
 model Follow {
@@ -153,11 +163,12 @@ model List {
   has_been_published         Boolean   @default(false)
   published_at               DateTime?
 
-  items    Item[]        @relation("ItemToList")
-  tiers    Tier[]        @relation("ListToTier")
-  pins     UserListPin[]
-  rankings Ranking[]
-  invites  ListInvite[]
+  items          Item[]          @relation("ItemToList")
+  tiers          Tier[]          @relation("ListToTier")
+  pins           UserListPin[]
+  rankings       Ranking[]
+  invites        ListInvite[]
+  activityEvents ActivityEvent[]
 }
 
 model UserListPin {
@@ -208,4 +219,23 @@ model Ranking {
   list List? @relation(fields: [listId], references: [id])
 
   @@index([listId, anonymous_session_token])
+}
+
+model ActivityEvent {
+  id        Int               @id @default(autoincrement())
+  actorId   Int
+  type      ActivityEventType
+  listId    Int
+  itemId    Int?
+  meta      Json?
+  createdAt DateTime          @default(now())
+
+  actor User  @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  list  List  @relation(fields: [listId], references: [id], onDelete: Cascade)
+  item  Item? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([listId])
+  @@index([createdAt])
+  @@index([actorId, createdAt(sort: Desc)])
 }

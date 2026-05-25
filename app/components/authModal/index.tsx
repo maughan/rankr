@@ -40,7 +40,7 @@ export default function AuthModal() {
   const handleSuccess = () => {
     dispatch(uiActions.closeAuthModal());
     dispatch(baseApi.util.resetApiState());
-    if (pathname === "/") router.push("/s");
+    if (pathname === "/") router.push("/feed");
   };
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {

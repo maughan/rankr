@@ -2,6 +2,7 @@
 
 import { useMemo, useEffect, useRef, useState } from "react";
 import { S } from "@/app/content/strings";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 const CONFETTI_COLORS = [
   "#F59E0B", "#7C3AED", "#3B82F6", "#10B981",
@@ -18,18 +19,6 @@ interface Piece {
   delay: string;
   rotStart: string;
   rotEnd: string;
-}
-
-function useReducedMotion() {
-  const [reduced, setReduced] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const handler = () => setReduced(mq.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
-  return reduced;
 }
 
 interface Props {

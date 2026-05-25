@@ -30,6 +30,7 @@ import type { ListPreview, ListVisibility } from "@/app/types";
 import { S } from "@/app/content/strings";
 import { archetypeStatPct } from "@/lib/insightsConfig";
 import type { ArchetypeSlug, ArchetypeStats, ArchetypeReceipt } from "@/lib/insightsConfig";
+import LandingFooter from "@/app/landing/LandingFooter";
 
 // ── Mutuals line ──────────────────────────────────────────────────────────────
 
@@ -446,21 +447,30 @@ function ListGrid({
 function ProfileSkeleton() {
   return (
     <div className="animate-pulse flex flex-col gap-6">
-      <div className="flex gap-5 items-center py-8">
-        <div className="w-[72px] h-[72px] rounded-full bg-rk-stroke flex-shrink-0" />
-        <div className="flex flex-col gap-2 flex-1">
-          <div className="h-5 w-36 bg-rk-stroke rounded-[4px]" />
-          <div className="h-3.5 w-24 bg-rk-stroke rounded-[4px]" />
-          <div className="h-3 w-20 bg-rk-stroke rounded-[4px]" />
+      {/* Hero */}
+      <div className="flex gap-5 items-start py-8">
+        <div className="w-[72px] h-[72px] rounded-full bg-rk-surface flex-shrink-0" />
+        <div className="flex flex-col gap-2.5 flex-1 pt-1">
+          <div className="h-5 w-40 bg-rk-surface rounded-[4px]" />
+          <div className="h-3.5 w-24 bg-rk-surface rounded-[4px]" />
+          <div className="h-3 w-32 bg-rk-surface rounded-[4px]" />
+          <div className="flex gap-4 mt-1">
+            <div className="h-3 w-16 bg-rk-surface rounded-[4px]" />
+            <div className="h-3 w-16 bg-rk-surface rounded-[4px]" />
+            <div className="h-3 w-12 bg-rk-surface rounded-[4px]" />
+          </div>
         </div>
+        <div className="h-8 w-24 bg-rk-surface rounded-[8px] flex-shrink-0" />
       </div>
+
+      {/* List grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden">
-            <div className="h-36 bg-rk-stroke" />
+            <div className="h-36 bg-rk-row" />
             <div className="px-3 py-3 flex flex-col gap-2">
-              <div className="h-4 w-3/4 bg-rk-stroke rounded-[4px]" />
-              <div className="h-3 w-1/2 bg-rk-stroke rounded-[4px]" />
+              <div className="h-4 w-3/4 bg-rk-row rounded-[4px]" />
+              <div className="h-3 w-1/2 bg-rk-row rounded-[4px]" />
             </div>
           </div>
         ))}
@@ -489,7 +499,7 @@ export default function ProfileClient({ username }: { username: string }) {
   const nav = (
     <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
       <div className="flex justify-between items-center h-12">
-        <Link href={isLoggedIn ? "/s" : "/"} className="flex items-center gap-2">
+        <Link href={isLoggedIn ? "/feed" : "/"} className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
           <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
             tierstack.dev
@@ -513,22 +523,24 @@ export default function ProfileClient({ username }: { username: string }) {
 
   if (isPending) {
     return (
-      <div className="min-h-screen bg-rk-page">
+      <div className="min-h-screen bg-rk-page flex flex-col">
         {nav}
-        <div className="max-w-5xl mx-auto px-4 pb-16">
+        <div className="max-w-5xl mx-auto px-4 pb-16 w-full flex-1">
           <ProfileSkeleton />
         </div>
+        <LandingFooter />
       </div>
     );
   }
 
   if (isError || !data) {
     return (
-      <div className="min-h-screen bg-rk-page">
+      <div className="min-h-screen bg-rk-page flex flex-col">
         {nav}
-        <div className="max-w-5xl mx-auto px-4 py-16 text-center">
+        <div className="max-w-5xl mx-auto px-4 py-16 text-center flex-1 w-full">
           <p className="text-[14px] text-rk-muted">Could not load profile.</p>
         </div>
+        <LandingFooter />
       </div>
     );
   }
@@ -556,9 +568,9 @@ export default function ProfileClient({ username }: { username: string }) {
     : "No lists yet.";
 
   return (
-    <div className="min-h-screen bg-rk-page">
+    <div className="min-h-screen bg-rk-page flex flex-col">
       {nav}
-      <div className="max-w-5xl mx-auto px-4 pb-16">
+      <div className="max-w-5xl mx-auto px-4 pb-16 w-full flex-1">
         <ProfileHero
           username={user.username}
           displayName={user.display_name}
@@ -627,6 +639,7 @@ export default function ProfileClient({ username }: { username: string }) {
           emptyMsg={tabEmptyMsg}
         />
       </div>
+      <LandingFooter />
     </div>
   );
 }

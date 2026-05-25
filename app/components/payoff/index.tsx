@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { X, Flame, Sparkles, Check, Trophy, ArrowRight, Zap } from "lucide-react";
 import { IconCoffee, IconSwords } from "@tabler/icons-react";
@@ -12,6 +12,7 @@ import { S } from "@/app/content/strings";
 import { KOFI_URL } from "@/app/siteConfig";
 import { useAppDispatch } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 // ── Confetti ──────────────────────────────────────────────────────────────────
 
@@ -34,107 +35,19 @@ const CONFETTI_PARTICLES: {
   h: number;
 }[] = [
   { left: 8, top: 0, delay: 0, color: TIER_COLORS[0], rot: 320, w: 8, h: 11 },
-  {
-    left: 18,
-    top: 12,
-    delay: 60,
-    color: TIER_COLORS[1],
-    rot: -270,
-    w: 7,
-    h: 9,
-  },
+  { left: 18, top: 12, delay: 60, color: TIER_COLORS[1], rot: -270, w: 7, h: 9 },
   { left: 30, top: 4, delay: 120, color: TIER_COLORS[2], rot: 400, w: 9, h: 7 },
-  {
-    left: 42,
-    top: 16,
-    delay: 40,
-    color: TIER_COLORS[3],
-    rot: -350,
-    w: 7,
-    h: 10,
-  },
+  { left: 42, top: 16, delay: 40, color: TIER_COLORS[3], rot: -350, w: 7, h: 10 },
   { left: 55, top: 6, delay: 200, color: TIER_COLORS[4], rot: 290, w: 8, h: 8 },
-  {
-    left: 67,
-    top: 14,
-    delay: 80,
-    color: TIER_COLORS[5],
-    rot: -420,
-    w: 9,
-    h: 7,
-  },
-  {
-    left: 78,
-    top: 2,
-    delay: 160,
-    color: TIER_COLORS[0],
-    rot: 380,
-    w: 7,
-    h: 11,
-  },
-  {
-    left: 90,
-    top: 18,
-    delay: 240,
-    color: TIER_COLORS[1],
-    rot: -310,
-    w: 8,
-    h: 9,
-  },
-  {
-    left: 13,
-    top: 26,
-    delay: 300,
-    color: TIER_COLORS[2],
-    rot: 430,
-    w: 9,
-    h: 7,
-  },
-  {
-    left: 25,
-    top: 30,
-    delay: 140,
-    color: TIER_COLORS[3],
-    rot: -280,
-    w: 7,
-    h: 10,
-  },
-  {
-    left: 48,
-    top: 22,
-    delay: 350,
-    color: TIER_COLORS[4],
-    rot: 360,
-    w: 8,
-    h: 8,
-  },
-  {
-    left: 62,
-    top: 28,
-    delay: 100,
-    color: TIER_COLORS[5],
-    rot: -340,
-    w: 9,
-    h: 7,
-  },
-  {
-    left: 73,
-    top: 20,
-    delay: 220,
-    color: TIER_COLORS[0],
-    rot: 410,
-    w: 7,
-    h: 11,
-  },
-  {
-    left: 85,
-    top: 8,
-    delay: 380,
-    color: TIER_COLORS[1],
-    rot: -300,
-    w: 8,
-    h: 9,
-  },
+  { left: 67, top: 14, delay: 80, color: TIER_COLORS[5], rot: -420, w: 9, h: 7 },
+  { left: 78, top: 2, delay: 160, color: TIER_COLORS[0], rot: 380, w: 7, h: 11 },
+  { left: 90, top: 18, delay: 240, color: TIER_COLORS[1], rot: -310, w: 8, h: 9 },
+  { left: 13, top: 26, delay: 300, color: TIER_COLORS[2], rot: 430, w: 9, h: 7 },
+  { left: 25, top: 30, delay: 140, color: TIER_COLORS[3], rot: -280, w: 7, h: 10 },
+  { left: 48, top: 22, delay: 350, color: TIER_COLORS[4], rot: 360, w: 8, h: 8 },
+  { left: 62, top: 28, delay: 100, color: TIER_COLORS[5], rot: -340, w: 9, h: 7 },
+  { left: 73, top: 20, delay: 220, color: TIER_COLORS[0], rot: 410, w: 7, h: 11 },
+  { left: 85, top: 8, delay: 380, color: TIER_COLORS[1], rot: -300, w: 8, h: 9 },
 ];
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -221,29 +134,33 @@ function PayoffSkeleton() {
 
 // ── Hero ──────────────────────────────────────────────────────────────────────
 
-export function PayoffHero({
+function PayoffHero({
   data,
-  isFirst,
   title,
-}: PayoffPageProps & { title: string }) {
+  displayPct,
+  showConfetti,
+}: {
+  data: PayoffData | undefined;
+  title: string;
+  displayPct: number;
+  showConfetti: boolean;
+}) {
   if (!data) return null;
 
   const { completion, alignment } = data;
-  const shouldConfetti = isFirst && completion.isComplete;
 
   const subtitle = completion.isComplete
     ? S.payoff.subtitleComplete(completion.rankedCount, completion.totalCount)
     : S.payoff.subtitlePartial(completion.rankedCount, completion.totalCount);
 
-  // rankerCount includes the current user; subtract 1 for "other rankers"
   const otherCount = Math.max(0, alignment.rankerCount - 1);
   const isFirstRanker = otherCount === 0;
   const isFewRankers = otherCount >= 1 && otherCount < 4;
 
   return (
     <div className="relative overflow-hidden pt-6 pb-2 flex flex-col items-center text-center gap-3">
-      {/* Confetti — only rendered when isFirst + isComplete; animation gated in CSS */}
-      {shouldConfetti &&
+      {/* Confetti — fires after reveal when isFirst + isComplete */}
+      {showConfetti &&
         CONFETTI_PARTICLES.map((p, i) => (
           <span
             key={i}
@@ -292,7 +209,7 @@ export function PayoffHero({
               className="font-[700] text-rk-accent leading-none tabular-nums"
               style={{ fontSize: 72 }}
             >
-              {alignment.pct}
+              {displayPct}
             </span>
             <span
               className="font-[600] text-rk-accent"
@@ -459,8 +376,10 @@ function TasteNemesisCard({
   nemesis: NonNullable<PayoffData["tasteNemesis"]>;
 }) {
   return (
-    <div className="rounded-[12px] border bg-rk-surface p-4 flex flex-col gap-3 justify-center items-center"
-      style={{ borderColor: "rgba(240,149,149,0.25)" }}>
+    <div
+      className="rounded-[12px] border bg-rk-surface p-4 flex flex-col gap-3 justify-center items-center"
+      style={{ borderColor: "rgba(240,149,149,0.25)" }}
+    >
       <div className="flex items-center gap-1.5">
         <IconSwords size={12} style={{ color: "#F09595" }} strokeWidth={1.75} />
         <p
@@ -512,17 +431,15 @@ function TasteNemesisCard({
   );
 }
 
-// ── Featured (hottest take + closest match + nemesis) ─────────────────────────
+// ── Featured (closest match + nemesis, staggered) ────────────────────────────
 
-export function PayoffFeatured({ data }: PayoffPageProps) {
+function PayoffFeatured({ data }: { data: PayoffData | undefined }) {
   if (!data) return null;
-  const { hottestTake, closestMatch, tasteNemesis, alignment } = data;
-  if (!hottestTake && !closestMatch && !tasteNemesis) return null;
+  const { closestMatch, tasteNemesis, alignment } = data;
+  if (!closestMatch && !tasteNemesis) return null;
 
-  // "few rankers" = 1-3 others besides the current user
   const isFewRankers = alignment.rankerCount - 1 < 4;
-
-  const cardCount = [hottestTake, closestMatch, tasteNemesis].filter(Boolean).length;
+  const cardCount = [closestMatch, tasteNemesis].filter(Boolean).length;
 
   return (
     <div
@@ -530,59 +447,70 @@ export function PayoffFeatured({ data }: PayoffPageProps) {
         cardCount === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"
       }`}
     >
-      {hottestTake && <HottestTakeCard take={hottestTake} />}
       {closestMatch && (
-        <ClosestMatchCard match={closestMatch} isFew={isFewRankers} />
+        <div className="rk-reveal-up" style={{ animationDelay: "0ms" }}>
+          <ClosestMatchCard match={closestMatch} isFew={isFewRankers} />
+        </div>
       )}
-      {tasteNemesis && <TasteNemesisCard nemesis={tasteNemesis} />}
+      {tasteNemesis && (
+        <div className="rk-reveal-up" style={{ animationDelay: "60ms" }}>
+          <TasteNemesisCard nemesis={tasteNemesis} />
+        </div>
+      )}
     </div>
   );
 }
 
 // ── Extras row ────────────────────────────────────────────────────────────────
 
-export function PayoffExtras({ extras }: { extras: PayoffData["extras"] }) {
+function PayoffExtras({ extras }: { extras: PayoffData["extras"] }) {
   const tiles = [
     {
       icon: <Flame size={16} className="text-rk-accent" />,
       value: extras.contrarianPicks,
       label: S.payoff.contrarianLabel,
+      delay: 160,
     },
     {
       icon: <Check size={16} className="text-rk-accent" />,
       value: extras.perfectMatchCount,
       label: S.payoff.perfectMatchLabel,
+      delay: 220,
     },
     {
       icon: <Trophy size={16} className="text-rk-accent" />,
       value: extras.sTierCount,
       label: S.payoff.sTierLabel,
+      delay: 280,
     },
   ];
 
   return (
     <div className="grid grid-cols-3 gap-3">
-      {tiles.map(({ icon, value, label }) => (
+      {tiles.map(({ icon, value, label, delay }) => (
         <div
           key={label}
-          className="rounded-[12px] border border-rk-stroke bg-rk-surface p-4 flex flex-col items-center gap-2 text-center"
+          className="rk-reveal-up"
+          style={{ animationDelay: `${delay}ms` }}
         >
-          <div
-            className="w-9 h-9 rounded-[8px] flex items-center justify-center flex-shrink-0"
-            style={{
-              backgroundColor: "rgba(74,138,232,0.08)",
-              border: "1px solid rgba(74,138,232,0.16)",
-            }}
-          >
-            {icon}
+          <div className="rounded-[12px] border border-rk-stroke bg-rk-surface p-4 flex flex-col items-center gap-2 text-center">
+            <div
+              className="w-9 h-9 rounded-[8px] flex items-center justify-center flex-shrink-0"
+              style={{
+                backgroundColor: "rgba(74,138,232,0.08)",
+                border: "1px solid rgba(74,138,232,0.16)",
+              }}
+            >
+              {icon}
+            </div>
+            <p
+              className="font-[600] text-rk-primary leading-none tabular-nums"
+              style={{ fontSize: 26 }}
+            >
+              {value}
+            </p>
+            <p className="text-[11px] text-rk-muted leading-tight">{label}</p>
           </div>
-          <p
-            className="font-[600] text-rk-primary leading-none tabular-nums"
-            style={{ fontSize: 26 }}
-          >
-            {value}
-          </p>
-          <p className="text-[11px] text-rk-muted leading-tight">{label}</p>
         </div>
       ))}
     </div>
@@ -591,7 +519,7 @@ export function PayoffExtras({ extras }: { extras: PayoffData["extras"] }) {
 
 // ── CTAs ──────────────────────────────────────────────────────────────────────
 
-export function PayoffCtas({
+function PayoffCtas({
   data,
   isFirst,
   isComplete,
@@ -610,7 +538,6 @@ export function PayoffCtas({
   return (
     <>
       <div className="flex flex-col gap-3">
-        {/* Share hot-takes CTA — only when the list has sharing enabled */}
         {shareToken && (
           <button
             onClick={() => setShareOpen(true)}
@@ -620,7 +547,6 @@ export function PayoffCtas({
           </button>
         )}
 
-        {/* Share nemesis CTA — only when nemesis + sharing both exist */}
         {shareToken && data.tasteNemesis && (
           <button
             onClick={() => setNemesisShareOpen(true)}
@@ -635,7 +561,6 @@ export function PayoffCtas({
           </button>
         )}
 
-        {/* Comparison CTA */}
         <Link
           href={backHref}
           className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] border border-rk-stroke text-rk-secondary text-center hover:border-rk-secondary hover:text-rk-primary transition-colors"
@@ -643,7 +568,6 @@ export function PayoffCtas({
           {S.payoff.ctaCompare}
         </Link>
 
-        {/* Finish ranking — partial submissions only */}
         {!isComplete && (
           <Link
             href={rankHref}
@@ -696,7 +620,7 @@ function PayoffFoot() {
   return (
     <div className="flex justify-center pt-2 pb-8">
       <Link
-        href="/s"
+        href="/feed"
         className="text-[12px] text-rk-tertiary hover:text-rk-muted transition-colors"
       >
         {S.payoff.browseLists}
@@ -713,7 +637,6 @@ function SupportCard() {
   if (!visible || !KOFI_URL) return null;
 
   const handleDismiss = () => setVisible(false);
-
   const handleClick = () => track("support_cta_click");
 
   return (
@@ -772,7 +695,73 @@ function SupportCard() {
 
 export default function PayoffPage(props: PayoffPageProps) {
   const { data, isLoading, isError, backHref, isFirst, isAnon } = props;
+  const reduced = useReducedMotion();
 
+  // ── Reveal state machine ────────────────────────────────────────────────────
+  const rafRef = useRef<number | null>(null);
+  const targetPctRef = useRef(0);
+  // Updated on every render so RAF callback always sees fresh values
+  const doRevealRef = useRef<(instant: boolean) => void>(() => {});
+
+  const [displayPct, setDisplayPct] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  doRevealRef.current = (instant: boolean) => {
+    const confetti = isFirst && (data?.completion.isComplete ?? false);
+    setRevealed(true);
+    if (confetti) setTimeout(() => setShowConfetti(true), instant ? 0 : 700);
+  };
+
+  useEffect(() => {
+    if (!data) return;
+
+    const otherCount = Math.max(0, data.alignment.rankerCount - 1);
+    const isFirstRanker = otherCount === 0;
+    const target = data.alignment.pct;
+    targetPctRef.current = target;
+
+    if (reduced || isFirstRanker) {
+      setDisplayPct(target);
+      doRevealRef.current(true);
+      return;
+    }
+
+    const start = performance.now();
+    const DURATION = 1200;
+
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / DURATION, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplayPct(Math.round(eased * target));
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        rafRef.current = null;
+        doRevealRef.current(false);
+      }
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+  }, [data, reduced]);
+
+  const skip = () => {
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    setDisplayPct(targetPctRef.current);
+    doRevealRef.current(true);
+  };
+
+  // ── Derived ─────────────────────────────────────────────────────────────────
   const isComplete = data?.completion.isComplete ?? false;
   const title = isFirst
     ? isComplete
@@ -804,17 +793,44 @@ export default function PayoffPage(props: PayoffPageProps) {
     <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
       <PayoffNav backHref={backHref} />
 
-      <div className="px-4 sm:px-8 py-8 max-w-2xl mx-auto flex flex-col gap-8">
+      {/* Click-to-skip zone: only active before reveal, excluded from nav */}
+      <div
+        className={`px-4 sm:px-8 py-8 max-w-2xl mx-auto flex flex-col gap-8 ${
+          !revealed && !isLoading ? "cursor-pointer select-none" : ""
+        }`}
+        onClick={!revealed && !isLoading ? skip : undefined}
+      >
         {isLoading ? (
           <PayoffSkeleton />
         ) : (
           <>
-            <PayoffHero {...props} title={title} />
-            {data && (
+            <PayoffHero
+              data={data}
+              title={title}
+              displayPct={displayPct}
+              showConfetti={showConfetti}
+            />
+
+            {data && revealed && (
               <>
-                <PayoffFeatured {...props} />
+                <PayoffFeatured data={data} />
+
                 <PayoffExtras extras={data.extras} />
-                <PayoffCtas {...props} isComplete={isComplete} />
+
+                {/* Hottest take — punchline, revealed last */}
+                {data.hottestTake && (
+                  <div
+                    className="rk-reveal-pop"
+                    style={{ animationDelay: "400ms" }}
+                  >
+                    <HottestTakeCard take={data.hottestTake} />
+                  </div>
+                )}
+
+                <div className="rk-reveal-up" style={{ animationDelay: "520ms" }}>
+                  <PayoffCtas {...props} isComplete={isComplete} />
+                </div>
+
                 <SupportCard />
                 {isAnon && <PayoffAnonNudge />}
                 {!isAnon && <PayoffFoot />}

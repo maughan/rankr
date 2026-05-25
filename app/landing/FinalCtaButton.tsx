@@ -18,7 +18,7 @@ export default function FinalCtaButton() {
   if (isLoggedIn) {
     return (
       <Link
-        href="/s"
+        href="/feed"
         className="px-8 py-4 text-[15px] font-[600] bg-rk-accent text-white rounded-[12px] hover:opacity-90 transition-opacity"
       >
         Go to app
