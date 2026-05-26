@@ -28,6 +28,7 @@ import { TierItem } from "@/app/types";
 import NavAvatar from "@/app/components/NavAvatar";
 import LandingFooter from "@/app/landing/LandingFooter";
 import { SubmissionLoader } from "@/app/components/SubmissionLoader";
+import { ItemCard } from "@/app/components/item/ItemCard";
 
 // ── Tier label colours ────────────────────────────────────────────────────────
 
@@ -39,62 +40,6 @@ const TIER_STYLE: Record<string, { bg: string; text: string }> = {
   D: { bg: "#85B7EB", text: "#042C53" },
   F: { bg: "#AFA9EC", text: "#26215C" },
 };
-
-// ── Item card (matches list view) ─────────────────────────────────────────────
-
-function ItemCard({
-  item,
-  isJustDropped,
-}: {
-  item: TierItem;
-  isJustDropped?: boolean;
-}) {
-  const base =
-    "relative w-[70px] bg-rk-surface border border-rk-stroke rounded-[8px] overflow-hidden cursor-grab active:cursor-grabbing" +
-    " motion-safe:transition-[transform,border-color] motion-safe:duration-150 motion-safe:ease-out" +
-    " motion-safe:hover:-translate-y-0.5 motion-safe:hover:scale-[1.02] motion-safe:hover:border-rk-muted";
-  const cls = `${base}${isJustDropped ? " rk-item-drop" : ""}`;
-
-  if (item.img) {
-    return (
-      <div className={cls}>
-        <div className="relative h-[44px]">
-          <Image
-            loader={ImageKitLoader}
-            src={item.img}
-            alt=""
-            fill
-            sizes="70px"
-            style={{ objectFit: "cover" }}
-          />
-        </div>
-        <div className="px-1.5 py-1.5">
-          <p className="text-[11px] text-rk-secondary leading-tight truncate">
-            {item.name ?? "—"}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={cls}>
-      <div
-        className="h-[44px] flex items-center justify-center rounded-t-[6px]"
-        style={{ backgroundColor: item.color ?? "#334155" }}
-      >
-        <span className="text-white text-[11px] font-[500] select-none">
-          {item.short_label}
-        </span>
-      </div>
-      <div className="px-1.5 py-1.5">
-        <p className="text-[11px] text-rk-secondary leading-tight truncate">
-          {item.name}
-        </p>
-      </div>
-    </div>
-  );
-}
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -435,6 +380,7 @@ export default function RankClient({
                         <ItemCard
                           item={item}
                           isJustDropped={justDroppedId === item.id}
+                          variant="rank"
                         />
                       </Draggable>
                     ))}
@@ -466,6 +412,7 @@ export default function RankClient({
                     <ItemCard
                       item={item}
                       isJustDropped={justDroppedId === item.id}
+                      variant="rank"
                     />
                   </Draggable>
                 );
