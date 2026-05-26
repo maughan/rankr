@@ -63,6 +63,7 @@ import Modal from "../../components/modal";
 import ShareModal from "./ShareModal";
 import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
 import { ImageKitLoader, getUserFromToken } from "@/lib/helpers";
+import { ItemCard } from "@/app/components/item/ItemCard";
 import { TierItem } from "@/app/types";
 import TierComparison from "../../components/tierComparison";
 import { nameToColor } from "@/lib/itemColor";
@@ -190,67 +191,6 @@ function AgreementBadge({ pct, tier }: { pct: number; tier: AgreementTier }) {
   return (
     <div className={base} style={{ backgroundColor: "rgba(134,239,172,0.12)", color: "#86EFAC" }}>
       <span>{pct}% agree</span>
-    </div>
-  );
-}
-
-function ItemCard({ item, onEdit }: { item: TierItem; onEdit?: () => void }) {
-  const editable = !!onEdit;
-  const base = [
-    "w-[70px] bg-rk-surface border border-rk-stroke rounded-[8px] overflow-hidden relative",
-    editable
-      ? "cursor-pointer group"
-      : "transition-transform hover:scale-[1.04] cursor-default",
-  ].join(" ");
-
-  const overlay = editable ? (
-    <div
-      className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-      onClick={onEdit}
-    >
-      <Pencil size={14} className="text-white" />
-    </div>
-  ) : null;
-
-  if (item.img) {
-    return (
-      <div className={base}>
-        <div className="relative h-[44px]">
-          <Image
-            loader={ImageKitLoader}
-            src={item.img}
-            alt=""
-            fill
-            sizes="70px"
-            style={{ objectFit: "cover" }}
-          />
-        </div>
-        <div className="px-1.5 py-1.5">
-          <p className="text-[11px] text-rk-secondary leading-tight truncate">
-            {item.name ?? "—"}
-          </p>
-        </div>
-        {overlay}
-      </div>
-    );
-  }
-
-  return (
-    <div className={base}>
-      <div
-        className="h-[44px] flex items-center justify-center rounded-t-[6px]"
-        style={{ backgroundColor: item.color ?? "#334155" }}
-      >
-        <span className="text-white text-[11px] font-[500] select-none">
-          {item.short_label}
-        </span>
-      </div>
-      <div className="px-1.5 py-1.5">
-        <p className="text-[11px] text-rk-secondary leading-tight truncate">
-          {item.name}
-        </p>
-      </div>
-      {overlay}
     </div>
   );
 }

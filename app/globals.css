@@ -124,4 +124,24 @@ body {
   }
   .rk-reveal-up  { animation: rk-reveal-up 320ms ease-out both; }
   .rk-reveal-pop { animation: rk-reveal-up 400ms cubic-bezier(0.34, 1.2, 0.64, 1) both; }
+
+  /* Scrollable item-name text — ping-pong scroll */
+  @keyframes mq-ping-pong {
+    0%,  12%  { transform: translateX(0); }
+    44%, 56%  { transform: translateX(var(--mq-end, 0px)); }
+    88%, 100% { transform: translateX(0); }
+  }
+
+  /* Touch one-shot (class added/removed by JS) */
+  .mq-scroll-active {
+    animation: mq-ping-pong 3s linear 1;
+  }
+
+  /* Desktop: infinite loop while card is hovered or focused */
+  @media (hover: hover) {
+    .mq-card:hover .mq-candidate,
+    .mq-card:focus-visible .mq-candidate {
+      animation: mq-ping-pong 3s linear infinite;
+    }
+  }
 }

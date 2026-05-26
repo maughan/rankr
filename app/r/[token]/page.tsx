@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState } from "react";
 import { ImageIcon, Users } from "lucide-react";
@@ -18,7 +17,7 @@ import Skeleton from "@/app/components/Skeleton";
 import { TierRowSkeleton } from "@/app/s/[id]/skeletons";
 import AnonComparison from "@/app/components/anonComparison";
 import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
-import { ImageKitLoader } from "@/lib/helpers";
+import { ItemCard } from "@/app/components/item/ItemCard";
 
 const TIER_STYLE: Record<string, { bg: string; text: string }> = {
   S: { bg: "#C44545", text: "#ffffff" },
@@ -29,57 +28,9 @@ const TIER_STYLE: Record<string, { bg: string; text: string }> = {
   F: { bg: "#AFA9EC", text: "#26215C" },
 };
 
-function ItemCard({ item }: { item: SharedListItem }) {
-  const base =
-    "w-[70px] bg-rk-surface border border-rk-stroke rounded-[8px] overflow-hidden cursor-default";
-
-  if (item.img) {
-    return (
-      <div className={base}>
-        <div className="relative h-[44px]">
-          <Image
-            loader={ImageKitLoader}
-            src={item.img}
-            alt=""
-            fill
-            sizes="70px"
-            style={{ objectFit: "cover" }}
-          />
-        </div>
-        <div className="px-1.5 py-1.5">
-          <p className="text-[11px] text-rk-secondary leading-tight truncate">
-            {item.name ?? "—"}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className={base}>
-      <div
-        className="h-[44px] flex items-center justify-center rounded-t-[6px]"
-        style={{ backgroundColor: item.color ?? "#334155" }}
-      >
-        <span className="text-white text-[11px] font-[500] select-none">
-          {item.short_label}
-        </span>
-      </div>
-      <div className="px-1.5 py-1.5">
-        <p className="text-[11px] text-rk-secondary leading-tight truncate">
-          {item.name}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 export default function SharedListPage() {
   const { token } = useParams<{ token: string }>();
-  const {
-    data: list,
-    isError,
-  } = useQuery<SharedList>({
+  const { data: list, isError } = useQuery<SharedList>({
     queryKey: ["sharedList", token],
     queryFn: async () => {
       const res = await fetch(`/api/r/${token}`);
