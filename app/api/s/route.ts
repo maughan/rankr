@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
-import { ICON_NAMES_SET, COLOR_NAMES_SET } from "@/lib/categoryIcons";
+import { CATEGORY_SLUGS_SET } from "@/lib/categories";
 import { generateShortId, slugify } from "@/lib/listUrl";
 import { computeETag, checkETagMatch } from "@/lib/server/etag";
 import { Ranking } from "@/app/generated/prisma/client";
@@ -135,9 +135,7 @@ export async function GET(_req: Request) {
         visibility: list.visibility,
         img: list.img,
         createdBy: list.createdBy,
-        tags: list.tags,
-        category_icon: list.category_icon,
-        category_color: list.category_color,
+        category: list.category,
         item_count: list.items.length,
         ranker_count: rankerSet.size,
         ranking_count: rankingCount,
@@ -176,23 +174,16 @@ export async function POST(req: Request) {
 
     const data = await req.json();
 
-    // category_icon/category_color require `prisma generate` after the migration
-    await (prisma.list.create as any)({
+    await prisma.list.create({
       data: {
         title: data.title,
         description: data.description,
-        tags: data.tags,
         createdById: decoded.sub,
         img: data.img,
         visibility: data.visibility ?? "draft",
         short_id: generateShortId(),
         slug: slugify(data.title ?? "list"),
-        category_icon: ICON_NAMES_SET.has(data.category_icon)
-          ? data.category_icon
-          : "ti-stack-2",
-        category_color: COLOR_NAMES_SET.has(data.category_color)
-          ? data.category_color
-          : "blue",
+        category: CATEGORY_SLUGS_SET.has(data.category) ? data.category : "other",
         tiers: {
           connect: [
             { id: 1 },
@@ -232,7 +223,7 @@ export async function PATCH(req: Request) {
 
     const data = await req.json();
 
-    const ownsList = await (prisma.list as any).findFirst({
+    const ownsList = await prisma.list.findFirst({
       where: { id: data.id, createdById: user.id },
       select: {
         id: true,
@@ -281,8 +272,7 @@ export async function PATCH(req: Request) {
       data.visibility !== "public" &&
       ownsList.visibility === "public";
 
-    // category_icon/category_color require `prisma generate` after the migration
-    await (prisma.list as any).update({
+    await prisma.list.update({
       where: { id: data.id, createdById: user.id },
       data: {
         title: data.title,
@@ -304,13 +294,9 @@ export async function PATCH(req: Request) {
             has_been_published: true,
             published_at: new Date(),
           }),
-        ...(data.category_icon &&
-          ICON_NAMES_SET.has(data.category_icon) && {
-            category_icon: data.category_icon,
-          }),
-        ...(data.category_color &&
-          COLOR_NAMES_SET.has(data.category_color) && {
-            category_color: data.category_color,
+        ...(data.category &&
+          CATEGORY_SLUGS_SET.has(data.category) && {
+            category: data.category,
           }),
         ...(typeof data.allow_contributions === "boolean" && {
           allow_contributions: data.allow_contributions,

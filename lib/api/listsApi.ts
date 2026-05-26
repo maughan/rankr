@@ -43,6 +43,16 @@ export interface PayoffData {
     perfectMatchCount: number;
     sTierCount: number;
   };
+  rankSimilar: {
+    id: number;
+    short_id: string;
+    slug: string;
+    title: string;
+    description: string | null;
+    category: string;
+    img: string | null;
+    co_ranker_count: number;
+  }[];
   shareToken: string | null;
 }
 
@@ -136,8 +146,7 @@ export const listsApi = baseApi.injectEndpoints({
         | "title"
         | "description"
         | "img"
-        | "category_icon"
-        | "category_color"
+        | "category"
         | "visibility"
       >
     >({

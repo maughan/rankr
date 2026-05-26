@@ -1,3 +1,5 @@
+import type { CategorySlug } from "@/lib/categories";
+
 export type ListVisibility = "public" | "hidden" | "draft" | "private";
 
 export interface TopTierItem {
@@ -19,9 +21,7 @@ export interface ListPreview {
   createdAt: string;
   updatedAt: string;
   createdBy: { id: number; username: string };
-  tags: string[];
-  category_icon: string;
-  category_color: string;
+  category: CategorySlug;
   item_count: number;
   ranker_count: number;
   ranking_count: number;
@@ -45,9 +45,7 @@ export interface TierList {
     id: number;
     username: string;
   };
-  tags: Array<string>;
-  category_icon: string;
-  category_color: string;
+  category: CategorySlug;
   is_shareable: boolean;
   share_token: string | null;
   anonymous_rankings_enabled: boolean;

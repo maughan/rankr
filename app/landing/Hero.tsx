@@ -22,54 +22,58 @@ type HeroItem = {
 };
 
 async function fetchHeroData() {
-  const list = await (prisma.list as any).findFirst({
-    where: { id: 1 },
-    select: {
-      id: true,
-      title: true,
-      createdById: true,
-      tiers: { select: { id: true, title: true, color: true, value: true } },
-      items: {
-        select: {
-          id: true,
-          name: true,
-          img: true,
-          color: true,
-          short_label: true,
+  try {
+    const list = await (prisma.list as any).findFirst({
+      where: { id: 1 },
+      select: {
+        id: true,
+        title: true,
+        createdById: true,
+        tiers: { select: { id: true, title: true, color: true, value: true } },
+        items: {
+          select: {
+            id: true,
+            name: true,
+            img: true,
+            color: true,
+            short_label: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  if (!list) return null;
+    if (!list) return null;
 
-  const sortedTiers = (list.tiers as HeroTier[])
-    .filter((t) => t.value !== 0)
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 4);
+    const sortedTiers = (list.tiers as HeroTier[])
+      .filter((t) => t.value !== 0)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 4);
 
-  const rankings = await prisma.ranking.findMany({
-    where: {
-      itemId: { in: (list.items as HeroItem[]).map((i) => i.id) },
-      userId: list.createdById as number,
-    },
-    select: { itemId: true, value: true },
-  });
+    const rankings = await prisma.ranking.findMany({
+      where: {
+        itemId: { in: (list.items as HeroItem[]).map((i) => i.id) },
+        userId: list.createdById as number,
+      },
+      select: { itemId: true, value: true },
+    });
 
-  const rankMap = new Map(rankings.map((r) => [r.itemId, r.value]));
-  const tierValueToIdx = new Map(sortedTiers.map((t, i) => [t.value, i]));
-  const tierItems: HeroItem[][] = sortedTiers.map(() => []);
+    const rankMap = new Map(rankings.map((r) => [r.itemId, r.value]));
+    const tierValueToIdx = new Map(sortedTiers.map((t, i) => [t.value, i]));
+    const tierItems: HeroItem[][] = sortedTiers.map(() => []);
 
-  for (const item of list.items as HeroItem[]) {
-    const value = rankMap.get(item.id);
-    if (!value || value === 0) continue;
-    const idx = tierValueToIdx.get(value);
-    if (idx !== undefined && tierItems[idx].length < 5) {
-      tierItems[idx].push(item);
+    for (const item of list.items as HeroItem[]) {
+      const value = rankMap.get(item.id);
+      if (!value || value === 0) continue;
+      const idx = tierValueToIdx.get(value);
+      if (idx !== undefined && tierItems[idx].length < 5) {
+        tierItems[idx].push(item);
+      }
     }
-  }
 
-  return { listTitle: list.title as string, tiers: sortedTiers, tierItems };
+    return { listTitle: list.title as string, tiers: sortedTiers, tierItems };
+  } catch {
+    return null;
+  }
 }
 
 function ItemChip({ item }: { item: HeroItem }) {

@@ -16,33 +16,27 @@ export const createNewList = ({
   description,
   img,
   visibility,
-  category_icon,
-  category_color,
+  category,
 }: Pick<
   TierList,
   | "title"
   | "description"
   | "img"
   | "visibility"
-  | "category_icon"
-  | "category_color"
+  | "category"
 >): Pick<
   TierList,
   | "title"
   | "description"
-  | "tags"
   | "visibility"
   | "img"
-  | "category_icon"
-  | "category_color"
+  | "category"
 > => ({
   title,
   description,
   img,
   visibility,
-  category_icon,
-  category_color,
-  tags: [],
+  category,
 });
 
 export const createNewTier = ({

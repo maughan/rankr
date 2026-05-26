@@ -7,23 +7,23 @@ type FeaturedList = {
   title: string;
   description: string;
   share_token: string | null;
-  category_icon: string;
-  category_color: string;
 };
 
 async function fetchFeaturedLists(): Promise<FeaturedList[]> {
-  return (prisma.list as any).findMany({
-    where: { is_featured: true, is_shareable: true },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      share_token: true,
-      category_icon: true,
-      category_color: true,
-    },
-    take: 6,
-  });
+  try {
+    return await prisma.list.findMany({
+      where: { is_featured: true, is_shareable: true },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        share_token: true,
+      },
+      take: 6,
+    });
+  } catch {
+    return [];
+  }
 }
 
 function ListCard({ list }: { list: FeaturedList }) {

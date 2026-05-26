@@ -1,5 +1,6 @@
 // Server-only. Never import from client components.
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/app/generated/prisma/client";
 import { nameToColor } from "@/lib/itemColor";
 import { MIN_OTHER_AUTHED_RANKERS_FOR_NEMESIS } from "@/lib/insightsConfig";
 
@@ -61,6 +62,16 @@ export interface PayoffData {
     perfectMatchCount: number;
     sTierCount: number;
   };
+  rankSimilar: {
+    id: number;
+    short_id: string;
+    slug: string;
+    title: string;
+    description: string | null;
+    category: string;
+    img: string | null;
+    co_ranker_count: number;
+  }[];
   shareToken: string | null;
 }
 
@@ -74,6 +85,7 @@ interface ComputePayoffParams {
 }
 
 export async function computePayoff({
+  listId,
   items,
   tiers,
   userRankings,
@@ -92,6 +104,17 @@ export async function computePayoff({
   const rankedCount = userRankings.length;
   const isComplete = rankedCount === totalCount;
 
+  type SimilarList = {
+    id: number;
+    short_id: string;
+    slug: string;
+    title: string;
+    description: string | null;
+    category: string;
+    img: string | null;
+    co_ranker_count: number;
+  };
+
   // ── Parallel DB queries ───────────────────────────────────────────────────
   const [
     crowdGrouped,
@@ -99,6 +122,7 @@ export async function computePayoff({
     otherAuthedRankings,
     authedRankerRows,
     anonRankerRows,
+    rankSimilar,
   ] = await Promise.all([
     // Per-item: crowd average value + total ranking count
     (prisma.ranking as any).groupBy({
@@ -144,6 +168,53 @@ export async function computePayoff({
       select: { anonymous_session_token: true },
       distinct: ["anonymous_session_token"],
     }),
+
+    // Co-ranker similar lists — single query via join table
+    listItemIds.length > 0
+      ? prisma.$queryRaw<SimilarList[]>(Prisma.sql`
+          SELECT
+            l.id,
+            l.short_id,
+            l.slug,
+            l.title,
+            l.description,
+            l.category,
+            l.img,
+            COUNT(DISTINCT r."userId")::int AS co_ranker_count
+          FROM "Ranking" r
+          JOIN "_ItemToList" itl ON r."itemId" = itl."A"
+          JOIN "List" l ON itl."B" = l.id
+          WHERE
+            r."userId" IN (
+              SELECT DISTINCT cr."userId"
+              FROM "Ranking" cr
+              WHERE cr."itemId" IN (${Prisma.join(listItemIds)})
+                AND cr."userId" IS NOT NULL
+                AND cr.value > 0
+                ${currentUserId !== null ? Prisma.sql`AND cr."userId" != ${currentUserId}` : Prisma.sql``}
+            )
+            AND l.id != ${listId}
+            AND l.visibility = 'public'
+            AND r.value > 0
+            AND r."userId" IS NOT NULL
+            ${
+              currentUserId !== null
+                ? Prisma.sql`
+            AND NOT EXISTS (
+              SELECT 1 FROM "Ranking" ur
+              JOIN "_ItemToList" uitl ON ur."itemId" = uitl."A"
+              WHERE uitl."B" = l.id
+                AND ur."userId" = ${currentUserId}
+                AND ur.value > 0
+            )`
+                : Prisma.sql``
+            }
+          GROUP BY l.id, l.short_id, l.slug, l.title, l.description, l.category, l.img
+          HAVING COUNT(DISTINCT r."userId") >= 2
+          ORDER BY co_ranker_count DESC
+          LIMIT 5
+        `)
+      : Promise.resolve([] as SimilarList[]),
   ]);
 
   const rankerCount = authedRankerRows.length + anonRankerRows.length;
@@ -282,6 +353,7 @@ export async function computePayoff({
     closestMatch,
     tasteNemesis,
     extras: { contrarianPicks, perfectMatchCount, sTierCount },
+    rankSimilar: rankSimilar.slice(0, 3),
     shareToken,
   };
 }

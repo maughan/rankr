@@ -208,6 +208,14 @@ export const S = {
     // Footer
     browseLists: "Browse more lists",
 
+    // Surprise me
+    surpriseMe: "Surprise me",
+
+    // Rank similar
+    rankSimilarEyebrow: "Rank next",
+    rankSimilarHeading: "Lists your crowd also ranked",
+    rankSimilarCoRankers: (n: number) => `${n} ranker${n !== 1 ? "s" : ""} in common`,
+
     // No data
     noRankingFound: "No ranking found for this list.",
   },
@@ -358,7 +366,7 @@ export const S = {
       {
         step: "Create a list",
         detail:
-          "Name it, pick a category icon, and add the items you want to rank. Give each one a name, a colour, or upload an image.",
+          "Name it, pick a category, and add the items you want to rank. Give each one a name, a colour, or upload an image.",
       },
       {
         step: "Drag items into tiers",
@@ -416,12 +424,13 @@ export const S = {
 
   // ── /browse page ──────────────────────────────────────────────────────────
   browsePage: {
-    seoTitle: "Browse Tier Lists - Popular & Recent · tierstack",
+    seoTitle: "Browse Tier Lists by Category · tierstack",
     seoDescription:
       "Browse public tier lists on tierstack. Find popular rankings on movies, music, food, games, and more.",
     h1: "Browse tier lists",
-    subtitle: "Public lists, ranked by the community.",
-    empty: "No public lists yet - check back soon.",
+    subtitle: "Explore public rankings by category.",
+    empty: "No categories have enough public lists yet — check back soon.",
+    categoryEmpty: "No public lists in this category yet — check back soon.",
   },
 
   // ── Taste archetype ───────────────────────────────────────────────────────

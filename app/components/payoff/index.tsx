@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { X, Flame, Sparkles, Check, Trophy, ArrowRight, Zap } from "lucide-react";
+import { X, Flame, Sparkles, Check, Trophy, ArrowRight, Zap, ChevronRight } from "lucide-react";
 import { IconCoffee, IconSwords } from "@tabler/icons-react";
 import { track } from "@vercel/analytics";
 import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
+import { listUrl } from "@/lib/listUrl";
 import Skeleton from "@/app/components/Skeleton";
 import { PayoffData } from "@/lib/api/listsApi";
 import { S } from "@/app/content/strings";
@@ -517,6 +518,48 @@ function PayoffExtras({ extras }: { extras: PayoffData["extras"] }) {
   );
 }
 
+// ── Rank similar ─────────────────────────────────────────────────────────────
+
+function RankSimilarSection({
+  lists,
+}: {
+  lists: NonNullable<PayoffPageProps["data"]>["rankSimilar"];
+}) {
+  if (lists.length < 2) return null;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-1.5">
+        <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest">
+          {S.payoff.rankSimilarEyebrow}
+        </p>
+      </div>
+      <div className="flex flex-col gap-2">
+        {lists.map((list) => (
+          <Link
+            key={list.id}
+            href={`${listUrl(list)}/s`}
+            className="flex items-center justify-between gap-3 rounded-[10px] border border-rk-stroke bg-rk-surface px-4 py-3 hover:border-rk-muted transition-colors group"
+          >
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <p className="text-[13px] font-[500] text-rk-primary line-clamp-1 group-hover:text-rk-accent transition-colors">
+                {list.title}
+              </p>
+              <p className="text-[11px] text-rk-muted">
+                {S.payoff.rankSimilarCoRankers(list.co_ranker_count)}
+              </p>
+            </div>
+            <ChevronRight
+              size={14}
+              className="text-rk-muted flex-shrink-0 group-hover:text-rk-accent transition-colors"
+            />
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ── CTAs ──────────────────────────────────────────────────────────────────────
 
 function PayoffCtas({
@@ -816,6 +859,8 @@ export default function PayoffPage(props: PayoffPageProps) {
                 <PayoffFeatured data={data} />
 
                 <PayoffExtras extras={data.extras} />
+
+                <RankSimilarSection lists={data.rankSimilar} />
 
                 {/* Hottest take — punchline, revealed last */}
                 {data.hottestTake && (

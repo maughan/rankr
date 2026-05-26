@@ -32,6 +32,7 @@ import {
 import { listUrl } from "@/lib/listUrl";
 import { S } from "@/app/content/strings";
 import LandingFooter from "../landing/LandingFooter";
+import { SurpriseButton } from "../components/SurpriseButton";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -203,7 +204,8 @@ function EngagementCard({ event }: { event: EngagementFeedItem }) {
 }
 
 function NewFollowersCard({ event }: { event: NewFollowersFeedItem }) {
-  const { username } = getUserFromToken();
+  const [username, setUsername] = useState("");
+  useEffect(() => { setUsername(getUserFromToken().username); }, []);
 
   return (
     <PersonalCardShell icon={<Users size={15} className="text-rk-accent" />}>
@@ -347,12 +349,17 @@ function FallbackSection({ lists }: { lists: FallbackList[] }) {
   if (lists.length === 0) return null;
   return (
     <div className="pt-6 border-t border-rk-stroke mt-2">
-      <p className="text-[14px] font-[500] text-rk-primary">
-        {S.feed.fallbackHeading}
-      </p>
-      <p className="text-[12px] text-rk-muted mt-0.5 mb-4">
-        {S.feed.fallbackSubhead}
-      </p>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <p className="text-[14px] font-[500] text-rk-primary">
+            {S.feed.fallbackHeading}
+          </p>
+          <p className="text-[12px] text-rk-muted mt-0.5">
+            {S.feed.fallbackSubhead}
+          </p>
+        </div>
+        <SurpriseButton className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[500] border border-rk-stroke text-rk-secondary rounded-[8px] hover:border-rk-muted hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" />
+      </div>
       <div className="grid grid-cols-2 gap-3">
         {lists.map((l) => (
           <FallbackListCard key={l.id} list={l} />
@@ -479,7 +486,8 @@ const FEED_KEY = ["feed"] as const;
 export default function FeedPage() {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
-  const { username } = getUserFromToken();
+  const [username, setUsername] = useState("");
+  useEffect(() => { setUsername(getUserFromToken().username); }, []);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -590,6 +598,7 @@ export default function FeedPage() {
             >
               Library
             </Link>
+            <SurpriseButton className="flex items-center gap-1.5 text-[13px] font-[500] text-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" />
             <NavAvatar username={username} />
           </div>
         </div>

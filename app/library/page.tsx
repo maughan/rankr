@@ -6,28 +6,6 @@ import { toast } from "sonner";
 import ImageKit from "imagekit-javascript";
 import Image from "next/image";
 import { LayoutGrid } from "lucide-react";
-import {
-  IconStack2,
-  IconBurger,
-  IconCookie,
-  IconCandy,
-  IconPizza,
-  IconRobot,
-  IconBrain,
-  IconRocket,
-  IconHeart,
-  IconStar,
-  IconLeaf,
-  IconTree,
-  IconSun,
-  IconMountain,
-  IconMoon,
-  IconMoodHappy,
-  IconMusic,
-  IconMovie,
-  IconCamera,
-  IconUser,
-} from "@tabler/icons-react";
 
 import { useCreateListMutation } from "@/lib/api/listsApi";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -44,53 +22,10 @@ import Modal from "../components/modal";
 import EmptyState from "../components/EmptyState";
 import NavAvatar from "../components/NavAvatar";
 import { S } from "@/app/content/strings";
-import {
-  ICON_NAMES,
-  COLOR_NAMES,
-  COLOR_HEX,
-  CategoryIcon,
-  CategoryColor,
-} from "@/lib/categoryIcons";
 import LandingFooter from "../landing/LandingFooter";
+import { CategoryPicker } from "../components/item/CategoryPicker";
 
 // ── Icon registry ─────────────────────────────────────────────────────────────
-
-const ICON_COMPONENTS: Record<
-  CategoryIcon,
-  React.ComponentType<{ size?: number }>
-> = {
-  "ti-stack-2": IconStack2,
-  "ti-burger": IconBurger,
-  "ti-cookie": IconCookie,
-  "ti-candy": IconCandy,
-  "ti-pizza": IconPizza,
-  "ti-robot": IconRobot,
-  "ti-brain": IconBrain,
-  "ti-rocket": IconRocket,
-  "ti-heart": IconHeart,
-  "ti-star": IconStar,
-  "ti-leaf": IconLeaf,
-  "ti-tree": IconTree,
-  "ti-sun": IconSun,
-  "ti-mountain": IconMountain,
-  "ti-moon": IconMoon,
-  "ti-mood-happy": IconMoodHappy,
-  "ti-music": IconMusic,
-  "ti-movie": IconMovie,
-  "ti-camera": IconCamera,
-  "ti-user": IconUser,
-};
-
-function CategoryIconDisplay({
-  name,
-  size = 16,
-}: {
-  name: string;
-  size?: number;
-}) {
-  const Comp = ICON_COMPONENTS[name as CategoryIcon];
-  return Comp ? <Comp size={size} /> : null;
-}
 
 // ── Section ───────────────────────────────────────────────────────────────────
 
@@ -364,67 +299,12 @@ export default function Library() {
             }
           />
 
-          {/* ── Icon picker ─────────────────────────────────────────────── */}
-          <div>
-            <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
-              Icon
-            </p>
-            <div className="grid grid-cols-5 gap-1.5">
-              {ICON_NAMES.map((name) => {
-                const isSelected = editList.category_icon === name;
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() =>
-                      dispatch(
-                        uiActions.updateListMeta({ category_icon: name })
-                      )
-                    }
-                    className={`aspect-square flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer ${
-                      isSelected
-                        ? "border-rk-accent bg-rk-accent/10 text-rk-accent"
-                        : "border-rk-stroke bg-rk-row text-rk-muted hover:border-rk-muted hover:text-rk-secondary"
-                    }`}
-                  >
-                    <CategoryIconDisplay name={name} size={18} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── Color picker ────────────────────────────────────────────── */}
-          <div>
-            <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
-              Color
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {COLOR_NAMES.map((name) => {
-                const isSelected = editList.category_color === name;
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() =>
-                      dispatch(
-                        uiActions.updateListMeta({ category_color: name })
-                      )
-                    }
-                    title={name}
-                    className={`w-7 h-7 rounded-full transition-all cursor-pointer ${
-                      isSelected
-                        ? "ring-2 ring-offset-2 ring-rk-accent ring-offset-rk-surface scale-110"
-                        : "hover:scale-110"
-                    }`}
-                    style={{
-                      backgroundColor: COLOR_HEX[name as CategoryColor],
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
+          <CategoryPicker
+            value={editList.category}
+            onChange={(slug) =>
+              dispatch(uiActions.updateListMeta({ category: slug }))
+            }
+          />
 
           {/* ── Cover image ─────────────────────────────────────────────── */}
           {editList.img ? (
