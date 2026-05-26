@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { ICON_NAMES_SET, COLOR_NAMES_SET } from "@/lib/categoryIcons";
 import { generateShortId, slugify } from "@/lib/listUrl";
 import { computeETag, checkETagMatch } from "@/lib/server/etag";
+import { Ranking } from "@/app/generated/prisma/client";
 
 function verifyToken(token: string) {
   return jwt.verify(token, process.env.JWT_SECRET!) as unknown as {
@@ -61,7 +62,14 @@ export async function GET(_req: Request) {
     });
 
     const filteredLists: any[] = lists.filter(
-      (list) => list.visibility === "public" || list.createdBy.id === viewerId
+      (list) =>
+        list.visibility === "public" ||
+        list.createdBy.id === viewerId ||
+        (list.items
+          .map((i: any) => i.rankings.map((r: any) => r.userId))
+          .flat()
+          .some((r: any) => r === viewerId) &&
+          list.visibility === "private")
     );
 
     const result = filteredLists.map((list) => {
