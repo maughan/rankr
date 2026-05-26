@@ -112,16 +112,21 @@ function HotTakeBody({ event }: { event: NetworkFeedItem }) {
   return (
     <Link
       href={listUrl(list)}
-      className="mt-2 p-3 rounded-[8px] bg-rk-row border border-rk-stroke hover:border-rk-muted transition-colors block"
+      className="mt-2 p-3 rounded-[8px] transition-colors block border"
       onClick={(e) => e.stopPropagation()}
+      style={{
+        backgroundColor: "rgba(249, 115, 22, 0.25)",
+        borderColor: "rgb(249, 115, 22)",
+        color: "rgb(249, 115, 22)",
+      }}
     >
-      <p className="text-[13px] font-[500] text-rk-primary truncate">
+      <p className="text-[13px] font-[500] truncate">
         {item.name ?? "Unknown item"}
       </p>
-      <p className="text-[11px] text-rk-muted mt-0.5">
+      <p className="text-[11px] mt-0.5">
         Rated {delta} tier{delta !== 1 ? "s" : ""} {direction} than the crowd
         {" · "}
-        <span className="text-rk-tertiary">{list.title}</span>
+        <span>{list.title}</span>
       </p>
     </Link>
   );
@@ -638,11 +643,13 @@ export default function FeedPage() {
               </div>
             )}
 
-            {!hasNextPage && allItems.length > 0 && fallbackLists.length === 0 && (
-              <p className="text-center text-[12px] text-rk-tertiary py-6">
-                You&apos;re all caught up
-              </p>
-            )}
+            {!hasNextPage &&
+              allItems.length > 0 &&
+              fallbackLists.length === 0 && (
+                <p className="text-center text-[12px] text-rk-tertiary py-6">
+                  You&apos;re all caught up
+                </p>
+              )}
 
             {/* All-lists fallback — always below the main feed when present */}
             {fallbackLists.length > 0 && (
