@@ -364,13 +364,16 @@ export default function TierComparison({
             {selectedCell ? "No items in this cell" : "No major disagreements"}
           </p>
         ) : (
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-10">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4">
             {detailItems.map(({ item, myTierIdx, theirTierIdx }) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between sm:justify-around sm:gap-10 sm:mx-auto"
+                className="flex items-center justify-between sm:justify-around sm:gap-10 sm:mx-auto bg-rk-row border-rk-stroke p-3 rounded-[8px] sm:w-[45%]"
               >
-                <ItemTile item={item} />
+                <div className="flex items-center gap-2">
+                  <ItemTile item={item} />
+                  <p className="text-sm">{item.name}</p>
+                </div>
                 <div className="flex items-center gap-2">
                   <div
                     className="w-8 h-8 flex items-center justify-center rounded-sm text-xs font-bold text-black"
