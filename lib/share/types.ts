@@ -21,6 +21,7 @@ export const KNOWN_TEMPLATES = [
   "head-to-head",
   "hot-takes",
   "taste-nemesis",
+  "closest-match",
   "divisive-item",
   "archetype",
 ] as const;
@@ -67,6 +68,16 @@ export interface TasteNemesisData {
   nemesisAvatarColor: string;
   alignmentPct: number;
   disagreedCount: number;
+  totalCount: number;
+  shareUrl: string;
+}
+
+export interface ClosestMatchData {
+  listName: string;
+  matchHandle: string;
+  matchAvatarColor: string;
+  alignmentPct: number;
+  agreedCount: number;
   totalCount: number;
   shareUrl: string;
 }

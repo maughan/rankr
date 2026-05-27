@@ -1,29 +1,27 @@
-// Taste-nemesis share card — the ranker who disagrees with the viewer the most.
-// Layout mirrors head-to-head but red-themed; data fetched here like all templates.
+// Closest-match share card — the ranker who agrees with the viewer the most.
+// Green-themed mirror of taste-nemesis; same data-fetch pattern.
 
 import { prisma } from "@/lib/prisma";
-import { Brand, ShareFoot, TierBadge } from "@/lib/share/brand";
+import { Brand, ShareFoot } from "@/lib/share/brand";
 import { ShareCardError } from "@/lib/share/errors";
 import { COLORS } from "@/lib/share/tokens";
 import {
   Format,
   FORMATS,
-  TasteNemesisData,
+  ClosestMatchData,
   TemplateModule,
 } from "@/lib/share/types";
 import { nameToColor } from "@/lib/itemColor";
-import {
-  MIN_OTHER_AUTHED_RANKERS_FOR_NEMESIS,
-} from "@/lib/insightsConfig";
+import { MIN_OTHER_AUTHED_RANKERS_FOR_NEMESIS } from "@/lib/insightsConfig";
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
-async function fetchData(params: URLSearchParams): Promise<TasteNemesisData> {
+async function fetchData(params: URLSearchParams): Promise<ClosestMatchData> {
   const token = params.get("token");
   const listIdRaw = params.get("listId");
   const userIdRaw = params.get("userId");
 
-  if (!userIdRaw) throw new ShareCardError(400, "Sign in to see your taste nemesis");
+  if (!userIdRaw) throw new ShareCardError(400, "Sign in to see your closest match");
   const userId = Number(userIdRaw);
 
   let list: { id: number; title: string; items: { id: number }[] } | null = null;
@@ -53,33 +51,21 @@ async function fetchData(params: URLSearchParams): Promise<TasteNemesisData> {
 
   const itemIds = (list.items as { id: number }[]).map((i) => i.id);
 
-  // Viewer's rankings
-  const viewerRaw = await prisma.ranking.findMany({
-    where: { itemId: { in: itemIds }, userId, value: { gt: 0 } },
-    select: { itemId: true, value: true },
-  });
+  const [viewerRaw, otherRankings] = await Promise.all([
+    prisma.ranking.findMany({
+      where: { itemId: { in: itemIds }, userId, value: { gt: 0 } },
+      select: { itemId: true, value: true },
+    }),
+    prisma.ranking.findMany({
+      where: { itemId: { in: itemIds }, userId: { not: null }, value: { gt: 0 }, NOT: { userId } },
+      select: { userId: true, itemId: true, value: true, user: { select: { username: true } } },
+    }),
+  ]);
 
   if (!viewerRaw.length) throw new ShareCardError(400, "You haven't ranked this list yet");
 
   const userValueMap = new Map<number, number>(viewerRaw.map((r) => [r.itemId, r.value]));
 
-  // All other authed rankers
-  const otherRankings = await prisma.ranking.findMany({
-    where: {
-      itemId: { in: itemIds },
-      userId: { not: null },
-      value: { gt: 0 },
-      NOT: { userId },
-    },
-    select: {
-      userId: true,
-      itemId: true,
-      value: true,
-      user: { select: { username: true } },
-    },
-  });
-
-  // Group by userId
   const rankerMap = new Map<number, { username: string; values: Map<number, number> }>();
   for (const row of otherRankings) {
     if (row.userId === null) continue;
@@ -95,11 +81,11 @@ async function fetchData(params: URLSearchParams): Promise<TasteNemesisData> {
     .slice(0, 500);
 
   if (rankerEntries.length < MIN_OTHER_AUTHED_RANKERS_FOR_NEMESIS) {
-    throw new ShareCardError(400, "Not enough rankers to identify a nemesis yet");
+    throw new ShareCardError(400, "Not enough rankers to identify a closest match yet");
   }
 
-  let worstPct = Infinity;
-  let nemesis: { uid: number; username: string; pct: number; agreed: number; both: number } | null = null;
+  let bestPct = -1;
+  let match: { uid: number; username: string; pct: number; agreed: number; both: number } | null = null;
 
   for (const [uid, { username, values: theirValues }] of rankerEntries) {
     let within = 0, agreed = 0, both = 0;
@@ -112,21 +98,21 @@ async function fetchData(params: URLSearchParams): Promise<TasteNemesisData> {
     }
     if (both === 0) continue;
     const pct = Math.round((within / both) * 100);
-    if (pct < worstPct) {
-      worstPct = pct;
-      nemesis = { uid, username, pct, agreed, both };
+    if (pct > bestPct) {
+      bestPct = pct;
+      match = { uid, username, pct, agreed, both };
     }
   }
 
-  if (!nemesis) throw new ShareCardError(400, "Could not find a nemesis");
+  if (!match) throw new ShareCardError(400, "Could not find a closest match");
 
   return {
     listName: list.title,
-    nemesisHandle: nemesis.username,
-    nemesisAvatarColor: nameToColor(nemesis.username),
-    alignmentPct: nemesis.pct,
-    disagreedCount: nemesis.both - nemesis.agreed,
-    totalCount: nemesis.both,
+    matchHandle: match.username,
+    matchAvatarColor: nameToColor(match.username),
+    alignmentPct: match.pct,
+    agreedCount: match.agreed,
+    totalCount: match.both,
     shareUrl,
   };
 }
@@ -150,7 +136,7 @@ type T = {
   clRadius: number;
   avatarSize: number;
   avatarFont: number;
-  zapSize: number;
+  sepSize: number;
   titleCut: number;
 };
 
@@ -172,7 +158,7 @@ const TOKENS: Record<Format, T> = {
     clRadius: 14,
     avatarSize: 80,
     avatarFont: 32,
-    zapSize: 36,
+    sepSize: 36,
     titleCut: 30,
   },
   wide: {
@@ -192,7 +178,7 @@ const TOKENS: Record<Format, T> = {
     clRadius: 11,
     avatarSize: 60,
     avatarFont: 24,
-    zapSize: 26,
+    sepSize: 26,
     titleCut: 28,
   },
   story: {
@@ -212,22 +198,21 @@ const TOKENS: Record<Format, T> = {
     clRadius: 18,
     avatarSize: 100,
     avatarFont: 40,
-    zapSize: 44,
+    sepSize: 44,
     titleCut: 34,
   },
 };
 
-const RED = "#F09595";
-const RED_DIM = "rgba(240,149,149,0.18)";
-const RED_BORDER = "rgba(240,149,149,0.35)";
+const GREEN = "#5DCAA5";
+const GREEN_DIM = "rgba(93,202,165,0.18)";
+const GREEN_BORDER = "rgba(93,202,165,0.35)";
 
 // ── Render components ─────────────────────────────────────────────────────────
 
-function AvatarRow({ data, t }: { data: TasteNemesisData; t: T }) {
-  const initial = (data.nemesisHandle[0] ?? "?").toUpperCase();
+function AvatarRow({ data, t }: { data: ClosestMatchData; t: T }) {
+  const initial = (data.matchHandle[0] ?? "?").toUpperCase();
   return (
     <div style={{ display: "flex", alignItems: "center", gap: Math.round(t.avatarSize * 0.35) }}>
-      {/* Me bubble */}
       <div
         style={{
           display: "flex",
@@ -245,10 +230,8 @@ function AvatarRow({ data, t }: { data: TasteNemesisData; t: T }) {
         </span>
       </div>
 
-      {/* Zap separator */}
-      <span style={{ fontSize: t.zapSize, color: RED, lineHeight: 1, flexShrink: 0 }}>⚡</span>
+      <span style={{ fontSize: t.sepSize, color: GREEN, lineHeight: 1, flexShrink: 0 }}>♥</span>
 
-      {/* Nemesis bubble */}
       <div
         style={{
           display: "flex",
@@ -257,7 +240,7 @@ function AvatarRow({ data, t }: { data: TasteNemesisData; t: T }) {
           width: t.avatarSize,
           height: t.avatarSize,
           borderRadius: "50%",
-          backgroundColor: data.nemesisAvatarColor,
+          backgroundColor: data.matchAvatarColor,
           flexShrink: 0,
         }}
       >
@@ -269,7 +252,7 @@ function AvatarRow({ data, t }: { data: TasteNemesisData; t: T }) {
   );
 }
 
-function HeroBlock({ data, t }: { data: TasteNemesisData; t: T }) {
+function HeroBlock({ data, t }: { data: ClosestMatchData; t: T }) {
   const listTruncated =
     data.listName.length > t.titleCut
       ? data.listName.slice(0, t.titleCut - 1) + "…"
@@ -277,26 +260,25 @@ function HeroBlock({ data, t }: { data: TasteNemesisData; t: T }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: t.heroGap }}>
-      {/* Big alignment % in red */}
       <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
         <span
           style={{
             fontSize: t.heroNum,
             fontWeight: 700,
-            color: RED,
+            color: GREEN,
             lineHeight: 1,
             letterSpacing: "-3px",
           }}
         >
           {data.alignmentPct}
         </span>
-        <span style={{ fontSize: t.heroSym, fontWeight: 700, color: RED, lineHeight: 1 }}>
+        <span style={{ fontSize: t.heroSym, fontWeight: 700, color: GREEN, lineHeight: 1 }}>
           %
         </span>
       </div>
 
       <span style={{ fontSize: t.caption, color: COLORS.secondary, lineHeight: 1.2 }}>
-        aligned with @{data.nemesisHandle}
+        aligned with @{data.matchHandle}
       </span>
 
       <span style={{ fontSize: t.listName, fontWeight: 500, color: COLORS.primary, lineHeight: 1.2 }}>
@@ -306,14 +288,14 @@ function HeroBlock({ data, t }: { data: TasteNemesisData; t: T }) {
   );
 }
 
-function DisagreementBox({ data, t }: { data: TasteNemesisData; t: T }) {
+function AgreementBox({ data, t }: { data: ClosestMatchData; t: T }) {
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        backgroundColor: RED_DIM,
-        border: `1px solid ${RED_BORDER}`,
+        backgroundColor: GREEN_DIM,
+        border: `1px solid ${GREEN_BORDER}`,
         borderRadius: t.clRadius,
         padding: `${t.clPadV}px ${t.clPadH}px`,
         gap: Math.round(t.clPadV * 0.5),
@@ -327,10 +309,10 @@ function DisagreementBox({ data, t }: { data: TasteNemesisData; t: T }) {
           letterSpacing: "0.10em",
         }}
       >
-        BIGGEST CLASH
+        BIGGEST OVERLAP
       </span>
-      <span style={{ fontSize: t.clItem, color: RED, fontWeight: 600, lineHeight: 1.2 }}>
-        Disagree on {data.disagreedCount} of {data.totalCount} items
+      <span style={{ fontSize: t.clItem, color: GREEN, fontWeight: 600, lineHeight: 1.2 }}>
+        Agree on {data.agreedCount} of {data.totalCount} items exactly
       </span>
     </div>
   );
@@ -338,7 +320,7 @@ function DisagreementBox({ data, t }: { data: TasteNemesisData; t: T }) {
 
 // ── Format-specific Card layouts ──────────────────────────────────────────────
 
-function SquareOrStoryCard({ data, format }: { data: TasteNemesisData; format: "square" | "story" }) {
+function SquareOrStoryCard({ data, format }: { data: ClosestMatchData; format: "square" | "story" }) {
   const t = TOKENS[format];
   const { width, height } = FORMATS[format];
 
@@ -354,7 +336,6 @@ function SquareOrStoryCard({ data, format }: { data: TasteNemesisData; format: "
         fontFamily: "Geist",
       }}
     >
-      {/* Zone A — brand + nemesis pill */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Brand scale={t.brandScale} />
         <div
@@ -362,19 +343,18 @@ function SquareOrStoryCard({ data, format }: { data: TasteNemesisData; format: "
             display: "flex",
             alignItems: "center",
             gap: 8,
-            backgroundColor: RED_DIM,
-            border: `1px solid ${RED_BORDER}`,
+            backgroundColor: GREEN_DIM,
+            border: `1px solid ${GREEN_BORDER}`,
             borderRadius: 8,
             padding: "8px 14px",
           }}
         >
-          <span style={{ fontSize: Math.round(t.brandScale * 14), fontWeight: 700, color: RED, letterSpacing: "0.06em", lineHeight: 1 }}>
-            ⚔ TASTE NEMESIS
+          <span style={{ fontSize: Math.round(t.brandScale * 14), fontWeight: 700, color: GREEN, letterSpacing: "0.06em", lineHeight: 1 }}>
+            ✨ CLOSEST MATCH
           </span>
         </div>
       </div>
 
-      {/* Zone B — avatars + hero + callout, vertically centered */}
       <div
         style={{
           display: "flex",
@@ -386,16 +366,15 @@ function SquareOrStoryCard({ data, format }: { data: TasteNemesisData; format: "
       >
         <AvatarRow data={data} t={t} />
         <HeroBlock data={data} t={t} />
-        <DisagreementBox data={data} t={t} />
+        <AgreementBox data={data} t={t} />
       </div>
 
-      {/* Zone C — footer */}
       <ShareFoot url={data.shareUrl} scale={t.footScale} />
     </div>
   );
 }
 
-function WideCard({ data }: { data: TasteNemesisData }) {
+function WideCard({ data }: { data: ClosestMatchData }) {
   const t = TOKENS.wide;
   const { width, height } = FORMATS.wide;
 
@@ -411,20 +390,18 @@ function WideCard({ data }: { data: TasteNemesisData }) {
         fontFamily: "Geist",
       }}
     >
-      {/* Zone A — brand left, footer right */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Brand scale={t.brandScale} />
         <ShareFoot url={data.shareUrl} scale={t.footScale} />
       </div>
 
-      {/* Zone B — left: avatars + hero; right: callout */}
       <div style={{ display: "flex", flex: 1, gap: 56, alignItems: "center", marginTop: 32 }}>
         <div style={{ display: "flex", flex: 1, flexDirection: "column", gap: 24 }}>
           <AvatarRow data={data} t={t} />
           <HeroBlock data={data} t={t} />
         </div>
         <div style={{ display: "flex", flex: 1 }}>
-          <DisagreementBox data={data} t={t} />
+          <AgreementBox data={data} t={t} />
         </div>
       </div>
     </div>
@@ -433,7 +410,7 @@ function WideCard({ data }: { data: TasteNemesisData }) {
 
 // ── Export ────────────────────────────────────────────────────────────────────
 
-export const tasteNemesis: TemplateModule = {
+export const closestMatch: TemplateModule = {
   async handler(params: URLSearchParams, format: Format) {
     const data = await fetchData(params);
     if (format === "wide") return <WideCard data={data} />;

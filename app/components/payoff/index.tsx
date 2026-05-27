@@ -2,7 +2,16 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { X, Flame, Sparkles, Check, Trophy, ArrowRight, Zap, ChevronRight } from "lucide-react";
+import {
+  X,
+  Flame,
+  Sparkles,
+  Check,
+  Trophy,
+  ArrowRight,
+  Zap,
+  ChevronRight,
+} from "lucide-react";
 import { IconCoffee, IconSwords } from "@tabler/icons-react";
 import { track } from "@vercel/analytics";
 import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
@@ -36,19 +45,107 @@ const CONFETTI_PARTICLES: {
   h: number;
 }[] = [
   { left: 8, top: 0, delay: 0, color: TIER_COLORS[0], rot: 320, w: 8, h: 11 },
-  { left: 18, top: 12, delay: 60, color: TIER_COLORS[1], rot: -270, w: 7, h: 9 },
+  {
+    left: 18,
+    top: 12,
+    delay: 60,
+    color: TIER_COLORS[1],
+    rot: -270,
+    w: 7,
+    h: 9,
+  },
   { left: 30, top: 4, delay: 120, color: TIER_COLORS[2], rot: 400, w: 9, h: 7 },
-  { left: 42, top: 16, delay: 40, color: TIER_COLORS[3], rot: -350, w: 7, h: 10 },
+  {
+    left: 42,
+    top: 16,
+    delay: 40,
+    color: TIER_COLORS[3],
+    rot: -350,
+    w: 7,
+    h: 10,
+  },
   { left: 55, top: 6, delay: 200, color: TIER_COLORS[4], rot: 290, w: 8, h: 8 },
-  { left: 67, top: 14, delay: 80, color: TIER_COLORS[5], rot: -420, w: 9, h: 7 },
-  { left: 78, top: 2, delay: 160, color: TIER_COLORS[0], rot: 380, w: 7, h: 11 },
-  { left: 90, top: 18, delay: 240, color: TIER_COLORS[1], rot: -310, w: 8, h: 9 },
-  { left: 13, top: 26, delay: 300, color: TIER_COLORS[2], rot: 430, w: 9, h: 7 },
-  { left: 25, top: 30, delay: 140, color: TIER_COLORS[3], rot: -280, w: 7, h: 10 },
-  { left: 48, top: 22, delay: 350, color: TIER_COLORS[4], rot: 360, w: 8, h: 8 },
-  { left: 62, top: 28, delay: 100, color: TIER_COLORS[5], rot: -340, w: 9, h: 7 },
-  { left: 73, top: 20, delay: 220, color: TIER_COLORS[0], rot: 410, w: 7, h: 11 },
-  { left: 85, top: 8, delay: 380, color: TIER_COLORS[1], rot: -300, w: 8, h: 9 },
+  {
+    left: 67,
+    top: 14,
+    delay: 80,
+    color: TIER_COLORS[5],
+    rot: -420,
+    w: 9,
+    h: 7,
+  },
+  {
+    left: 78,
+    top: 2,
+    delay: 160,
+    color: TIER_COLORS[0],
+    rot: 380,
+    w: 7,
+    h: 11,
+  },
+  {
+    left: 90,
+    top: 18,
+    delay: 240,
+    color: TIER_COLORS[1],
+    rot: -310,
+    w: 8,
+    h: 9,
+  },
+  {
+    left: 13,
+    top: 26,
+    delay: 300,
+    color: TIER_COLORS[2],
+    rot: 430,
+    w: 9,
+    h: 7,
+  },
+  {
+    left: 25,
+    top: 30,
+    delay: 140,
+    color: TIER_COLORS[3],
+    rot: -280,
+    w: 7,
+    h: 10,
+  },
+  {
+    left: 48,
+    top: 22,
+    delay: 350,
+    color: TIER_COLORS[4],
+    rot: 360,
+    w: 8,
+    h: 8,
+  },
+  {
+    left: 62,
+    top: 28,
+    delay: 100,
+    color: TIER_COLORS[5],
+    rot: -340,
+    w: 9,
+    h: 7,
+  },
+  {
+    left: 73,
+    top: 20,
+    delay: 220,
+    color: TIER_COLORS[0],
+    rot: 410,
+    w: 7,
+    h: 11,
+  },
+  {
+    left: 85,
+    top: 8,
+    delay: 380,
+    color: TIER_COLORS[1],
+    rot: -300,
+    w: 8,
+    h: 9,
+  },
 ];
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -357,13 +454,19 @@ function ClosestMatchCard({
       </div>
 
       <p className="text-[12px] text-rk-muted leading-snug">
-        {isFew
-          ? S.payoff.closestMatchFew
-          : S.payoff.closestMatchDetail(
-              match.handle,
-              match.agreedCount,
-              match.totalCount
-            )}
+        {isFew ? (
+          S.payoff.closestMatchFew
+        ) : (
+          <>
+            <Link
+              href={`/u/${match.handle}`}
+              className="hover:underline text-rk-secondary"
+            >
+              @{match.handle}
+            </Link>
+            {` agrees with you on ${match.agreedCount} of ${match.totalCount}`}
+          </>
+        )}
       </p>
     </div>
   );
@@ -422,11 +525,13 @@ function TasteNemesisCard({
       </div>
 
       <p className="text-[12px] text-rk-muted leading-snug">
-        {S.nemesis.detail(
-          nemesis.handle,
-          nemesis.disagreedCount,
-          nemesis.totalCount
-        )}
+        <Link
+          href={`/u/${nemesis.handle}`}
+          className="hover:underline text-rk-secondary"
+        >
+          @{nemesis.handle}
+        </Link>
+        {` disagrees with you on ${nemesis.disagreedCount} of ${nemesis.totalCount} items.`}
       </p>
     </div>
   );
@@ -560,87 +665,6 @@ function RankSimilarSection({
   );
 }
 
-// ── CTAs ──────────────────────────────────────────────────────────────────────
-
-function PayoffCtas({
-  data,
-  isFirst,
-  isComplete,
-  backHref,
-}: PayoffPageProps & { isComplete: boolean }) {
-  const [shareOpen, setShareOpen] = useState(false);
-  const [nemesisShareOpen, setNemesisShareOpen] = useState(false);
-
-  if (!data) return null;
-
-  const shareToken = data.shareToken;
-  const rankHref = `${backHref}/s`;
-  const shareLabel =
-    isFirst && isComplete ? S.payoff.ctaShareFirst : S.payoff.ctaShare;
-
-  return (
-    <>
-      <div className="flex flex-col gap-3">
-        {shareToken && (
-          <button
-            onClick={() => setShareOpen(true)}
-            className="w-full py-2.5 rounded-[10px] text-[14px] font-[500] bg-rk-accent text-white hover:opacity-90 transition-opacity cursor-pointer"
-          >
-            {shareLabel}
-          </button>
-        )}
-
-        {shareToken && data.tasteNemesis && (
-          <button
-            onClick={() => setNemesisShareOpen(true)}
-            className="w-full py-2.5 rounded-[10px] text-[14px] font-[500] border hover:opacity-90 transition-opacity cursor-pointer"
-            style={{
-              borderColor: "rgba(240,149,149,0.35)",
-              color: "#F09595",
-              backgroundColor: "rgba(240,149,149,0.06)",
-            }}
-          >
-            {S.nemesis.shareLabel}
-          </button>
-        )}
-
-        <Link
-          href={backHref}
-          className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] border border-rk-stroke text-rk-secondary text-center hover:border-rk-secondary hover:text-rk-primary transition-colors"
-        >
-          {S.payoff.ctaCompare}
-        </Link>
-
-        {!isComplete && (
-          <Link
-            href={rankHref}
-            className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] text-rk-muted text-center hover:text-rk-secondary transition-colors"
-          >
-            {S.payoff.ctaFinish} →
-          </Link>
-        )}
-      </div>
-
-      {shareToken && (
-        <ShareCardModal
-          token={shareToken}
-          template="hot-takes"
-          open={shareOpen}
-          onClose={() => setShareOpen(false)}
-        />
-      )}
-      {shareToken && data.tasteNemesis && (
-        <ShareCardModal
-          token={shareToken}
-          template="taste-nemesis"
-          open={nemesisShareOpen}
-          onClose={() => setNemesisShareOpen(false)}
-        />
-      )}
-    </>
-  );
-}
-
 // ── Anon nudge ────────────────────────────────────────────────────────────────
 
 function PayoffAnonNudge() {
@@ -749,6 +773,9 @@ export default function PayoffPage(props: PayoffPageProps) {
   const [displayPct, setDisplayPct] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [nemesisShareOpen, setNemesisShareOpen] = useState(false);
+  const [closestMatchShareOpen, setClosestMatchShareOpen] = useState(false);
 
   doRevealRef.current = (instant: boolean) => {
     const confetti = isFirst && (data?.completion.isComplete ?? false);
@@ -814,6 +841,14 @@ export default function PayoffPage(props: PayoffPageProps) {
     ? S.payoff.titleResubmitComplete
     : S.payoff.titleResubmitPartial;
 
+  if (!data) return null;
+
+  const shareToken = data.shareToken;
+  const canShare = !isAnon && (!!shareToken || !!props.listId);
+  const rankHref = `${backHref}/s`;
+  const shareLabel =
+    isFirst && isComplete ? S.payoff.ctaShareFirst : S.payoff.ctaShare;
+
   if (isError) {
     return (
       <div className="fixed inset-0 z-10 bg-rk-page flex items-center justify-center">
@@ -872,13 +907,99 @@ export default function PayoffPage(props: PayoffPageProps) {
                   </div>
                 )}
 
-                <div className="rk-reveal-up" style={{ animationDelay: "520ms" }}>
-                  <PayoffCtas {...props} isComplete={isComplete} />
+                <div
+                  className="rk-reveal-up"
+                  style={{ animationDelay: "520ms" }}
+                >
+                  <>
+                    <div className="flex flex-col gap-3">
+                      {canShare && (
+                        <button
+                          onClick={() => setShareOpen(true)}
+                          className="w-full py-2.5 rounded-[10px] text-[14px] font-[500] bg-rk-accent text-white hover:opacity-90 transition-opacity cursor-pointer"
+                        >
+                          {shareLabel}
+                        </button>
+                      )}
+
+                      {canShare && data.closestMatch && (
+                        <button
+                          onClick={() => setClosestMatchShareOpen(true)}
+                          className="w-full py-2.5 rounded-[10px] text-[14px] font-[500] border hover:opacity-90 transition-opacity cursor-pointer"
+                          style={{
+                            borderColor: "rgba(93,202,165,0.35)",
+                            color: "#5DCAA5",
+                            backgroundColor: "rgba(93,202,165,0.06)",
+                          }}
+                        >
+                          {S.closestMatch.shareLabel}
+                        </button>
+                      )}
+
+                      {canShare && data.tasteNemesis && (
+                        <button
+                          onClick={() => setNemesisShareOpen(true)}
+                          className="w-full py-2.5 rounded-[10px] text-[14px] font-[500] border hover:opacity-90 transition-opacity cursor-pointer"
+                          style={{
+                            borderColor: "rgba(240,149,149,0.35)",
+                            color: "#F09595",
+                            backgroundColor: "rgba(240,149,149,0.06)",
+                          }}
+                        >
+                          {S.nemesis.shareLabel}
+                        </button>
+                      )}
+
+                      <Link
+                        href={backHref}
+                        className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] border border-rk-stroke text-rk-secondary text-center hover:border-rk-secondary hover:text-rk-primary transition-colors"
+                      >
+                        {S.payoff.ctaCompare}
+                      </Link>
+
+                      {!isComplete && (
+                        <Link
+                          href={rankHref}
+                          className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] text-rk-muted text-center hover:text-rk-secondary transition-colors"
+                        >
+                          {S.payoff.ctaFinish} →
+                        </Link>
+                      )}
+                    </div>
+                  </>
                 </div>
 
                 <SupportCard />
                 {isAnon && <PayoffAnonNudge />}
                 {!isAnon && <PayoffFoot />}
+
+                {canShare && (
+                  <ShareCardModal
+                    token={shareToken ?? undefined}
+                    listId={!shareToken ? props.listId : undefined}
+                    template="hot-takes"
+                    open={shareOpen}
+                    onClose={() => setShareOpen(false)}
+                  />
+                )}
+                {canShare && data.closestMatch && (
+                  <ShareCardModal
+                    token={shareToken ?? undefined}
+                    listId={!shareToken ? props.listId : undefined}
+                    template="closest-match"
+                    open={closestMatchShareOpen}
+                    onClose={() => setClosestMatchShareOpen(false)}
+                  />
+                )}
+                {canShare && data.tasteNemesis && (
+                  <ShareCardModal
+                    token={shareToken ?? undefined}
+                    listId={!shareToken ? props.listId : undefined}
+                    template="taste-nemesis"
+                    open={nemesisShareOpen}
+                    onClose={() => setNemesisShareOpen(false)}
+                  />
+                )}
               </>
             )}
           </>

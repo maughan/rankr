@@ -2,6 +2,7 @@
 
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { TierList, TierItem } from "@/app/types";
 import { getUserFromToken, ImageKitLoader } from "@/lib/helpers";
 
@@ -196,7 +197,13 @@ export default function TierComparison({
       <div>
         <p className="text-2xl font-bold">{list.title}</p>
         <p className="text-sm text-gray-400">
-          {list.items.length} items · You vs @{compareUsername}
+          {list.items.length} items · You vs{" "}
+          <Link
+            href={`/u/${compareUsername}`}
+            className="hover:underline font-bold text-white"
+          >
+            @{compareUsername}
+          </Link>
         </p>
       </div>
 
@@ -407,7 +414,13 @@ export default function TierComparison({
           {missingFromThem > 0 && (
             <p>
               {missingFromThem} item{missingFromThem !== 1 ? "s" : ""} not yet
-              stacked by @{compareUsername}
+              stacked by{" "}
+              <Link
+                href={`/u/${compareUsername}`}
+                className="hover:underline font-bold text-white"
+              >
+                @{compareUsername}
+              </Link>
             </p>
           )}
         </div>

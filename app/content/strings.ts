@@ -154,6 +154,10 @@ export const S = {
     shareLabel: "Share your nemesis",
   },
 
+  closestMatch: {
+    shareLabel: "Share your closest match",
+  },
+
   payoff: {
     eyebrow: "ranking submitted",
 
