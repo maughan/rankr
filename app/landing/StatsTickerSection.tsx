@@ -3,12 +3,16 @@ import { prisma } from "@/lib/prisma";
 const THRESHOLDS = { rankings: 500, lists: 25, rankers: 50 };
 
 async function fetchStats() {
-  const [rankings, lists, rankers] = await Promise.all([
-    prisma.ranking.count({ where: { value: { not: 0 } } }),
-    (prisma.list as any).count({ where: { is_shareable: true } }),
-    prisma.user.count(),
-  ]);
-  return { rankings, lists, rankers };
+  try {
+    const [rankings, lists, rankers] = await Promise.all([
+      prisma.ranking.count({ where: { value: { not: 0 } } }),
+      (prisma.list as any).count({ where: { is_shareable: true } }),
+      prisma.user.count(),
+    ]);
+    return { rankings, lists, rankers };
+  } catch {
+    return { rankings: 0, lists: 0, rankers: 0 };
+  }
 }
 
 function fmt(n: number): string {

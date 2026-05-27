@@ -139,9 +139,7 @@ model List {
   createdById Int
   createdBy   User     @relation(fields: [createdById], references: [id])
 
-  tags           String[]
-  category_icon  String   @default("ti-stack-2")
-  category_color String   @default("blue")
+  category       String   @default("other")
 
   // Human-readable URL fields
   short_id                   String    @unique

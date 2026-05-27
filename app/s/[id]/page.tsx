@@ -11,14 +11,18 @@ import ListDetail from "./ListDetail";
 // Pre-render the 100 most recently active public lists at build time.
 // All other lists fall through to on-demand rendering.
 export async function generateStaticParams() {
-  const lists = (await (prisma.list as any).findMany({
-    where: { visibility: "public" },
-    select: { short_id: true, slug: true },
-    orderBy: { updatedAt: "desc" },
-    take: 100,
-  })) as { short_id: string; slug: string }[];
+  try {
+    const lists = (await (prisma.list as any).findMany({
+      where: { visibility: "public" },
+      select: { short_id: true, slug: true },
+      orderBy: { updatedAt: "desc" },
+      take: 100,
+    })) as { short_id: string; slug: string }[];
 
-  return lists.map((list) => ({ id: `${list.slug}-${list.short_id}` }));
+    return lists.map((list) => ({ id: `${list.slug}-${list.short_id}` }));
+  } catch {
+    return [];
+  }
 }
 
 type Props = { params: Promise<{ id: string }> };

@@ -1,17 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { listUrl } from "@/lib/listUrl";
 import { SITE_URL, TWITTER_HANDLE } from "@/app/siteConfig";
 import { S } from "@/app/content/strings";
+import { CATEGORIES } from "@/lib/categories";
+import { CategoryIcon } from "@/app/components/item/CategoryIcon";
 import LandingNav from "@/app/landing/LandingNav";
+// import { SurpriseButton } from "@/app/components/SurpriseButton";
 
 export const revalidate = 3600;
 
 const COPY = S.browsePage;
 const PAGE_URL = `${SITE_URL}/browse`;
 const MIN_ITEMS = 3;
-const MIN_RANKINGS = 1;
+const MIN_CATEGORY_LISTS = 3;
 
 export const metadata: Metadata = {
   title: COPY.seoTitle,
@@ -31,68 +33,43 @@ export const metadata: Metadata = {
   },
 };
 
-type BrowseList = {
-  slug: string;
-  short_id: string;
-  title: string;
-  description: string | null;
-  updatedAt: Date;
-  _count: { items: number; rankings: number };
-  createdBy: { username: string };
-};
-
-async function fetchPublicLists(): Promise<BrowseList[]> {
-  const raw = await (prisma.list as any).findMany({
+async function fetchCategoryCounts(): Promise<Map<string, number>> {
+  const raw = await prisma.list.findMany({
     where: { visibility: "public" },
     select: {
-      slug: true,
-      short_id: true,
-      title: true,
-      description: true,
-      updatedAt: true,
-      _count: { select: { items: true, rankings: true } },
-      createdBy: { select: { username: true } },
+      category: true,
+      _count: { select: { items: true } },
     },
-    orderBy: [{ rankings: { _count: "desc" } }, { updatedAt: "desc" }],
-    take: 96,
   });
 
-  return (raw as BrowseList[]).filter(
-    (l) => l._count.items >= MIN_ITEMS && l._count.rankings >= MIN_RANKINGS
-  );
-}
-
-function BrowseCard({ list }: { list: BrowseList }) {
-  return (
-    <Link
-      href={listUrl(list)}
-      className="flex flex-col gap-2 rounded-[12px] p-4 transition-colors group"
-      style={{ backgroundColor: "#0F1828", border: "1px solid #1E2C44" }}
-    >
-      <p className="text-[14px] font-[600] text-rk-primary group-hover:text-rk-accent transition-colors line-clamp-1">
-        {list.title}
-      </p>
-      {list.description && (
-        <p className="text-[12px] text-rk-secondary line-clamp-2 leading-relaxed">
-          {list.description}
-        </p>
-      )}
-      <p className="text-[11px] text-rk-tertiary mt-auto pt-1">
-        {list._count.rankings} ranking{list._count.rankings !== 1 ? "s" : ""} ·{" "}
-        {list._count.items} item{list._count.items !== 1 ? "s" : ""}
-      </p>
-    </Link>
-  );
+  const counts = new Map<string, number>();
+  for (const l of raw) {
+    if (l._count.items >= MIN_ITEMS) {
+      counts.set(l.category, (counts.get(l.category) ?? 0) + 1);
+    }
+  }
+  return counts;
 }
 
 export default async function BrowsePage() {
-  const lists = await fetchPublicLists();
+  const countByCategory = await fetchCategoryCounts().catch(() => new Map<string, number>());
+
+  const tiles = CATEGORIES.map((cat) => ({
+    ...cat,
+    count: countByCategory.get(cat.slug) ?? 0,
+  }))
+    .filter((cat) => cat.count >= MIN_CATEGORY_LISTS)
+    .sort((a, b) => {
+      if (a.slug === "other") return 1;
+      if (b.slug === "other") return -1;
+      return b.count - a.count;
+    });
 
   return (
     <div className="min-h-screen bg-rk-page flex flex-col">
       <LandingNav />
 
-      <main className="flex-1 px-6 py-12 sm:px-10 max-w-6xl mx-auto w-full flex flex-col gap-8">
+      <main className="flex-1 px-6 py-12 sm:px-10 max-w-4xl mx-auto w-full flex flex-col gap-10">
         <div className="flex flex-col gap-2">
           <h1 className="text-[36px] sm:text-[44px] font-bold text-rk-primary tracking-tight">
             {COPY.h1}
@@ -100,15 +77,39 @@ export default async function BrowsePage() {
           <p className="text-[15px] text-rk-secondary">{COPY.subtitle}</p>
         </div>
 
-        {lists.length === 0 ? (
+        {tiles.length === 0 ? (
           <p className="text-[14px] text-rk-muted">{COPY.empty}</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {lists.map((list) => (
-              <BrowseCard key={list.short_id} list={list} />
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {tiles.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/browse/${cat.slug}`}
+                className="flex flex-col gap-3 rounded-[12px] p-5 border transition-colors hover:border-rk-muted group"
+                style={{
+                  backgroundColor: `${cat.color}10`,
+                  borderColor: `${cat.color}30`,
+                }}
+              >
+                <div style={{ color: cat.color }}>
+                  <CategoryIcon slug={cat.slug} size={22} />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <p className="text-[14px] font-[600] text-rk-primary group-hover:text-rk-accent transition-colors">
+                    {cat.label}
+                  </p>
+                  <p className="text-[11px] text-rk-muted">
+                    {cat.count} list{cat.count !== 1 ? "s" : ""}
+                  </p>
+                </div>
+              </Link>
             ))}
           </div>
         )}
+
+        <div className="flex justify-center pt-4">
+          {/* <SurpriseButton className="flex items-center gap-2 px-4 py-2 text-[13px] font-[500] border border-rk-stroke text-rk-secondary rounded-[8px] hover:border-rk-muted hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" /> */}
+        </div>
       </main>
     </div>
   );

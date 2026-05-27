@@ -19,28 +19,7 @@ import {
   Flame,
   Zap,
 } from "lucide-react";
-import {
-  IconStack2,
-  IconBurger,
-  IconCookie,
-  IconCandy,
-  IconPizza,
-  IconRobot,
-  IconBrain,
-  IconRocket,
-  IconHeart,
-  IconStar,
-  IconLeaf,
-  IconTree,
-  IconSun,
-  IconMountain,
-  IconMoon,
-  IconMoodHappy,
-  IconMusic,
-  IconMovie,
-  IconCamera,
-  IconUser,
-} from "@tabler/icons-react";
+import { IconStack2 } from "@tabler/icons-react";
 
 import {
   useCreateItemsMutation,
@@ -70,13 +49,9 @@ import { nameToColor } from "@/lib/itemColor";
 import EmptyState from "@/app/components/EmptyState";
 import NavAvatar from "@/app/components/NavAvatar";
 import { S } from "@/app/content/strings";
-import {
-  ICON_NAMES,
-  COLOR_NAMES,
-  COLOR_HEX,
-  CategoryIcon,
-  CategoryColor,
-} from "@/lib/categoryIcons";
+import { getCategoryMeta } from "@/lib/categories";
+import { CategoryIcon } from "@/app/components/item/CategoryIcon";
+import { CategoryPicker } from "@/app/components/item/CategoryPicker";
 import ImageKit from "imagekit-javascript";
 import LandingFooter from "@/app/landing/LandingFooter";
 import PublishingLoader from "@/app/components/PublishingLoader";
@@ -121,43 +96,6 @@ const TIER_STYLE: Record<string, { bg: string; text: string }> = {
   D: { bg: "#85B7EB", text: "#042C53" },
   F: { bg: "#AFA9EC", text: "#26215C" },
 };
-
-const ICON_COMPONENTS: Record<
-  CategoryIcon,
-  React.ComponentType<{ size?: number }>
-> = {
-  "ti-stack-2": IconStack2,
-  "ti-burger": IconBurger,
-  "ti-cookie": IconCookie,
-  "ti-candy": IconCandy,
-  "ti-pizza": IconPizza,
-  "ti-robot": IconRobot,
-  "ti-brain": IconBrain,
-  "ti-rocket": IconRocket,
-  "ti-heart": IconHeart,
-  "ti-star": IconStar,
-  "ti-leaf": IconLeaf,
-  "ti-tree": IconTree,
-  "ti-sun": IconSun,
-  "ti-mountain": IconMountain,
-  "ti-moon": IconMoon,
-  "ti-mood-happy": IconMoodHappy,
-  "ti-music": IconMusic,
-  "ti-movie": IconMovie,
-  "ti-camera": IconCamera,
-  "ti-user": IconUser,
-};
-
-function CategoryIconDisplay({
-  name,
-  size = 16,
-}: {
-  name: string;
-  size?: number;
-}) {
-  const Comp = ICON_COMPONENTS[name as CategoryIcon];
-  return Comp ? <Comp size={size} /> : null;
-}
 
 // ── Item card ────────────────────────────────────────────────────────────────
 
@@ -448,8 +386,7 @@ export default function ListDetail({
         img: list?.img ?? "",
         description: list?.description ?? "",
         visibility: list?.visibility ?? "draft",
-        category_icon: list?.category_icon ?? "ti-stack-2",
-        category_color: list?.category_color ?? "blue",
+        category: list?.category ?? "other",
         allow_contributions: list?.allow_contributions ?? false,
       })
     );
@@ -922,18 +859,21 @@ export default function ListDetail({
         {/* ── Header block ──────────────────────────────────────────────── */}
         <div className="flex items-start gap-3">
           {/* Category icon tile */}
-          <div
-            className={`w-11 h-11 rounded-[10px] border flex-shrink-0 flex items-center justify-center`}
-            style={{
-              backgroundColor: `${
-                COLOR_HEX[list.category_color as CategoryColor]
-              }40`,
-              borderColor: COLOR_HEX[list.category_color as CategoryColor],
-              color: COLOR_HEX[list.category_color as CategoryColor],
-            }}
-          >
-            <CategoryIconDisplay name={list.category_icon} size={20} />
-          </div>
+          {(() => {
+            const cat = getCategoryMeta(list.category);
+            return (
+              <div
+                className="w-11 h-11 rounded-[10px] border flex-shrink-0 flex items-center justify-center"
+                style={{
+                  backgroundColor: `${cat.color}40`,
+                  borderColor: cat.color,
+                  color: cat.color,
+                }}
+              >
+                <CategoryIcon slug={list.category} size={20} />
+              </div>
+            );
+          })()}
 
           <div className="min-w-0">
             <p
@@ -1402,67 +1342,12 @@ export default function ListDetail({
             }
           />
 
-          {/* ── Icon picker ─────────────────────────────────────────────── */}
-          <div>
-            <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
-              Icon
-            </p>
-            <div className="grid grid-cols-5 gap-1.5">
-              {ICON_NAMES.map((name) => {
-                const isSelected = editList.category_icon === name;
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() =>
-                      dispatch(
-                        uiActions.updateListMeta({ category_icon: name })
-                      )
-                    }
-                    className={`aspect-square flex items-center justify-center rounded-[8px] border transition-colors cursor-pointer ${
-                      isSelected
-                        ? "border-rk-accent bg-rk-accent/10 text-rk-accent"
-                        : "border-rk-stroke bg-rk-row text-rk-muted hover:border-rk-muted hover:text-rk-secondary"
-                    }`}
-                  >
-                    <CategoryIconDisplay name={name} size={18} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ── Color picker ────────────────────────────────────────────── */}
-          <div>
-            <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
-              Color
-            </p>
-            <div className="flex gap-2 flex-wrap">
-              {COLOR_NAMES.map((name) => {
-                const isSelected = editList.category_color === name;
-                return (
-                  <button
-                    key={name}
-                    type="button"
-                    onClick={() =>
-                      dispatch(
-                        uiActions.updateListMeta({ category_color: name })
-                      )
-                    }
-                    title={name}
-                    className={`w-7 h-7 rounded-full transition-all cursor-pointer ${
-                      isSelected
-                        ? "ring-2 ring-offset-2 ring-rk-accent ring-offset-rk-surface scale-110"
-                        : "hover:scale-110"
-                    }`}
-                    style={{
-                      backgroundColor: COLOR_HEX[name as CategoryColor],
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </div>
+          <CategoryPicker
+            value={editList.category}
+            onChange={(slug) =>
+              dispatch(uiActions.updateListMeta({ category: slug }))
+            }
+          />
 
           {/* ── Cover image ─────────────────────────────────────────────── */}
           {editList.img ? (

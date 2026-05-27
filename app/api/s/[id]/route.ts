@@ -51,6 +51,7 @@ export async function GET(
 
     return NextResponse.json(list, { headers: { ETag: etag } });
   } catch (e) {
+    console.log('EEE', e)
     return NextResponse.json({ error: e }, { status: 500 });
   }
 }

@@ -25,8 +25,7 @@ interface UIState {
     | "description"
     | "img"
     | "visibility"
-    | "category_icon"
-    | "category_color"
+    | "category"
     | "allow_contributions"
   >;
   rankings: Tier[];
@@ -54,8 +53,7 @@ const initialState: UIState = {
     img: "",
     description: "",
     visibility: "draft" as ListVisibility,
-    category_icon: "ti-stack-2",
-    category_color: "blue",
+    category: "other" as const,
     allow_contributions: false,
   },
   rankings: [],
@@ -125,8 +123,7 @@ export const uiSlice = createSlice({
         img: "",
         description: "",
         visibility: "draft",
-        category_icon: "ti-stack-2",
-        category_color: "blue",
+        category: "other",
         allow_contributions: false,
       };
     },
@@ -139,8 +136,7 @@ export const uiSlice = createSlice({
           | "description"
           | "img"
           | "visibility"
-          | "category_icon"
-          | "category_color"
+          | "category"
           | "allow_contributions"
         >
       >
@@ -157,8 +153,7 @@ export const uiSlice = createSlice({
         img: "",
         description: "",
         visibility: "draft",
-        category_icon: "ti-stack-2",
-        category_color: "blue",
+        category: "other",
         allow_contributions: false,
       };
     },

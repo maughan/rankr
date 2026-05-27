@@ -53,9 +53,7 @@ const makeList = (overrides: Partial<TierList> = {}): TierList => ({
   createdAt: "2024-01-01",
   updatedAt: "2024-01-01",
   createdBy: { id: 1, username: "alice" },
-  tags: [],
-  category_icon: "ti-stack-2",
-  category_color: "blue",
+  category: "other",
   is_shareable: false,
   share_token: null,
   anonymous_rankings_enabled: true,
@@ -68,23 +66,20 @@ const makeList = (overrides: Partial<TierList> = {}): TierList => ({
 // ── createNewList ─────────────────────────────────────────────────────────────
 
 describe("createNewList", () => {
-  it("returns a list payload with an empty tags array", () => {
+  it("returns a list payload with the given category", () => {
     const result = createNewList({
       title: "My List",
       description: "desc",
       img: "img.png",
       visibility: "public",
-      category_icon: "ti-stack-2",
-      category_color: "blue",
+      category: "music",
     });
     expect(result).toEqual({
       title: "My List",
       description: "desc",
       img: "img.png",
       visibility: "public",
-      category_icon: "ti-stack-2",
-      category_color: "blue",
-      tags: [],
+      category: "music",
     });
   });
 });
