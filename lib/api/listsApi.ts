@@ -172,6 +172,14 @@ export const listsApi = baseApi.injectEndpoints({
       }
     ),
 
+    copyList: builder.mutation<{ id: number; short_id: string; slug: string }, number>({
+      query: (listId) => ({
+        url: `/s/${listId}/copy`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Lists"],
+    }),
+
     createItems: builder.mutation<void, { listId: number; names: string[] }>({
       query: (data) => ({
         url: "/items",
@@ -356,6 +364,7 @@ export const {
   useGetItemsQuery,
   useCreateListMutation,
   useUpdateListMutation,
+  useCopyListMutation,
   useCreateItemsMutation,
   useSubmitRankingsMutation,
   useTogglePinMutation,

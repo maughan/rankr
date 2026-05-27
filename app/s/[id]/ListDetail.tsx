@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { formatDistanceStrict } from "date-fns";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import {
   ImageIcon,
   Flame,
   Zap,
+  Copy,
 } from "lucide-react";
 import { IconStack2 } from "@tabler/icons-react";
 
@@ -25,6 +26,7 @@ import {
   useCreateItemsMutation,
   useUpdateListMutation,
   useDeleteItemMutation,
+  useCopyListMutation,
 } from "@/lib/api/listsApi";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { processResponseData } from "@/lib/helpers";
@@ -50,6 +52,7 @@ import EmptyState from "@/app/components/EmptyState";
 import NavAvatar from "@/app/components/NavAvatar";
 import { S } from "@/app/content/strings";
 import { getCategoryMeta } from "@/lib/categories";
+import { listUrl } from "@/lib/listUrl";
 import { CategoryIcon } from "@/app/components/item/CategoryIcon";
 import { CategoryPicker } from "@/app/components/item/CategoryPicker";
 import ImageKit from "imagekit-javascript";
@@ -76,6 +79,7 @@ function InviteParamReader({
   const searchParams = useSearchParams();
   useEffect(() => {
     const token = searchParams.get("invite");
+    console.log('TOKEN', token)
     if (!token) return;
     const maxAge = 60 * 60 * 24 * 365;
     document.cookie = `rankr_invite_${listId}=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
@@ -168,9 +172,11 @@ export default function ListDetail({
     },
     staleTime: 30_000,
   });
+  const router = useRouter();
   const [createItems, { isLoading: isCreating }] = useCreateItemsMutation();
   const [saveList, { isLoading: isSaving }] = useUpdateListMutation();
   const [deleteItem] = useDeleteItemMutation();
+  const [copyList, { isLoading: isCopying }] = useCopyListMutation();
 
   const { modals, imageModalUrl, filteredListRankings, userfilter, editList } =
     useAppSelector((state) => state.ui);
@@ -328,6 +334,16 @@ export default function ListDetail({
     return result;
   }, [list, currentUserId, userfilter, distinctRankerCount]);
 
+  // Read invite token from URL on mount and bake it into a cookie so the server
+  // access check can see it on the very next fetch — before any render gate fires.
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("invite");
+    if (!token) return;
+    const maxAge = 60 * 60 * 24 * 365;
+    document.cookie = `rankr_invite_${listId}=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    refetch();
+  }, [listId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!modals.auth) {
       const { id } = getUserFromToken();
@@ -390,6 +406,16 @@ export default function ListDetail({
         allow_contributions: list?.allow_contributions ?? false,
       })
     );
+  };
+
+  const handleCopyList = async () => {
+    try {
+      const result = await copyList(listId).unwrap();
+      toast.success("List copied — editing your draft now");
+      router.push(listUrl(result));
+    } catch {
+      toast.error("Failed to copy list");
+    }
   };
 
   const handleVisibilityChange = (newVis: string) => {
@@ -771,6 +797,14 @@ export default function ListDetail({
                       Share
                     </button>
                   )}
+                  <button
+                    onClick={handleCopyList}
+                    disabled={isCopying}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <Copy size={13} />
+                    Copy
+                  </button>
                   <Link
                     href={`${listHref}/s`}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
@@ -820,6 +854,16 @@ export default function ListDetail({
               >
                 <Share2 size={13} />
                 Share
+              </button>
+            )}
+            {isLoggedIn && (
+              <button
+                onClick={handleCopyList}
+                disabled={isCopying}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+              >
+                <Copy size={13} />
+                Copy
               </button>
             )}
             {isLoggedIn && (
