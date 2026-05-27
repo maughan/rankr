@@ -357,13 +357,16 @@ function ClosestMatchCard({
       </div>
 
       <p className="text-[12px] text-rk-muted leading-snug">
-        {isFew
-          ? S.payoff.closestMatchFew
-          : S.payoff.closestMatchDetail(
-              match.handle,
-              match.agreedCount,
-              match.totalCount
-            )}
+        {isFew ? (
+          S.payoff.closestMatchFew
+        ) : (
+          <>
+            <Link href={`/u/${match.handle}`} className="hover:underline text-rk-secondary">
+              @{match.handle}
+            </Link>
+            {` agrees with you on ${match.agreedCount} of ${match.totalCount}`}
+          </>
+        )}
       </p>
     </div>
   );
@@ -422,11 +425,10 @@ function TasteNemesisCard({
       </div>
 
       <p className="text-[12px] text-rk-muted leading-snug">
-        {S.nemesis.detail(
-          nemesis.handle,
-          nemesis.disagreedCount,
-          nemesis.totalCount
-        )}
+        <Link href={`/u/${nemesis.handle}`} className="hover:underline text-rk-secondary">
+          @{nemesis.handle}
+        </Link>
+        {` disagrees with you on ${nemesis.disagreedCount} of ${nemesis.totalCount} items.`}
       </p>
     </div>
   );

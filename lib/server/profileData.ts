@@ -14,8 +14,6 @@ export async function getProfileData(
       display_name: true,
       bio: true,
       createdAt: true,
-      follower_count: true,
-      following_count: true,
       archetype: true,
       archetype_stats: true,
     },
@@ -25,8 +23,6 @@ export async function getProfileData(
     display_name: string | null;
     bio: string | null;
     createdAt: Date;
-    follower_count: number;
-    following_count: number;
     archetype: string | null;
     archetype_stats: unknown;
   } | null;
@@ -35,7 +31,15 @@ export async function getProfileData(
 
   const isOwner = viewerId === user.id;
 
-  const [viewerFollowRow, targetFollowRow, blockRow, mutualsCount, mutualsSample] =
+  const [
+    viewerFollowRow,
+    targetFollowRow,
+    blockRow,
+    mutualsCount,
+    mutualsSample,
+    followerCount,
+    followingCount,
+  ] =
     viewerId && !isOwner
       ? await Promise.all([
           (prisma as any).follow.findUnique({
@@ -69,8 +73,18 @@ export async function getProfileData(
             select: { follower: { select: { username: true, display_name: true } } },
             take: 3,
           }),
+          (prisma as any).follow.count({ where: { followingId: user.id } }),
+          (prisma as any).follow.count({ where: { followerId: user.id } }),
         ])
-      : [null, null, null, 0, []];
+      : await Promise.all([
+          Promise.resolve(null),
+          Promise.resolve(null),
+          Promise.resolve(null),
+          Promise.resolve(0),
+          Promise.resolve([]),
+          (prisma as any).follow.count({ where: { followingId: user.id } }),
+          (prisma as any).follow.count({ where: { followerId: user.id } }),
+        ]);
 
   const viewerFollowsThem = !!viewerFollowRow;
   const theyFollowViewer = !!targetFollowRow;
@@ -170,8 +184,8 @@ export async function getProfileData(
       display_name: user.display_name,
       bio: user.bio,
       createdAt: user.createdAt.toISOString(),
-      follower_count: user.follower_count,
-      following_count: user.following_count,
+      follower_count: followerCount as number,
+      following_count: followingCount as number,
       archetype: (user.archetype ?? null) as import("@/lib/insightsConfig").ArchetypeSlug | null,
       archetype_stats: (user.archetype_stats ?? null) as import("@/lib/insightsConfig").ArchetypeStats | null,
     },
