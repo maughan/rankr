@@ -33,24 +33,45 @@ function closestTierIdx(
 
 async function fetchData(params: URLSearchParams): Promise<HotTakesData> {
   const token = params.get("token");
+  const listIdRaw = params.get("listId");
   const userIdRaw = params.get("userId");
   const anonSession = params.get("anonSession");
 
-  if (!token) throw new ShareCardError(400, "Missing token");
+  let list: { id: number; title: string; tiers: { id: number; title: string; value: number }[]; items: { id: number; name: string | null }[] } | null = null;
+  let shareUrl: string;
 
-  const list = await (prisma.list as any).findUnique({
-    where: { share_token: token },
-    select: {
-      id: true,
-      title: true,
-      is_shareable: true,
-      tiers: { select: { id: true, title: true, value: true } },
-      items: { select: { id: true, name: true } },
-    },
-  });
+  if (token) {
+    const found = await (prisma.list as any).findUnique({
+      where: { share_token: token },
+      select: {
+        id: true,
+        title: true,
+        is_shareable: true,
+        tiers: { select: { id: true, title: true, value: true } },
+        items: { select: { id: true, name: true } },
+      },
+    });
+    if (!found || !found.is_shareable) throw new ShareCardError(404, "List not found");
+    list = found;
+    shareUrl = `tierstack.dev/r/${token}`;
+  } else if (listIdRaw && userIdRaw) {
+    const found = await (prisma.list as any).findUnique({
+      where: { id: Number(listIdRaw) },
+      select: {
+        id: true,
+        title: true,
+        tiers: { select: { id: true, title: true, value: true } },
+        items: { select: { id: true, name: true } },
+      },
+    });
+    if (!found) throw new ShareCardError(404, "List not found");
+    list = found;
+    shareUrl = "tierstack.dev";
+  } else {
+    throw new ShareCardError(400, "Missing token or listId");
+  }
 
-  if (!list || !list.is_shareable)
-    throw new ShareCardError(404, "List not found");
+  if (!list) throw new ShareCardError(500, "List not resolved");
 
   const itemIds = (list.items as { id: number }[]).map((i) => i.id);
   const sortedTiers = [...(list.tiers as { title: string; value: number }[])]
@@ -158,7 +179,7 @@ async function fetchData(params: URLSearchParams): Promise<HotTakesData> {
     listName: list.title,
     rankerCount,
     takes: topTakes,
-    shareUrl: `tierstack.dev/r/${token}`,
+    shareUrl,
   };
 }
 
