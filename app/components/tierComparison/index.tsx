@@ -368,7 +368,7 @@ export default function TierComparison({
             {detailItems.map(({ item, myTierIdx, theirTierIdx }) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between sm:justify-around sm:gap-10 sm:mx-auto bg-rk-row border-rk-stroke p-3 rounded-[8px] sm:w-[45%]"
+                className="flex items-center justify-between sm:gap-10 sm:mx-auto bg-rk-row border-rk-stroke p-3 rounded-[8px] sm:w-[45%]"
               >
                 <div className="flex items-center gap-2">
                   <ItemTile item={item} />
