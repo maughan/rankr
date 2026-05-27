@@ -6,7 +6,7 @@ import { S } from "@/app/content/strings";
 import { CATEGORIES } from "@/lib/categories";
 import { CategoryIcon } from "@/app/components/item/CategoryIcon";
 import LandingNav from "@/app/landing/LandingNav";
-import { SurpriseButton } from "@/app/components/SurpriseButton";
+// import { SurpriseButton } from "@/app/components/SurpriseButton";
 
 export const revalidate = 3600;
 
@@ -108,7 +108,7 @@ export default async function BrowsePage() {
         )}
 
         <div className="flex justify-center pt-4">
-          <SurpriseButton className="flex items-center gap-2 px-4 py-2 text-[13px] font-[500] border border-rk-stroke text-rk-secondary rounded-[8px] hover:border-rk-muted hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" />
+          {/* <SurpriseButton className="flex items-center gap-2 px-4 py-2 text-[13px] font-[500] border border-rk-stroke text-rk-secondary rounded-[8px] hover:border-rk-muted hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" /> */}
         </div>
       </main>
     </div>

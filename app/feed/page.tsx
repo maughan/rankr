@@ -32,7 +32,7 @@ import {
 import { listUrl } from "@/lib/listUrl";
 import { S } from "@/app/content/strings";
 import LandingFooter from "../landing/LandingFooter";
-import { SurpriseButton } from "../components/SurpriseButton";
+// import { SurpriseButton } from "../components/SurpriseButton";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -358,7 +358,7 @@ function FallbackSection({ lists }: { lists: FallbackList[] }) {
             {S.feed.fallbackSubhead}
           </p>
         </div>
-        <SurpriseButton className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[500] border border-rk-stroke text-rk-secondary rounded-[8px] hover:border-rk-muted hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" />
+        {/* <SurpriseButton className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[500] border border-rk-stroke text-rk-secondary rounded-[8px] hover:border-rk-muted hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" /> */}
       </div>
       <div className="grid grid-cols-2 gap-3">
         {lists.map((l) => (
@@ -598,7 +598,7 @@ export default function FeedPage() {
             >
               Library
             </Link>
-            <SurpriseButton className="flex items-center gap-1.5 text-[13px] font-[500] text-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" />
+            {/* <SurpriseButton className="flex items-center gap-1.5 text-[13px] font-[500] text-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" /> */}
             <NavAvatar username={username} />
           </div>
         </div>
