@@ -3,6 +3,7 @@ import ImageKit from "imagekit";
 import sharp from "sharp";
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
+import { moderateImage } from "@/lib/server/imageModeration";
 
 const imagekit = new ImageKit({
   publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
@@ -79,6 +80,15 @@ export async function POST(req: Request, { params }: Params) {
       .toBuffer();
   } catch {
     return NextResponse.json({ error: "Could not process image" }, { status: 422 });
+  }
+
+  // ── Content moderation ────────────────────────────────────────────────────────
+  const moderation = await moderateImage(processed);
+  if (!moderation.safe) {
+    return NextResponse.json(
+      { error: moderation.reason ?? "Image did not pass content moderation." },
+      { status: 422 }
+    );
   }
 
   // ── Upload to ImageKit (server-side — no client auth handshake needed) ────────

@@ -3,7 +3,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import ImageKit from "imagekit-javascript";
 import Image from "next/image";
 import { LayoutGrid } from "lucide-react";
 
@@ -152,33 +151,29 @@ export default function Library() {
     }
   }, [modals.auth]);
 
-  const imagekit = new ImageKit({
-    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
-    authenticationEndpoint: "/api/imagekit-auth",
-  } as any);
-
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const formData = new FormData();
+    formData.append("file", file);
+
     try {
-      const res = await fetch("/api/imagekit-auth");
-      const { token, expire, signature } = await res.json();
+      const res = await fetch("/api/upload/cover", {
+        method: "POST",
+        body: formData,
+      });
 
-      const result = await imagekit.upload({
-        file,
-        fileName: `${Date.now()}-${file.name}`,
-        folder: "/s",
-        token,
-        expire,
-        signature,
-      } as any);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.error ?? S.lists.imageUploadFailed);
+        return;
+      }
 
-      dispatch(uiActions.updateListMeta({ img: result.url }));
+      const { url } = await res.json();
+      dispatch(uiActions.updateListMeta({ img: url }));
       toast.success(S.lists.imageUploaded);
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error(S.lists.imageUploadFailed);
     }
   };

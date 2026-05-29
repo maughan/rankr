@@ -10,6 +10,10 @@ import { uiActions } from "@/lib/store/uiSlice";
 import { baseApi } from "@/lib/api/baseApi";
 import Modal from "@/app/components/modal";
 import { S } from "@/app/content/strings";
+import { usePostHog } from "posthog-js/react";
+import { getUserFromToken } from "@/lib/helpers";
+import { E } from "@/lib/analytics/events";
+import { trackEvent } from "@/lib/analytics/client";
 
 type Tab = "login" | "signup";
 
@@ -18,6 +22,7 @@ export default function AuthModal() {
   const open = useAppSelector((s) => s.ui.modals.auth);
   const router = useRouter();
   const pathname = usePathname();
+  const ph = usePostHog();
 
   const [tab, setTab] = useState<Tab>("login");
   const [loading, setLoading] = useState(false);
@@ -60,6 +65,9 @@ export default function AuthModal() {
         toast.error(S.auth.loginFailed);
         return;
       }
+      // Identify AFTER the cookie is set — getUserFromToken reads it synchronously.
+      const { id, username } = getUserFromToken();
+      if (id && ph) ph.identify(String(id), { username });
       handleSuccess();
       toast.success(S.auth.loginSuccess);
     } catch {
@@ -72,6 +80,7 @@ export default function AuthModal() {
   const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const data = new FormData(e.currentTarget);
+    trackEvent(E.SIGNUP_STARTED);
     setLoading(true);
     try {
       const res = await fetch("/api/auth/user", {
@@ -87,6 +96,10 @@ export default function AuthModal() {
         toast.error(S.auth.signupTaken);
         return;
       }
+      // Identify with merge — this stitches the anonymous pre-signup session
+      // into the new authenticated user record in PostHog.
+      const { id, username } = getUserFromToken();
+      if (id && ph) ph.identify(String(id), { username });
       handleSuccess();
       toast.success(S.auth.signupSuccess);
     } catch {

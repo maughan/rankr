@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
 import { resolveUserByUsername, getBlockBetween } from "@/lib/server/followHelpers";
+import { captureServer } from "@/lib/analytics/server";
+import { E } from "@/lib/analytics/events";
 
 // POST /api/u/:username/follow — follow a user (idempotent)
 export async function POST(
@@ -22,6 +24,7 @@ export async function POST(
     return new Response(null, { status: 403 });
   }
 
+  let didFollow = false;
   await (prisma as any).$transaction(async (tx: any) => {
     const existing = await tx.follow.findUnique({
       where: {
@@ -33,7 +36,12 @@ export async function POST(
     await tx.follow.create({ data: { followerId: viewer.sub, followingId: target.id } });
     await tx.user.update({ where: { id: viewer.sub }, data: { following_count: { increment: 1 } } });
     await tx.user.update({ where: { id: target.id },  data: { follower_count:  { increment: 1 } } });
+    didFollow = true;
   });
+
+  if (didFollow) {
+    await captureServer(String(viewer.sub), E.FOLLOW_ADDED, { target_user_id: target.id });
+  }
 
   return new Response(null, { status: 204 });
 }
@@ -50,6 +58,7 @@ export async function DELETE(
   const target = await resolveUserByUsername(username);
   if (!target) return new Response(null, { status: 404 });
 
+  let didUnfollow = false;
   await (prisma as any).$transaction(async (tx: any) => {
     const existing = await tx.follow.findUnique({
       where: {
@@ -65,7 +74,12 @@ export async function DELETE(
     });
     await tx.user.update({ where: { id: viewer.sub }, data: { following_count: { decrement: 1 } } });
     await tx.user.update({ where: { id: target.id },  data: { follower_count:  { decrement: 1 } } });
+    didUnfollow = true;
   });
+
+  if (didUnfollow) {
+    await captureServer(String(viewer.sub), E.FOLLOW_REMOVED, { target_user_id: target.id });
+  }
 
   return new Response(null, { status: 204 });
 }

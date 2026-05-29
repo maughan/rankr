@@ -6,10 +6,12 @@ import { User, Settings, LogOut } from "lucide-react";
 import { useAppDispatch } from "@/lib/hooks";
 import { baseApi } from "@/lib/api/baseApi";
 import { nameToColor } from "@/lib/itemColor";
+import { usePostHog } from "posthog-js/react";
 
 export default function NavAvatar({ username }: { username: string }) {
   const [open, setOpen] = useState(false);
   const dispatch = useAppDispatch();
+  const ph = usePostHog();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,6 +33,7 @@ export default function NavAvatar({ username }: { username: string }) {
   }, [open]);
 
   const signOut = () => {
+    ph?.reset(); // disassociate this browser session from the user
     // auth_token is httpOnly: false so we can clear it client-side
     document.cookie = "auth_token=; max-age=0; path=/;";
     dispatch(baseApi.util.resetApiState());

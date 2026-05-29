@@ -31,6 +31,47 @@ enum ActivityEventType {
   milestone
 }
 
+enum UserRole {
+  user
+  admin
+  super_admin
+}
+
+enum ReportReason {
+  spam
+  harassment
+  hateful
+  sexual
+  copyright
+  minors
+  violence
+  other
+}
+
+enum ReportStatus {
+  open
+  reviewing
+  actioned
+  dismissed
+}
+
+enum ReportableType {
+  list
+  item
+  profile
+}
+
+enum ModerationActionType {
+  dismiss_report
+  take_down
+  restore
+  warn_user
+  suspend_user
+  ban_user
+  unsuspend_user
+  unban_user
+}
+
 model Tier {
   id    Int    @id @default(autoincrement())
   title String
@@ -55,6 +96,10 @@ model Item {
   image_uploaded_at    DateTime?
   short_label_user_set Boolean   @default(false)
 
+  // Moderation
+  deleted_at    DateTime?
+  taken_down_at DateTime?
+
   createdBy      User            @relation(fields: [createdById], references: [id])
   rankings       Ranking[]
   lists          List[]          @relation("ItemToList")
@@ -77,7 +122,14 @@ model User {
   archetype_stats      Json?
   archetype_computed_at  DateTime?
   last_feed_visit_at     DateTime?
-  lists                List[]
+
+  // Moderation
+  role            UserRole  @default(user)
+  suspended_until DateTime?
+  banned_at       DateTime?
+  ban_reason      String?
+
+  lists                List[]                @relation("CreatedLists")
   rankings             Ranking[]
   items                Item[]
   pins                 UserListPin[]
@@ -89,6 +141,10 @@ model User {
   invitesReceived      ListInvite[]          @relation("InvitedUser")
   invitesSent          ListInvite[]          @relation("InvitedBy")
   activityEvents       ActivityEvent[]
+  reports_filed        Report[]              @relation("ReporterUser")
+  reports_reviewed     Report[]              @relation("ReviewerUser")
+  moderation_actions   ModerationAction[]    @relation("AdminActions")
+  taken_down_lists     List[]                @relation("ListTakenDownBy")
 }
 
 model Follow {
@@ -137,7 +193,7 @@ model List {
   visibility  ListVisibility @default(draft)
   img         String?
   createdById Int
-  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdBy   User     @relation("CreatedLists", fields: [createdById], references: [id])
 
   category       String   @default("other")
 
@@ -160,6 +216,13 @@ model List {
   // Publish tracking
   has_been_published         Boolean   @default(false)
   published_at               DateTime?
+
+  // Moderation
+  deleted_at        DateTime?
+  taken_down_at     DateTime?
+  taken_down_reason String?
+  taken_down_by_id  Int?
+  taken_down_by     User?    @relation("ListTakenDownBy", fields: [taken_down_by_id], references: [id], onDelete: SetNull)
 
   items          Item[]          @relation("ItemToList")
   tiers          Tier[]          @relation("ListToTier")
@@ -236,4 +299,44 @@ model ActivityEvent {
   @@index([listId])
   @@index([createdAt])
   @@index([actorId, createdAt(sort: Desc)])
+}
+
+model Report {
+  id                    Int            @id @default(autoincrement())
+  reporter_user_id      Int?
+  reporter_session_hash String?
+  reportable_type       ReportableType
+  reportable_id         Int
+  reason                ReportReason
+  context               String?
+  status                ReportStatus   @default(open)
+  created_at            DateTime       @default(now())
+  reviewed_by_id        Int?
+  reviewed_at           DateTime?
+  resolution_notes      String?
+
+  reporter    User? @relation("ReporterUser",  fields: [reporter_user_id], references: [id], onDelete: SetNull)
+  reviewed_by User? @relation("ReviewerUser",  fields: [reviewed_by_id],   references: [id], onDelete: SetNull)
+
+  @@unique([reporter_user_id, reportable_type, reportable_id])
+  @@unique([reporter_session_hash, reportable_type, reportable_id])
+  @@index([status, created_at])
+  @@index([reportable_type, reportable_id])
+}
+
+model ModerationAction {
+  id            Int                  @id @default(autoincrement())
+  admin_user_id Int
+  action_type   ModerationActionType
+  target_type   ReportableType
+  target_id     Int
+  reason        String?
+  notes         String?
+  created_at    DateTime             @default(now())
+
+  admin User @relation("AdminActions", fields: [admin_user_id], references: [id])
+
+  @@index([admin_user_id])
+  @@index([target_type, target_id])
+  @@index([created_at])
 }

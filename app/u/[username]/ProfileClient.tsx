@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatDistanceStrict } from "date-fns";
-import { LayoutGrid, ChevronRight, Share2 } from "lucide-react";
+import { LayoutGrid, ChevronRight, Share2, Flag } from "lucide-react";
 import {
   IconBolt,
   IconBrain,
@@ -31,6 +31,9 @@ import { S } from "@/app/content/strings";
 import { archetypeStatPct } from "@/lib/insightsConfig";
 import type { ArchetypeSlug, ArchetypeStats, ArchetypeReceipt } from "@/lib/insightsConfig";
 import LandingFooter from "@/app/landing/LandingFooter";
+import { trackEvent } from "@/lib/analytics/client";
+import { E } from "@/lib/analytics/events";
+import ReportModal from "@/app/components/ReportModal";
 
 // ── Mutuals line ──────────────────────────────────────────────────────────────
 
@@ -296,6 +299,7 @@ function ProfileHero({
   mutuals,
   onFollowersClick,
   onFollowingClick,
+  onReportClick,
 }: {
   username: string;
   displayName: string | null;
@@ -312,6 +316,7 @@ function ProfileHero({
   mutuals: MutualsInfo | null;
   onFollowersClick: () => void;
   onFollowingClick: () => void;
+  onReportClick: () => void;
 }) {
   const name = displayName ?? username;
   const memberSince = formatDistanceStrict(new Date(createdAt), new Date(), { addSuffix: false });
@@ -339,12 +344,21 @@ function ProfileHero({
             )}
           </div>
           {!isOwner && (
-            <FollowButton
-              username={username}
-              initialFollowing={viewerFollowsThem}
-              initialBlocked={viewerHasBlocked}
-              viewerIsBlocked={viewerIsBlocked}
-            />
+            <div className="flex items-center gap-2">
+              <FollowButton
+                username={username}
+                initialFollowing={viewerFollowsThem}
+                initialBlocked={viewerHasBlocked}
+                viewerIsBlocked={viewerIsBlocked}
+              />
+              <button
+                onClick={onReportClick}
+                title="Report"
+                className="w-8 h-8 flex items-center justify-center rounded-[8px] border border-rk-stroke text-rk-tertiary hover:text-rk-muted hover:border-rk-muted transition-colors cursor-pointer"
+              >
+                <Flag size={13} />
+              </button>
+            </div>
           )}
         </div>
 
@@ -492,9 +506,14 @@ export default function ProfileClient({ username }: { username: string }) {
   });
   const [activeTab, setActiveTab] = useState<Tab>("all");
   const [followModal, setFollowModal] = useState<"followers" | "following" | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
   const dispatch = useAppDispatch();
   const viewer = getUserFromToken();
   const isLoggedIn = viewer.id !== 0;
+
+  useEffect(() => {
+    trackEvent(E.PROFILE_VIEWED, { is_own_profile: viewer.username === username });
+  }, [username]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const nav = (
     <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
@@ -587,6 +606,7 @@ export default function ProfileClient({ username }: { username: string }) {
           mutuals={mutuals}
           onFollowersClick={() => setFollowModal("followers")}
           onFollowingClick={() => setFollowModal("following")}
+          onReportClick={() => setReportOpen(true)}
         />
 
         {!viewerHasBlocked && !viewerIsBlocked && (
@@ -640,6 +660,15 @@ export default function ProfileClient({ username }: { username: string }) {
         />
       </div>
       <LandingFooter />
+
+      {!isOwner && (
+        <ReportModal
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+          reportableType="profile"
+          reportableId={user.id}
+        />
+      )}
     </div>
   );
 }

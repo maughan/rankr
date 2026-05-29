@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Download, Share2, Copy, Check, ImageOff } from "lucide-react";
 import Modal from "@/app/components/modal";
+import { trackEvent } from "@/lib/analytics/client";
+import { E } from "@/lib/analytics/events";
 
 type Format = "square" | "wide" | "story";
 type TemplateName = "head-to-head" | "hot-takes" | "taste-nemesis" | "closest-match" | "divisive-item" | "archetype";
@@ -14,6 +16,7 @@ interface Props {
   template: TemplateName;
   open: boolean;
   onClose: () => void;
+  fromSurface?: string;
 }
 
 const FORMAT_LABELS: Record<Format, string> = {
@@ -46,7 +49,7 @@ const DEFAULT_ERROR: Record<TemplateName, string> = {
   "archetype": "Rank more lists to unlock your archetype card.",
 };
 
-export default function ShareCardModal({ token, listId, template, open, onClose }: Props) {
+export default function ShareCardModal({ token, listId, template, open, onClose, fromSurface }: Props) {
   const [format, setFormat] = useState<Format>("square");
   const [imgState, setImgState] = useState<ImgState>("loading");
   const [downloading, setDownloading] = useState(false);
@@ -67,8 +70,13 @@ export default function ShareCardModal({ token, listId, template, open, onClose 
       setCacheBust(Date.now());
       setImgState("loading");
       setErrorMsg(null);
+      trackEvent(E.SHARE_MODAL_OPENED, {
+        list_id: listId ?? 0,
+        from_surface: fromSurface ?? "unknown",
+        share_template: template,
+      });
     }
-  }, [open]);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset load state when format switches within the same open session
   useEffect(() => {
@@ -97,6 +105,7 @@ export default function ShareCardModal({ token, listId, template, open, onClose 
     a.download = `tierstack-${template}-${format}.png`;
     a.click();
     URL.revokeObjectURL(url);
+    trackEvent(E.SHARE_ACTION_TAKEN, { action: "download", template, format });
   };
 
   const handleCopy = async () => {
@@ -106,6 +115,7 @@ export default function ShareCardModal({ token, listId, template, open, onClose 
       await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+      trackEvent(E.SHARE_ACTION_TAKEN, { action: "copy_image", template, format });
     } catch { /* clipboard write not supported in this browser */ }
   };
 
@@ -116,6 +126,7 @@ export default function ShareCardModal({ token, listId, template, open, onClose 
     if (navigator.canShare?.({ files: [file] })) {
       try {
         await navigator.share({ files: [file] });
+        trackEvent(E.SHARE_ACTION_TAKEN, { action: "native_share", template, format });
       } catch { /* user cancelled */ }
     }
   };

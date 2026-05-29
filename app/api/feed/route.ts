@@ -61,7 +61,12 @@ export async function GET(req: Request) {
       where: {
         actorId: { in: followingIds },
         type: { not: "milestone" },
-        list: { visibility: "public" },
+        list: {
+          visibility: "public",
+          deleted_at: null,
+          taken_down_at: null,
+          createdBy: { banned_at: null },
+        } as any,
         ...(cursor !== undefined ? { id: { lt: cursor } } : {}),
       },
       orderBy: { id: "desc" },
@@ -114,7 +119,7 @@ export async function GET(req: Request) {
   if (isFirstPage) {
     // ── 1a. Engagement on viewer's created public lists ─────────────────────
     const viewerLists = await prisma.list.findMany({
-      where: { createdById: viewer.id, visibility: "public" },
+      where: { createdById: viewer.id, visibility: "public", deleted_at: null, taken_down_at: null } as any,
       select: {
         id: true,
         short_id: true,
@@ -307,7 +312,7 @@ export async function GET(req: Request) {
 
         if (eligibleIds.length > 0) {
           const eligibleLists = await prisma.list.findMany({
-            where: { id: { in: eligibleIds }, visibility: "public" },
+            where: { id: { in: eligibleIds }, visibility: "public", deleted_at: null, taken_down_at: null } as any,
             select: {
               id: true,
               short_id: true,
@@ -343,7 +348,7 @@ export async function GET(req: Request) {
     const totalFinal = personalItems.length + networkItems.length;
     if (totalFinal < limit) {
       const lists = await prisma.list.findMany({
-        where: { visibility: "public" },
+        where: { visibility: "public", deleted_at: null, taken_down_at: null } as any,
         orderBy: [{ is_featured: "desc" }, { updatedAt: "desc" }],
         take: 8,
         select: {

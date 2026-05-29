@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DndContext } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -14,6 +14,8 @@ import { listsApi } from "@/lib/api/listsApi";
 import type { SubmitRankingsResponse } from "@/lib/api/listsApi";
 import { S } from "@/app/content/strings";
 import Skeleton from "@/app/components/Skeleton";
+import { trackEvent } from "@/lib/analytics/client";
+import { E } from "@/lib/analytics/events";
 import { TierRowSkeleton } from "../skeletons";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
@@ -91,12 +93,27 @@ export default function RankClient({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [, setCurrentUserId] = useState(0);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const rankingStartTrackedRef = useRef(false);
   const [justDroppedId, setJustDroppedId] = useState<number | null>(null);
   const [pulsingTiers, setPulsingTiers] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (list && rankings.length === 0) {
       dispatch(uiActions.startRanking(list));
+    }
+    if (list && !rankingStartTrackedRef.current) {
+      rankingStartTrackedRef.current = true;
+      const { id: viewerId } = getUserFromToken();
+      const isAnon = viewerId <= 0;
+      const isFirst = isAnon || !list.items.some((item) =>
+        item.rankings.some((r) => r.userId === viewerId)
+      );
+      trackEvent(E.RANKING_STARTED, {
+        list_id: list.id,
+        list_creator_id: list.createdBy.id,
+        is_anonymous: isAnon,
+        is_first_ranking_for_user: isFirst,
+      });
     }
   }, [list]);
 

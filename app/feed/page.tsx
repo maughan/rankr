@@ -32,6 +32,8 @@ import {
 import { listUrl } from "@/lib/listUrl";
 import { S } from "@/app/content/strings";
 import LandingFooter from "../landing/LandingFooter";
+import { trackEvent } from "@/lib/analytics/client";
+import { E } from "@/lib/analytics/events";
 // import { SurpriseButton } from "../components/SurpriseButton";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -489,6 +491,8 @@ export default function FeedPage() {
   const [username, setUsername] = useState("");
   useEffect(() => { setUsername(getUserFromToken().username); }, []);
   const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => { trackEvent(E.FEED_VIEWED); }, []);
 
   const {
     data,

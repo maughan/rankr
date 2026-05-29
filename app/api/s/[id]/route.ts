@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { computeETag, checkETagMatch } from "@/lib/server/etag";
 import { getAuthedViewer } from "@/lib/server/auth";
 import { readViewerCtx, fetchAccessOpts, canView } from "@/lib/server/listAccess";
+import { captureServer } from "@/lib/analytics/server";
+import { E } from "@/lib/analytics/events";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -56,6 +58,9 @@ export async function GET(
   }
 }
 
+// DELETE /api/s/:id — soft-delete a list the viewer owns.
+// Sets deleted_at, disables the share link, and starts the 30-day grace period.
+// A background cron job hard-deletes lists past the grace window.
 export async function DELETE(
   _req: Request,
   { params }: Params
@@ -66,46 +71,25 @@ export async function DELETE(
   const { id } = await params;
   const listId = Number(id);
 
-  const list = await prisma.list.findFirst({
-    where: { id: listId, createdById: viewer.id },
-    select: {
-      id: true,
-      visibility: true,
-      items: { select: { id: true } },
-    },
+  const list = await (prisma.list as any).findFirst({
+    where: { id: listId, createdById: viewer.id, deleted_at: null },
+    select: { id: true, category: true },
   });
 
   if (!list) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (list.visibility !== "draft") {
-    return NextResponse.json(
-      { error: "Only draft lists can be deleted." },
-      { status: 409 }
-    );
-  }
 
-  const itemIds = list.items.map((i) => i.id);
-
-  await prisma.$transaction(async (tx) => {
-    // Delete items that belong only to this list (rankings cascade via onDelete: Cascade).
-    // Items shared across lists are left intact — just disconnected when the list is removed.
-    if (itemIds.length > 0) {
-      const sharedItems = await tx.item.findMany({
-        where: {
-          id: { in: itemIds },
-          lists: { some: { id: { not: listId } } },
-        },
-        select: { id: true },
-      });
-      const sharedIds = new Set(sharedItems.map((i) => i.id));
-      const soloIds = itemIds.filter((id) => !sharedIds.has(id));
-
-      if (soloIds.length > 0) {
-        await tx.item.deleteMany({ where: { id: { in: soloIds } } });
-      }
-    }
-
-    await tx.list.delete({ where: { id: listId } });
+  await (prisma.list as any).update({
+    where: { id: listId },
+    data: {
+      deleted_at: new Date(),
+      // Immediately disable the share link so /r/:token returns 410
+      is_shareable: false,
+      share_token: null,
+      share_token_created_at: null,
+    },
   });
+
+  await captureServer(String(viewer.id), E.LIST_DELETED, { list_id: listId });
 
   return NextResponse.json({ success: true });
 }

@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
 import { getAuthedViewer } from "@/lib/server/auth";
 import { readViewerCtx, fetchAccessOpts, canRank } from "@/lib/server/listAccess";
+import { captureServer } from "@/lib/analytics/server";
+import { E } from "@/lib/analytics/events";
 
 interface RankingInput {
   itemId: number;
@@ -158,6 +161,60 @@ export async function PUT(req: Request) {
     }
 
     await Promise.all(eventOps);
+
+    // ── PostHog events ────────────────────────────────────────────────────
+    const itemsRanked = body.filter((d) => d.value > 0).length;
+    const isComplete = body.length >= listItemIds.length;
+
+    // Crowd alignment: % of user's placed items within one tier of crowd mean.
+    // allRankings includes the user's own just-submitted values; at low ranker
+    // counts this slightly inflates the score, which is acceptable for analytics.
+    let alignWithin = 0, alignTotal = 0;
+    for (const d of body) {
+      if (d.value === 0) continue;
+      const crowd = crowdVals.get(d.itemId);
+      if (!crowd?.length) continue;
+      const mean = crowd.reduce((a, b) => a + b, 0) / crowd.length;
+      alignTotal++;
+      if (Math.abs(d.value - mean) <= 1) alignWithin++;
+    }
+    const alignmentPct = alignTotal > 0 ? Math.round((alignWithin / alignTotal) * 100) : 0;
+
+    const phOps: Promise<void>[] = [
+      captureServer(String(viewer.id), E.RANKING_SUBMITTED, {
+        list_id: listId,
+        items_ranked: itemsRanked,
+        alignment_pct: alignmentPct,
+        is_complete: isComplete,
+        was_partial: !isFirstSubmit,
+        time_to_complete_seconds: 0, // start time not available server-side
+      }),
+    ];
+    if (isComplete) {
+      phOps.push(
+        captureServer(String(viewer.id), E.RANKING_COMPLETED_100PCT, { list_id: listId })
+      );
+    }
+
+    // Attribution: did this ranker arrive via a shared link?
+    if (isFirstSubmit) {
+      try {
+        const biscuits = await cookies();
+        const shareRefVal = biscuits.get("rankr_share_ref")?.value;
+        if (shareRefVal) {
+          const ref = JSON.parse(shareRefVal) as { listId: number; refUserId: number };
+          phOps.push(
+            captureServer(String(viewer.id), E.SHARED_LINK_VISITOR_RANKED, {
+              ref_list_id: ref.listId,
+              ref_user_id: ref.refUserId,
+            })
+          );
+          biscuits.delete("rankr_share_ref");
+        }
+      } catch { /* malformed or missing cookie — skip attribution */ }
+    }
+
+    await Promise.all(phOps);
 
     return Response.json({ isFirstSubmit });
   } catch (e) {

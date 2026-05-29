@@ -3,6 +3,8 @@ import * as argon2 from "argon2";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { isReservedUsername } from "@/lib/reservedUsernames";
+import { captureServer, identifyServer } from "@/lib/analytics/server";
+import { E } from "@/lib/analytics/events";
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
@@ -70,6 +72,43 @@ export async function POST(req: Request) {
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
+
+    const distinctId = String(newUser.id);
+    const phOps: Promise<void>[] = [
+      captureServer(distinctId, E.SIGNUP_COMPLETED, {
+        user_id: newUser.id,
+        username: newUser.username,
+      }),
+      identifyServer(distinctId, {
+        username: newUser.username,
+        signed_up_at: newUser.createdAt.toISOString(),
+      }),
+    ];
+
+    // Attribution: did this signup come via a shared link?
+    const shareRefVal = biscuits.get("rankr_share_ref")?.value;
+    if (shareRefVal) {
+      try {
+        const ref = JSON.parse(shareRefVal) as {
+          listId: number;
+          refUserId: number;
+          visitedAt: string;
+        };
+        const timeToSignup = Math.round(
+          (Date.now() - new Date(ref.visitedAt).getTime()) / 1000
+        );
+        phOps.push(
+          captureServer(distinctId, E.SHARED_LINK_VISITOR_SIGNED_UP, {
+            ref_list_id: ref.listId,
+            ref_user_id: ref.refUserId,
+            time_to_first_visit_seconds: timeToSignup,
+          })
+        );
+        biscuits.delete("rankr_share_ref");
+      } catch { /* malformed cookie — ignore */ }
+    }
+
+    await Promise.all(phOps);
 
     return Response.json({ success: true });
   } catch (e) {

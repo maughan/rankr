@@ -8,6 +8,7 @@ import { S } from "@/app/content/strings";
 import { CATEGORIES, CATEGORY_SLUGS_SET, getCategoryMeta } from "@/lib/categories";
 import { CategoryIcon } from "@/app/components/item/CategoryIcon";
 import LandingNav from "@/app/landing/LandingNav";
+import { CategoryTracker } from "./CategoryTracker";
 
 export const revalidate = 3600;
 
@@ -135,6 +136,7 @@ export default async function CategoryBrowsePage({
 
   return (
     <div className="min-h-screen bg-rk-page flex flex-col">
+      <CategoryTracker category={category} />
       <LandingNav />
 
       <main className="flex-1 px-6 py-12 sm:px-10 max-w-6xl mx-auto w-full flex flex-col gap-8">

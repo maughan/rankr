@@ -34,6 +34,10 @@ export interface AggregatedList {
   tiers: AggregatedTier[];
   items: AggregatedItem[];
   ranker_count: number;
+  // Moderation state — checked before serving share-link content
+  deleted_at: Date | null;
+  taken_down_at: Date | null;
+  taken_down_reason: string | null;
 }
 
 // Fetch a list and compute tier placements from averaged rankings.
@@ -41,7 +45,7 @@ export interface AggregatedList {
 export async function computeListAggregates(
   listId: number
 ): Promise<AggregatedList | null> {
-  const list = await prisma.list.findUnique({
+  const list = await (prisma.list as any).findUnique({
     where: { id: listId },
     include: {
       tiers: true,
@@ -63,7 +67,7 @@ export async function computeListAggregates(
 
   if (!list) return null;
 
-  const itemIds = list.items.map((i) => i.id);
+  const itemIds = list.items.map((i: { id: number }) => i.id);
 
   // Average value per item, excluding N/A (value = 0)
   const grouped = await (prisma.ranking as any).groupBy({
@@ -99,7 +103,7 @@ export async function computeListAggregates(
   const ranker_count = authedCount.length + anonCount.length;
 
   // Populate tiers from averaged values
-  const tiers: AggregatedTier[] = list.tiers.map((t) => ({
+  const tiers: AggregatedTier[] = list.tiers.map((t: AggregatedTier) => ({
     ...t,
     items: [] as number[],
   }));
@@ -124,6 +128,9 @@ export async function computeListAggregates(
     tiers,
     items: list.items,
     ranker_count,
+    deleted_at: (list as any).deleted_at ?? null,
+    taken_down_at: (list as any).taken_down_at ?? null,
+    taken_down_reason: (list as any).taken_down_reason ?? null,
   };
 }
 

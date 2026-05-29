@@ -16,6 +16,13 @@ const makeOpts = (overrides: Partial<AccessOpts> = {}): AccessOpts => ({
   anonymous_rankings_enabled: true,
   hasValidInvite: false,
   hasExistingRanking: false,
+  isDeleted: false,
+  isTakenDown: false,
+  takenDownReason: null,
+  creatorIsBanned: false,
+  viewerRole: "user",
+  viewerIsBanned: false,
+  viewerIsSuspended: false,
   ...overrides,
 });
 
