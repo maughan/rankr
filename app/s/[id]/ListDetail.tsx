@@ -65,6 +65,7 @@ import {
   classifyAgreement,
   type AgreementTier,
 } from "@/lib/insightsConfig";
+import ListAwards, { type AwardUser, type SpiciestPick } from "./ListAwards";
 
 // ── Invite param reader — isolated in Suspense so useSearchParams doesn't
 //    block static prerendering of the parent page. ──────────────────────────
@@ -307,6 +308,87 @@ export default function ListDetail({
 
     return best;
   }, [list, distinctRankerCount]);
+
+  // Per-item crowd average (rounded tier value). Used for awards computation.
+  const crowdAvgByItemId = useMemo<Map<number, number>>(() => {
+    if (!list) return new Map();
+    const map = new Map<number, number>();
+    for (const item of list.items) {
+      const nonZero = (item.rankings as any[]).filter((r: any) => r.value > 0);
+      if (!nonZero.length) continue;
+      const avg = nonZero.reduce((s: number, r: any) => s + r.value, 0) / nonZero.length;
+      map.set(item.id, Math.round(avg));
+    }
+    return map;
+  }, [list]);
+
+  // Awards: score each authed non-viewer ranker vs crowd avg in a single pass.
+  // Contrarian/Most Agreeable require >= 2 other authed rankers; Spiciest Pick needs >= 1.
+  const listAwards = useMemo<{
+    contrarian: AwardUser | null;
+    agreeable: AwardUser | null;
+    spiciest: SpiciestPick | null;
+  } | null>(() => {
+    if (!list || distinctRankerCount < MIN_RANKERS_FOR_INSIGHTS || users.length === 0) return null;
+
+    const itemNameMap = new Map<number, string>(
+      (list.items as any[]).map((i: any) => [i.id, i.name ?? "?"])
+    );
+
+    let contrarian: AwardUser | null = null;
+    let agreeable: AwardUser | null = null;
+    let spiciest: SpiciestPick | null = null;
+    let lowestPct = Infinity;
+    let highestPct = -1;
+    let highestDelta = 1; // require at least 2 tiers off to qualify as spicy
+
+    for (const user of users) {
+      const userValueMap = new Map<number, number>();
+      for (const item of list.items) {
+        const r = (item.rankings as any[]).find(
+          (r: any) => r.user?.id === user.id && r.value > 0
+        );
+        if (r) userValueMap.set(item.id, r.value);
+      }
+
+      let within = 0, both = 0;
+      let userMaxDelta = 0;
+      let userMaxDeltaItemId = 0;
+
+      for (const [itemId, userValue] of userValueMap) {
+        const crowdAvg = crowdAvgByItemId.get(itemId);
+        if (!crowdAvg) continue;
+        both++;
+        const delta = Math.abs(userValue - crowdAvg);
+        if (delta <= 1) within++;
+        if (delta > userMaxDelta) { userMaxDelta = delta; userMaxDeltaItemId = itemId; }
+      }
+
+      // Contrarian / Most Agreeable — only meaningful with >= 2 comparable users
+      if (users.length >= 2 && both > 0) {
+        const pct = Math.round((within / both) * 100);
+        if (pct < lowestPct) { lowestPct = pct; contrarian = { userId: user.id, username: user.username, pct }; }
+        if (pct > highestPct) { highestPct = pct; agreeable = { userId: user.id, username: user.username, pct }; }
+      }
+
+      // Spiciest Pick — person with the single most extreme individual placement
+      if (userMaxDelta > highestDelta && userMaxDeltaItemId !== 0) {
+        highestDelta = userMaxDelta;
+        spiciest = {
+          userId: user.id,
+          username: user.username,
+          itemName: itemNameMap.get(userMaxDeltaItemId) ?? "?",
+          delta: userMaxDelta,
+        };
+      }
+    }
+
+    // Suppress contrarian/agreeable if only one user scored valid rankings.
+    if (contrarian?.userId === agreeable?.userId) { contrarian = null; agreeable = null; }
+
+    if (!contrarian && !agreeable && !spiciest) return null;
+    return { contrarian, agreeable, spiciest };
+  }, [list, users, crowdAvgByItemId, distinctRankerCount]);
 
   // Per-item agreement data — only when viewing own ranking with enough rankers.
   const agreementByItemId = useMemo<Map<number, { pct: number; tier: AgreementTier } | null>>(() => {
@@ -1115,6 +1197,16 @@ export default function ListDetail({
                 ? () => setAddItemsOpen(true)
                 : undefined
             }
+          />
+        )}
+
+        {/* ── List awards — aggregate view only ───────────────────────── */}
+        {!userfilter && (
+          <ListAwards
+            contrarian={listAwards?.contrarian ?? null}
+            agreeable={listAwards?.agreeable ?? null}
+            spiciest={listAwards?.spiciest ?? null}
+            onSelectUser={handleFilterByUser}
           />
         )}
 
