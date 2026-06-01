@@ -13,6 +13,67 @@ import {
   type ArchetypeStats,
 } from "@/lib/insightsConfig";
 
+// ── Single-list archetype hint ─────────────────────────────────────────────────
+// Pure function — no DB. Uses only self-signal features (no crowd data)
+// so it can run on the already-loaded rankings from the payoff route.
+// Returns null when fewer than 6 items were ranked.
+
+const MIN_ITEMS_FOR_HINT = 6;
+
+export function computeArchetypeHint(
+  userRankings: { itemId: number; value: number }[],
+  tiers: { title: string; value: number }[]
+): ArchetypeSlug | null {
+  if (tiers.length < 2) return null;
+
+  const sortedTiers = [...tiers].sort((a, b) => b.value - a.value);
+  const maxV = sortedTiers[0].value;
+  const minV = sortedTiers[sortedTiers.length - 1].value;
+  const range = maxV - minV;
+  if (range === 0) return null;
+
+  let extremeCount = 0;
+  let middleCount = 0;
+  let normSum = 0;
+  const normValues: number[] = [];
+
+  for (const r of userRankings) {
+    if (r.value <= 0) continue;
+    const norm = (r.value - minV) / range;
+    normValues.push(norm);
+    normSum += norm;
+    if (r.value === maxV || r.value === minV) extremeCount++;
+    if (r.value !== maxV && r.value !== minV) middleCount++;
+  }
+
+  const n = normValues.length;
+  if (n < MIN_ITEMS_FOR_HINT) return null;
+
+  const extremeRatio = extremeCount / n;
+  const middleRatio = middleCount / n;
+  const generosity = normSum / n;
+  const harshness = 1 - generosity;
+
+  // Omit contrarian / oracle — those require crowd alignment data.
+  const scores: [ArchetypeSlug, number][] = [
+    ["purist",     extremeRatio - ARCHETYPE_THRESHOLDS.puristMinExtremeRatio],
+    ["diplomat",   middleRatio  - ARCHETYPE_THRESHOLDS.diplomatMinMiddleRatio],
+    ["enthusiast", generosity   - ARCHETYPE_THRESHOLDS.enthusiastMinGenerosity],
+    ["critic",     harshness    - ARCHETYPE_THRESHOLDS.criticMinHarshness],
+  ];
+
+  let archetype: ArchetypeSlug = "wildcard";
+  let bestScore = 0;
+  for (const [slug, score] of scores) {
+    if (score > bestScore) {
+      bestScore = score;
+      archetype = slug;
+    }
+  }
+
+  return archetype;
+}
+
 interface ComputeResult {
   archetype: ArchetypeSlug;
   stats: ArchetypeStats;

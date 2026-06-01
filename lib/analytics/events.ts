@@ -27,6 +27,16 @@ export const E = {
   SHARED_LINK_VISITOR_SIGNED_UP:    "shared_link_visitor_signed_up",   // server
   SHARED_LINK_VISITOR_RANKED:       "shared_link_visitor_ranked",      // server
 
+  // Onboarding funnel
+  ONBOARDING_STARTED:                 "onboarding_started",            // server
+  ONBOARDING_TOPIC_PICKED:            "onboarding_topic_picked",       // client
+  ONBOARDING_RANKING_STARTED:         "onboarding_ranking_started",    // client
+  ONBOARDING_RANKING_COMPLETED:       "onboarding_ranking_completed",  // server ← activation
+  ONBOARDING_REVEAL_VIEWED:           "onboarding_reveal_viewed",      // client
+  ONBOARDING_SHARE_CLICKED:           "onboarding_share_clicked",      // client
+  ONBOARDING_BROWSE_CLICKED:          "onboarding_browse_clicked",     // client
+  ONBOARDING_SKIPPED:                 "onboarding_skipped",            // server
+
   // Engagement
   COMPARISON_VIEWED:                "comparison_viewed",       // client
   FEED_VIEWED:                      "feed_viewed",             // client
@@ -62,6 +72,15 @@ export interface EventProperties {
   [E.SHARED_LINK_VISITED]:              { ref_list_id: number; ref_user_id: number; is_first_visit: boolean; viewer_logged_in: boolean };
   [E.SHARED_LINK_VISITOR_SIGNED_UP]:    { ref_list_id: number; ref_user_id: number; time_to_first_visit_seconds: number };
   [E.SHARED_LINK_VISITOR_RANKED]:       { ref_list_id: number; ref_user_id: number };
+
+  [E.ONBOARDING_STARTED]:               Record<string, never>;
+  [E.ONBOARDING_TOPIC_PICKED]:          { topic: string };
+  [E.ONBOARDING_RANKING_STARTED]:       Record<string, never>;
+  [E.ONBOARDING_RANKING_COMPLETED]:     { list_id: number };
+  [E.ONBOARDING_REVEAL_VIEWED]:         Record<string, never>;
+  [E.ONBOARDING_SHARE_CLICKED]:         { list_id: number };
+  [E.ONBOARDING_BROWSE_CLICKED]:        Record<string, never>;
+  [E.ONBOARDING_SKIPPED]:               { at_step: "topic" | "rank" | "reveal" };
 
   [E.COMPARISON_VIEWED]:                { list_id: number };
   [E.FEED_VIEWED]:                      Record<string, never>;

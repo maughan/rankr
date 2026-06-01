@@ -25,6 +25,7 @@ import { uiActions } from "@/lib/store/uiSlice";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import { trackEvent } from "@/lib/analytics/client";
 import { E } from "@/lib/analytics/events";
+import ProgressDots from "@/app/components/ProgressDots";
 
 // ── Confetti ──────────────────────────────────────────────────────────────────
 
@@ -161,6 +162,42 @@ export interface PayoffPageProps {
   backHref: string;
   listId?: number;
   shareToken?: string;
+  onboardingMode?: boolean;
+  archetypeHint?: string | null;
+}
+
+// ── Archetype hint card ───────────────────────────────────────────────────────
+
+function ArchetypeHintCard({ archetype }: { archetype: string }) {
+  const config = S.archetypes[archetype as keyof typeof S.archetypes];
+  if (!config) return null;
+  return (
+    <div
+      className="rk-reveal-up rounded-[12px] border border-rk-stroke bg-rk-surface p-4 flex flex-col gap-3"
+      style={{ animationDelay: "340ms" }}
+    >
+      <div className="flex items-center gap-2">
+        <div
+          className="w-2 h-2 rounded-full flex-shrink-0"
+          style={{ backgroundColor: config.color }}
+        />
+        <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest">
+          Taste profile
+        </p>
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="text-[15px] font-[600] text-rk-primary leading-snug">
+          Showing signs of {config.name}
+        </p>
+        <p className="text-[12px] text-rk-muted leading-snug">
+          {config.tagline}
+        </p>
+      </div>
+      <p className="text-[11px] text-rk-tertiary">
+        Rank across 3 lists to unlock your full archetype.
+      </p>
+    </div>
+  );
 }
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
@@ -763,7 +800,7 @@ function SupportCard() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function PayoffPage(props: PayoffPageProps) {
-  const { data, isLoading, isError, backHref, isFirst, isAnon } = props;
+  const { data, isLoading, isError, backHref, isFirst, isAnon, onboardingMode, archetypeHint } = props;
   const reduced = useReducedMotion();
 
   // ── Reveal state machine ────────────────────────────────────────────────────
@@ -883,6 +920,13 @@ export default function PayoffPage(props: PayoffPageProps) {
     <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto sm:pb-24">
       <PayoffNav backHref={backHref} />
 
+      {/* Onboarding progress dots above content */}
+      {onboardingMode && (
+        <div className="flex justify-center pt-4">
+          <ProgressDots step={3} />
+        </div>
+      )}
+
       {/* Click-to-skip zone: only active before reveal, excluded from nav */}
       <div
         className={`px-4 sm:px-8 py-8 max-w-2xl mx-auto flex flex-col gap-8 ${
@@ -907,6 +951,10 @@ export default function PayoffPage(props: PayoffPageProps) {
 
                 <PayoffExtras extras={data.extras} />
 
+                {onboardingMode && archetypeHint && (
+                  <ArchetypeHintCard archetype={archetypeHint} />
+                )}
+
                 <RankSimilarSection lists={data.rankSimilar} />
 
                 {/* Hottest take — punchline, revealed last */}
@@ -927,7 +975,12 @@ export default function PayoffPage(props: PayoffPageProps) {
                     <div className="flex flex-col gap-3">
                       {canShare && (
                         <button
-                          onClick={() => setShareOpen(true)}
+                          onClick={() => {
+                            if (onboardingMode && props.listId) {
+                              trackEvent(E.ONBOARDING_SHARE_CLICKED, { list_id: props.listId });
+                            }
+                            setShareOpen(true);
+                          }}
                           className="w-full py-2.5 rounded-[10px] text-[14px] font-[500] bg-rk-accent text-white hover:opacity-90 transition-opacity cursor-pointer"
                         >
                           {shareLabel}
@@ -962,20 +1015,32 @@ export default function PayoffPage(props: PayoffPageProps) {
                         </button>
                       )}
 
-                      <Link
-                        href={backHref}
-                        className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] border border-rk-stroke text-rk-secondary text-center hover:border-rk-secondary hover:text-rk-primary transition-colors"
-                      >
-                        {S.payoff.ctaCompare}
-                      </Link>
-
-                      {!isComplete && (
+                      {onboardingMode ? (
                         <Link
-                          href={rankHref}
-                          className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] text-rk-muted text-center hover:text-rk-secondary transition-colors"
+                          href="/feed"
+                          onClick={() => trackEvent(E.ONBOARDING_BROWSE_CLICKED)}
+                          className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] border border-rk-stroke text-rk-secondary text-center hover:border-rk-secondary hover:text-rk-primary transition-colors"
                         >
-                          {S.payoff.ctaFinish} →
+                          Browse lists →
                         </Link>
+                      ) : (
+                        <>
+                          <Link
+                            href={backHref}
+                            className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] border border-rk-stroke text-rk-secondary text-center hover:border-rk-secondary hover:text-rk-primary transition-colors"
+                          >
+                            {S.payoff.ctaCompare}
+                          </Link>
+
+                          {!isComplete && (
+                            <Link
+                              href={rankHref}
+                              className="block w-full py-2.5 rounded-[10px] text-[14px] font-[500] text-rk-muted text-center hover:text-rk-secondary transition-colors"
+                            >
+                              {S.payoff.ctaFinish} →
+                            </Link>
+                          )}
+                        </>
                       )}
                     </div>
                   </>

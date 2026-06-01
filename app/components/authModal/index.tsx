@@ -42,10 +42,14 @@ export default function AuthModal() {
     };
   });
 
-  const handleSuccess = () => {
+  const handleSuccess = (overridePath?: string) => {
     dispatch(uiActions.closeAuthModal());
     dispatch(baseApi.util.resetApiState());
-    if (pathname === "/") router.push("/feed");
+    if (overridePath) {
+      router.push(overridePath);
+    } else if (pathname === "/") {
+      router.push("/feed");
+    }
   };
 
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
@@ -96,11 +100,21 @@ export default function AuthModal() {
         toast.error(S.auth.signupTaken);
         return;
       }
+      const result = await res.json() as {
+        onboarding_state: "pending" | "in_progress" | "completed" | "skipped";
+        onboarding_list_id?: number;
+      };
       // Identify with merge — this stitches the anonymous pre-signup session
       // into the new authenticated user record in PostHog.
       const { id, username } = getUserFromToken();
       if (id && ph) ph.identify(String(id), { username });
-      handleSuccess();
+      if (result.onboarding_state === "pending") {
+        handleSuccess("/onboarding/topic");
+      } else if (result.onboarding_state === "in_progress" && result.onboarding_list_id) {
+        handleSuccess(`/onboarding/rank?list=${result.onboarding_list_id}`);
+      } else {
+        handleSuccess(); // completed / skipped → normal flow
+      }
       toast.success(S.auth.signupSuccess);
     } catch {
       toast.error(S.auth.signupError);

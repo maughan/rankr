@@ -54,6 +54,7 @@ export interface PayoffData {
     co_ranker_count: number;
   }[];
   shareToken: string | null;
+  archetypeHint: string | null;
 }
 
 export interface SharedListItem {

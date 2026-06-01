@@ -5,10 +5,29 @@ import jwt from "jsonwebtoken";
 import { isReservedUsername } from "@/lib/reservedUsernames";
 import { captureServer, identifyServer } from "@/lib/analytics/server";
 import { E } from "@/lib/analytics/events";
+import { readAnonSession } from "@/lib/anonSession";
+import { OnboardingState } from "@/app/generated/prisma/client";
 
 const USERNAME_RE = /^[a-zA-Z0-9_]{3,20}$/;
 
 const JWT_SECRET = process.env.JWT_SECRET!;
+
+const OB_STATE_COOKIE = "rk_ob_state";
+
+function setOnboardingStateCookie(
+  biscuits: Awaited<ReturnType<typeof cookies>>,
+  state: OnboardingState
+) {
+  biscuits.set({
+    name: OB_STATE_COOKIE,
+    value: state,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 90, // 90 days — outlives any reasonable onboarding gap
+  });
+}
 
 export async function POST(req: Request) {
   try {
@@ -36,6 +55,45 @@ export async function POST(req: Request) {
       return new Response("Invalid credentials", { status: 401 });
     }
 
+    // ── Determine initial onboarding state ────────────────────────────────────
+
+    const biscuits = await cookies();
+
+    // 1. Returning anonymous user — they've already had the aha moment.
+    const anonToken = await readAnonSession();
+    const hasAnonRankings = anonToken
+      ? (await prisma.ranking.count({
+          where: { anonymous_session_token: anonToken, value: { gt: 0 } },
+        })) > 0
+      : false;
+
+    // 2. Deep-link arrival — they signed up from a shared list link.
+    let shareRefListId: number | null = null;
+    const shareRefVal = biscuits.get("rankr_share_ref")?.value;
+    if (shareRefVal) {
+      try {
+        const ref = JSON.parse(shareRefVal) as {
+          listId: number;
+          refUserId: number;
+          visitedAt: string;
+        };
+        shareRefListId = ref.listId;
+      } catch { /* malformed cookie — ignore */ }
+    }
+
+    let initialState: OnboardingState;
+    if (hasAnonRankings) {
+      // Already used the product anonymously — skip onboarding entirely.
+      initialState = "completed";
+    } else if (shareRefListId !== null) {
+      // Came in via a shared link — skip topic pick, go straight to ranking.
+      initialState = "in_progress";
+    } else {
+      initialState = "pending";
+    }
+
+    // ── Create user ───────────────────────────────────────────────────────────
+
     const hashPass = await argon2.hash(password);
 
     const newUser = await prisma.user.create({
@@ -43,12 +101,19 @@ export async function POST(req: Request) {
         email,
         username,
         password: hashPass,
+        onboarding_state: initialState,
+        ...(initialState === "in_progress" && {
+          onboarding_started_at: new Date(),
+          onboarding_picked_topic: "deep_link",
+        }),
       },
     });
 
     if (!newUser) {
       return new Response("Invalid credentials", { status: 401 });
     }
+
+    // ── Auth cookie ───────────────────────────────────────────────────────────
 
     const token = jwt.sign(
       {
@@ -61,8 +126,6 @@ export async function POST(req: Request) {
       { expiresIn: "7d" }
     );
 
-    const biscuits = await cookies();
-
     biscuits.set({
       name: "auth_token",
       value: token,
@@ -72,6 +135,12 @@ export async function POST(req: Request) {
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
+
+    // ── Onboarding state cookie (for middleware) ───────────────────────────────
+
+    setOnboardingStateCookie(biscuits, initialState);
+
+    // ── Analytics (fire-and-forget) ───────────────────────────────────────────
 
     const distinctId = String(newUser.id);
     const phOps: Promise<void>[] = [
@@ -85,9 +154,7 @@ export async function POST(req: Request) {
       }),
     ];
 
-    // Attribution: did this signup come via a shared link?
-    const shareRefVal = biscuits.get("rankr_share_ref")?.value;
-    if (shareRefVal) {
+    if (shareRefVal && shareRefListId !== null) {
       try {
         const ref = JSON.parse(shareRefVal) as {
           listId: number;
@@ -110,8 +177,14 @@ export async function POST(req: Request) {
 
     await Promise.all(phOps);
 
-    return Response.json({ success: true });
+    // ── Response ──────────────────────────────────────────────────────────────
+
+    return Response.json({
+      onboarding_state: initialState,
+      ...(shareRefListId !== null && { onboarding_list_id: shareRefListId }),
+    });
   } catch (e) {
     console.error(e);
+    return new Response("Server error", { status: 500 });
   }
 }
