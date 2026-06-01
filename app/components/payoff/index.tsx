@@ -23,6 +23,8 @@ import { KOFI_URL } from "@/app/siteConfig";
 import { useAppDispatch } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import { useReducedMotion } from "@/lib/useReducedMotion";
+import { trackEvent } from "@/lib/analytics/client";
+import { E } from "@/lib/analytics/events";
 
 // ── Confetti ──────────────────────────────────────────────────────────────────
 
@@ -773,6 +775,7 @@ export default function PayoffPage(props: PayoffPageProps) {
   const [displayPct, setDisplayPct] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const payoffTrackedRef = useRef(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [nemesisShareOpen, setNemesisShareOpen] = useState(false);
   const [closestMatchShareOpen, setClosestMatchShareOpen] = useState(false);
@@ -821,6 +824,15 @@ export default function PayoffPage(props: PayoffPageProps) {
       }
     };
   }, [data, reduced]);
+
+  useEffect(() => {
+    if (!revealed || !data || payoffTrackedRef.current) return;
+    payoffTrackedRef.current = true;
+    trackEvent(E.PAYOFF_SCREEN_VIEWED, {
+      list_id: props.listId ?? 0,
+      alignment_pct: data.alignment.pct,
+    });
+  }, [revealed, data, props.listId]);
 
   const skip = () => {
     if (rafRef.current !== null) {
@@ -980,6 +992,7 @@ export default function PayoffPage(props: PayoffPageProps) {
                     template="hot-takes"
                     open={shareOpen}
                     onClose={() => setShareOpen(false)}
+                    fromSurface="payoff"
                   />
                 )}
                 {canShare && data.closestMatch && (
@@ -989,6 +1002,7 @@ export default function PayoffPage(props: PayoffPageProps) {
                     template="closest-match"
                     open={closestMatchShareOpen}
                     onClose={() => setClosestMatchShareOpen(false)}
+                    fromSurface="payoff"
                   />
                 )}
                 {canShare && data.tasteNemesis && (
@@ -998,6 +1012,7 @@ export default function PayoffPage(props: PayoffPageProps) {
                     template="taste-nemesis"
                     open={nemesisShareOpen}
                     onClose={() => setNemesisShareOpen(false)}
+                    fromSurface="payoff"
                   />
                 )}
               </>

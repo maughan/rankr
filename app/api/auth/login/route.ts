@@ -2,6 +2,8 @@ import { prisma } from "@/lib/prisma";
 import * as argon2 from "argon2";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { captureServer } from "@/lib/analytics/server";
+import { E } from "@/lib/analytics/events";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -47,6 +49,8 @@ export async function POST(req: Request) {
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
     });
+
+    await captureServer(String(user.id), E.SIGNIN_COMPLETED, { user_id: user.id });
 
     return Response.json({ success: true });
   } catch (e) {

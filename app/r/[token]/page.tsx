@@ -30,14 +30,21 @@ const TIER_STYLE: Record<string, { bg: string; text: string }> = {
 
 export default function SharedListPage() {
   const { token } = useParams<{ token: string }>();
+  const [goneReason, setGoneReason] = useState<"deleted" | "taken_down" | null>(null);
   const { data: list, isError } = useQuery<SharedList>({
     queryKey: ["sharedList", token],
     queryFn: async () => {
       const res = await fetch(`/api/r/${token}`);
+      if (res.status === 410) {
+        const body = await res.json().catch(() => ({}));
+        setGoneReason(body.reason === "taken_down" ? "taken_down" : "deleted");
+        throw new Error("gone");
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.json();
     },
     staleTime: 30_000,
+    retry: false,
   });
   const { data: myRanking } = useGetMyRankingQuery(token, {
     refetchOnMountOrArgChange: true,
@@ -93,6 +100,58 @@ export default function SharedListPage() {
             <TierRowSkeleton tier="D" count={2} />
             <TierRowSkeleton tier="F" count={1} />
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Gone (deleted or taken down) ─────────────────────────────────────────
+  if (isError && goneReason) {
+    const heading =
+      goneReason === "deleted"
+        ? "This list has been deleted"
+        : "This list is no longer available";
+    const detail =
+      goneReason === "deleted"
+        ? "The creator removed this list. The share link is no longer active."
+        : "This list has been taken down and is no longer accessible.";
+    return (
+      <div className=" z-10 bg-rk-page overflow-y-auto sm:pb-24">
+        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+          <div className="flex justify-between items-center h-12">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+              <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+                tierstack.dev
+              </span>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <Link
+                href="/feed"
+                className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+              >
+                Browse lists
+              </Link>
+            </div>
+          </div>
+          <div className="flex sm:hidden items-center gap-2 pb-3">
+            <Link
+              href="/feed"
+              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+            >
+              Browse lists
+            </Link>
+          </div>
+        </div>
+        <div className="px-4 sm:px-8 py-16 max-w-3xl mx-auto flex flex-col items-center gap-3 text-center">
+          <p className="text-rk-primary text-[17px] font-[500]">{heading}</p>
+          <p className="text-[13px] text-rk-muted">{detail}</p>
+          <Link
+            href="/feed"
+            className="mt-2 px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+          >
+            Browse lists
+          </Link>
         </div>
       </div>
     );

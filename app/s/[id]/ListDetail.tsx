@@ -19,6 +19,7 @@ import {
   Flame,
   Zap,
   Copy,
+  Flag,
 } from "lucide-react";
 import { IconStack2 } from "@tabler/icons-react";
 
@@ -41,6 +42,7 @@ import ErrorBanner from "@/app/components/ErrorBanner";
 import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import Modal from "../../components/modal";
+import ReportModal from "@/app/components/ReportModal";
 import ShareModal from "./ShareModal";
 import ShareCardModal from "@/app/components/shareCard/ShareCardModal";
 import { ImageKitLoader, getUserFromToken } from "@/lib/helpers";
@@ -55,8 +57,9 @@ import { getCategoryMeta } from "@/lib/categories";
 import { listUrl } from "@/lib/listUrl";
 import { CategoryIcon } from "@/app/components/item/CategoryIcon";
 import { CategoryPicker } from "@/app/components/item/CategoryPicker";
-import ImageKit from "imagekit-javascript";
 import LandingFooter from "@/app/landing/LandingFooter";
+import { trackEvent } from "@/lib/analytics/client";
+import { E } from "@/lib/analytics/events";
 import PublishingLoader from "@/app/components/PublishingLoader";
 import PublishCelebration from "@/app/components/PublishCelebration";
 import {
@@ -217,6 +220,7 @@ export default function ListDetail({
   >(null);
   const [isPublishingList, setIsPublishingList] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const isListOwner = list?.createdBy.id === currentUserId;
 
   const totalRankingCount = useMemo(() => {
@@ -444,35 +448,34 @@ export default function ListDetail({
   const handleFilterByUser = (userId: number | null) => {
     if (!list) return;
     dispatch(uiActions.filterRankingsByUser({ user: userId, list }));
+    if (userId !== null && userId !== currentUserId) {
+      trackEvent(E.COMPARISON_VIEWED, { list_id: list.id });
+    }
   };
-
-  const imagekit = new ImageKit({
-    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
-    authenticationEndpoint: "/api/imagekit-auth",
-  } as any);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const formData = new FormData();
+    formData.append("file", file);
+
     try {
-      const res = await fetch("/api/imagekit-auth");
-      const { token, expire, signature } = await res.json();
+      const res = await fetch("/api/upload/cover", {
+        method: "POST",
+        body: formData,
+      });
 
-      const result = await imagekit.upload({
-        file,
-        fileName: `${Date.now()}-${file.name}`,
-        folder: "/s",
-        token,
-        expire,
-        signature,
-      } as any);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.error ?? S.lists.imageUploadFailed);
+        return;
+      }
 
-      dispatch(uiActions.updateListMeta({ img: result.url }));
+      const { url } = await res.json();
+      dispatch(uiActions.updateListMeta({ img: url }));
       toast.success(S.lists.imageUploaded);
-    } catch (err) {
-      console.error(err);
+    } catch {
       toast.error(S.lists.imageUploadFailed);
     }
   };
@@ -1068,6 +1071,19 @@ export default function ListDetail({
           </div>
         </div>
 
+        {/* Report button — non-owners only */}
+        {isLoggedIn && !isListOwner && list && (
+          <div>
+            <button
+              onClick={() => setReportOpen(true)}
+              className="flex items-center gap-1 text-[11px] text-rk-tertiary hover:text-rk-muted transition-colors cursor-pointer"
+            >
+              <Flag size={11} />
+              Report
+            </button>
+          </div>
+        )}
+
         {/* ── Hidden read-only banner ───────────────────────────────────── */}
         {list.visibility === "hidden" && (
           <div
@@ -1407,6 +1423,16 @@ export default function ListDetail({
         open={shareOpen}
         onClose={() => setShareOpen(false)}
       />
+
+      {/* ── Report modal ─────────────────────────────────────────────────── */}
+      {list && (
+        <ReportModal
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+          reportableType="list"
+          reportableId={list.id}
+        />
+      )}
 
       {/* ── Share card modal ─────────────────────────────────────────────── */}
       {shareCardTemplate && list.share_token && (

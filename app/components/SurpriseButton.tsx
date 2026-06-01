@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shuffle } from "lucide-react";
 import { S } from "@/app/content/strings";
+import { trackEvent } from "@/lib/analytics/client";
+import { E } from "@/lib/analytics/events";
 
 interface Props {
   className?: string;
@@ -16,6 +18,7 @@ export function SurpriseButton({ className, iconSize = 14 }: Props) {
   const handleClick = async () => {
     if (loading) return;
     setLoading(true);
+    trackEvent(E.SURPRISE_ME_CLICKED);
     try {
       const res = await fetch("/api/surprise");
       if (!res.ok) return;

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { formatDistanceStrict } from "date-fns";
-import { EyeClosed, Trash2, AlertTriangle } from "lucide-react";
+import { EyeClosed, Trash2 } from "lucide-react";
 import { listUrl } from "@/lib/listUrl";
 import { ImageKitLoader, processResponseData } from "@/lib/helpers";
 import type { ListPreview, TopTierItem } from "@/app/types";
@@ -24,8 +24,7 @@ export default function ListCard({
   const [deleteList, { isLoading: deleting, error: deleteError }] = useDeleteListMutation();
 
   const isOwner = list.createdBy.id === currentUserId;
-  const isDraft = list.visibility === "draft";
-  const canDelete = isOwner && isDraft;
+  const canDelete = isOwner;
 
   const handleDeleteConfirm = async () => {
     const result = await deleteList(list.id);
@@ -115,7 +114,7 @@ export default function ListCard({
         </div>
       )}
 
-      {false && canDelete && (
+      {canDelete && (
         <button
           onClick={(e) => { e.preventDefault(); setDeleteOpen(true); }}
           title="Delete list"
@@ -132,16 +131,9 @@ export default function ListCard({
             <p className="text-[17px] font-[500] text-rk-primary">
               Delete &ldquo;{list.title}&rdquo;?
             </p>
-            {list.ranking_count > 0 ? (
-              <div className="flex items-start gap-2 p-3 rounded-[8px] bg-amber-950/30 border border-amber-800/40">
-                <AlertTriangle size={15} className="text-amber-400 flex-shrink-0 mt-0.5" />
-                <p className="text-[13px] text-amber-300 leading-snug">
-                  {list.ranking_count} ranking{list.ranking_count !== 1 ? "s" : ""} will be permanently deleted.
-                </p>
-              </div>
-            ) : (
-              <p className="text-[13px] text-rk-muted">This list has no rankings. It will be permanently deleted.</p>
-            )}
+            <p className="text-[13px] text-rk-muted leading-snug">
+              The list will be moved to Recently Deleted. You have 30 days to restore it before it&rsquo;s permanently removed.
+            </p>
           </div>
 
           {deleteError && (

@@ -6,6 +6,8 @@ import { CATEGORY_SLUGS_SET } from "@/lib/categories";
 import { generateShortId, slugify } from "@/lib/listUrl";
 import { computeETag, checkETagMatch } from "@/lib/server/etag";
 import { Ranking } from "@/app/generated/prisma/client";
+import { captureServer } from "@/lib/analytics/server";
+import { E } from "@/lib/analytics/events";
 
 function verifyToken(token: string) {
   return jwt.verify(token, process.env.JWT_SECRET!) as unknown as {
@@ -174,7 +176,7 @@ export async function POST(req: Request) {
 
     const data = await req.json();
 
-    await prisma.list.create({
+    const created = await prisma.list.create({
       data: {
         title: data.title,
         description: data.description,
@@ -197,6 +199,12 @@ export async function POST(req: Request) {
           ],
         },
       },
+    });
+
+    await captureServer(String(decoded.sub), E.LIST_CREATED, {
+      list_id: created.id,
+      category: created.category,
+      item_count: 0,
     });
 
     return Response.json("Success", { status: 200 });
@@ -305,9 +313,16 @@ export async function PATCH(req: Request) {
     });
 
     if (isPublishing) {
-      await prisma.activityEvent.create({
-        data: { actorId: user.id, type: "published", listId: data.id },
-      });
+      await Promise.all([
+        prisma.activityEvent.create({
+          data: { actorId: user.id, type: "published", listId: data.id },
+        }),
+        captureServer(String(user.id), E.LIST_PUBLISHED, {
+          list_id: data.id,
+          visibility: data.visibility,
+          from_state: ownsList.visibility,
+        }),
+      ]);
     }
 
     return NextResponse.json({ message: "Success" }, { status: 200 });
