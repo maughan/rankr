@@ -13,7 +13,7 @@ import { Users, Trophy, RefreshCw, Layers } from "lucide-react";
 import NavAvatar from "../components/NavAvatar";
 import { getUserFromToken, ImageKitLoader } from "@/lib/helpers";
 import { nameToColor } from "@/lib/itemColor";
-import { useAppDispatch } from "@/lib/hooks";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import {
   fetchFeedPage,
@@ -34,6 +34,10 @@ import { S } from "@/app/content/strings";
 import LandingFooter from "../landing/LandingFooter";
 import { trackEvent } from "@/lib/analytics/client";
 import { E } from "@/lib/analytics/events";
+import Modal from "../components/modal";
+import { CategoryPicker } from "../components/item/CategoryPicker";
+import { toast } from "sonner";
+import { useCreateListMutation } from "@/lib/api/listsApi";
 // import { SurpriseButton } from "../components/SurpriseButton";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -207,7 +211,9 @@ function EngagementCard({ event }: { event: EngagementFeedItem }) {
 
 function NewFollowersCard({ event }: { event: NewFollowersFeedItem }) {
   const [username, setUsername] = useState("");
-  useEffect(() => { setUsername(getUserFromToken().username); }, []);
+  useEffect(() => {
+    setUsername(getUserFromToken().username);
+  }, []);
 
   return (
     <PersonalCardShell icon={<Users size={15} className="text-rk-accent" />}>
@@ -489,10 +495,18 @@ export default function FeedPage() {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const [username, setUsername] = useState("");
-  useEffect(() => { setUsername(getUserFromToken().username); }, []);
+  useEffect(() => {
+    setUsername(getUserFromToken().username);
+  }, []);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const { modals, editList } = useAppSelector((state) => state.ui);
+  const [createList, { isLoading: isCreating }] = useCreateListMutation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { trackEvent(E.FEED_VIEWED); }, []);
+  useEffect(() => {
+    trackEvent(E.FEED_VIEWED);
+  }, []);
+  const listsKey = ["lists"] as const;
 
   const {
     data,
@@ -507,6 +521,47 @@ export default function FeedPage() {
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
+
+  const handleAddList = async () => {
+    if (!editList.title || !editList.description) return;
+
+    try {
+      await createList(editList).unwrap();
+      queryClient.invalidateQueries({ queryKey: listsKey });
+      dispatch(uiActions.closeCreateListModal());
+      toast.success(S.lists.created);
+    } catch (e) {
+      console.error(e);
+      toast.error(S.lists.createFailed);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/upload/cover", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        toast.error(body.error ?? S.lists.imageUploadFailed);
+        return;
+      }
+
+      const { url } = await res.json();
+      dispatch(uiActions.updateListMeta({ img: url }));
+      toast.success(S.lists.imageUploaded);
+    } catch {
+      toast.error(S.lists.imageUploadFailed);
+    }
+  };
 
   const allItems = useMemo(
     () => data?.pages.flatMap((p) => p.items) ?? [],
@@ -596,14 +651,23 @@ export default function FeedPage() {
             </span>
           </Link>
           <div className="flex items-center gap-3">
+            <NavAvatar username={username} />
+
             <Link
               href="/library"
               className="text-[13px] font-[500] text-rk-secondary hover:text-rk-primary transition-colors"
             >
               Library
             </Link>
+            <div className="hidden sm:flex items-center gap-2">
+              <button
+                onClick={() => dispatch(uiActions.openCreateListModal())}
+                className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
+              >
+                + New list
+              </button>
+            </div>
             {/* <SurpriseButton className="flex items-center gap-1.5 text-[13px] font-[500] text-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" /> */}
-            <NavAvatar username={username} />
           </div>
         </div>
       </div>
@@ -673,6 +737,118 @@ export default function FeedPage() {
       </div>
 
       <LandingFooter />
+
+      {/* ── Create list modal ─────────────────────────────────────────────── */}
+      <Modal
+        open={modals.createList}
+        handleClose={() => dispatch(uiActions.closeCreateListModal())}
+      >
+        <div className="p-6 flex flex-col gap-4">
+          <p className="text-rk-primary text-[17px] font-[500]">Create list</p>
+
+          <input
+            className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary"
+            placeholder="List name"
+            value={editList.title}
+            onChange={(e) =>
+              dispatch(uiActions.updateListMeta({ title: e.target.value }))
+            }
+            autoFocus
+          />
+
+          <input
+            className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary"
+            placeholder="Description"
+            value={editList.description}
+            onChange={(e) =>
+              dispatch(
+                uiActions.updateListMeta({ description: e.target.value })
+              )
+            }
+          />
+
+          <CategoryPicker
+            value={editList.category}
+            onChange={(slug) =>
+              dispatch(uiActions.updateListMeta({ category: slug }))
+            }
+          />
+
+          {/* ── Cover image ─────────────────────────────────────────────── */}
+          {editList.img ? (
+            <div className="flex items-center gap-3">
+              <div className="relative w-16 h-16 rounded-[6px] overflow-hidden">
+                <Image
+                  loader={ImageKitLoader}
+                  src={editList.img}
+                  alt=""
+                  fill
+                  style={{ objectFit: "cover" }}
+                />
+              </div>
+              <button
+                onClick={() => dispatch(uiActions.updateListMeta({ img: "" }))}
+                className="text-[12px] text-rk-muted hover:text-rk-secondary transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+            >
+              Upload cover image (optional)
+            </button>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            hidden
+            accept="image/*"
+            onChange={handleImageUpload}
+          />
+
+          <label className="flex items-center justify-between">
+            <span className="text-[13px] text-rk-secondary">Visibility</span>
+            <select
+              value={editList.visibility}
+              onChange={(e) =>
+                dispatch(
+                  uiActions.updateListMeta({
+                    visibility: e.target.value as "public" | "hidden" | "draft",
+                  })
+                )
+              }
+              className="text-[13px] text-rk-primary bg-rk-bg border border-rk-stroke rounded-[6px] px-2 py-1"
+            >
+              <option value="draft">Draft</option>
+              <option value="public">Public</option>
+              <option value="hidden">Hidden</option>
+            </select>
+          </label>
+
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => dispatch(uiActions.closeCreateListModal())}
+              className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleAddList}
+              disabled={isCreating}
+              className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+            >
+              {isCreating && (
+                <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
+              )}
+              Create
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
