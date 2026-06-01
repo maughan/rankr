@@ -2,6 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { useAppDispatch } from "@/lib/hooks";
@@ -79,9 +80,11 @@ function SaveButton({
 
 export default function ProfileSettingsPage() {
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const [me, setMe] = useState<MeResponse | null>(null);
   const [loadingMe, setLoadingMe] = useState(true);
+  const [restartingOnboarding, setRestartingOnboarding] = useState(false);
 
   // Profile form state
   const [displayName, setDisplayName] = useState("");
@@ -110,6 +113,26 @@ export default function ProfileSettingsPage() {
       })
       .finally(() => setLoadingMe(false));
   }, []);
+
+  const handleRestartOnboarding = async () => {
+    setRestartingOnboarding(true);
+    try {
+      const res = await fetch("/api/onboarding/state", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: "in_progress" }),
+      });
+      if (!res.ok) {
+        toast.error("Something went wrong. Please try again.");
+        return;
+      }
+      router.push("/onboarding/topic");
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setRestartingOnboarding(false);
+    }
+  };
 
   const handleSaveProfile = async (e: FormEvent) => {
     e.preventDefault();
@@ -310,6 +333,26 @@ export default function ProfileSettingsPage() {
               </button> */}
             </div>
           </form>
+        </SectionCard>
+
+        {/* Onboarding re-entry */}
+        <SectionCard title="Get started">
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-[13px] text-rk-secondary">
+              Want a quick tour? We&apos;ll walk you through ranking your first list.
+            </p>
+            <button
+              type="button"
+              onClick={handleRestartOnboarding}
+              disabled={restartingOnboarding}
+              className="shrink-0 px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            >
+              {restartingOnboarding && (
+                <Loader2 size={13} className="animate-spin" />
+              )}
+              Show me around
+            </button>
+          </div>
         </SectionCard>
 
         {/* Profile link */}

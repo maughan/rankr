@@ -73,6 +73,7 @@ export interface PayoffData {
     co_ranker_count: number;
   }[];
   shareToken: string | null;
+  archetypeHint: string | null;
 }
 
 interface ComputePayoffParams {
@@ -355,5 +356,6 @@ export async function computePayoff({
     extras: { contrarianPicks, perfectMatchCount, sTierCount },
     rankSimilar: rankSimilar.slice(0, 3),
     shareToken,
+    archetypeHint: null,
   };
 }

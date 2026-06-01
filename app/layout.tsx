@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import StoreProvider from "./storeProvider";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -12,6 +13,7 @@ import PasswordModal from "./components/passwordModal";
 import FooterWrapper from "./components/FooterWrapper";
 import QueryProvider from "./components/QueryProvider";
 import PostHogProvider from "./components/PostHogProvider";
+import OnboardingBanner from "./components/OnboardingBanner";
 import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from "./siteConfig";
 
 const geistSans = Geist({
@@ -52,11 +54,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const biscuits = await cookies();
+  const obState = biscuits.get("rk_ob_state")?.value;
+
   return (
     <html lang="en">
       <body
@@ -69,6 +74,7 @@ export default function RootLayout({
               <RouteChangeHandler />
               <AuthModal />
               <PasswordModal />
+              <OnboardingBanner initialObState={obState} />
               {children}
               <div className="sm:bottom-0 sm:left-0 sm:right-0 z-[60]">
                 <FooterWrapper />

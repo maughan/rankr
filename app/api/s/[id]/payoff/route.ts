@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { computePayoff } from "@/lib/server/payoff";
+import { computeArchetypeHint } from "@/lib/server/archetype";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -51,7 +52,9 @@ export async function GET(_req: Request, { params }: Params) {
       shareToken: list.is_shareable ? (list.share_token ?? null) : null,
     });
 
-    return Response.json(payoff);
+    const archetypeHint = computeArchetypeHint(userRankings, list.tiers);
+
+    return Response.json({ ...payoff, archetypeHint });
   } catch (e) {
     console.error(e);
     return new Response(null, { status: 500 });

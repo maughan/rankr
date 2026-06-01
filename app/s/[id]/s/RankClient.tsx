@@ -31,6 +31,7 @@ import NavAvatar from "@/app/components/NavAvatar";
 import LandingFooter from "@/app/landing/LandingFooter";
 import { SubmissionLoader } from "@/app/components/SubmissionLoader";
 import { ItemCard } from "@/app/components/item/ItemCard";
+import ProgressDots from "@/app/components/ProgressDots";
 
 // ── Tier label colours ────────────────────────────────────────────────────────
 
@@ -48,9 +49,13 @@ const TIER_STYLE: Record<string, { bg: string; text: string }> = {
 export default function RankClient({
   listId,
   listHref,
+  redirectTarget,
+  showProgress,
 }: {
   listId: number;
   listHref: string;
+  redirectTarget?: string;
+  showProgress?: boolean;
 }) {
   const router = useRouter();
 
@@ -185,9 +190,10 @@ export default function RankClient({
         // Navigate anyway — submitted page will handle its own loading state
       }
 
-      router.push(
-        `${listHref}/submitted${result.isFirstSubmit ? "?first=1" : ""}`
-      );
+      const dest = redirectTarget
+        ? `${redirectTarget}?list=${listId}${result.isFirstSubmit ? "&first=1" : ""}`
+        : `${listHref}/submitted${result.isFirstSubmit ? "?first=1" : ""}`;
+      router.push(dest);
     } catch (e) {
       console.error(e);
       toast.error(S.rankings.saveFailed);
@@ -263,7 +269,7 @@ export default function RankClient({
       <DndContext onDragEnd={handleDragEnd}>
         {/* ── Top bar ─────────────────────────────────────────────────────── */}
         <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
-          <div className="flex justify-between items-center h-12">
+          <div className="flex justify-between items-center h-12 relative">
             <Link
               href={isLoggedIn ? "/feed" : "/"}
               className="flex items-center gap-2"
@@ -273,6 +279,11 @@ export default function RankClient({
                 tierstack.dev
               </span>
             </Link>
+            {showProgress && (
+              <div className="absolute left-1/2 -translate-x-1/2">
+                <ProgressDots step={2} />
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <NavAvatar username={getUserFromToken().username} />
               <div className="hidden sm:flex items-center justify-between gap-2">

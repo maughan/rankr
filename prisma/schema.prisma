@@ -61,6 +61,13 @@ enum ReportableType {
   profile
 }
 
+enum OnboardingState {
+  pending
+  in_progress
+  completed
+  skipped
+}
+
 enum ModerationActionType {
   dismiss_report
   take_down
@@ -120,8 +127,14 @@ model User {
   following_count      Int                   @default(0)
   archetype            ArchetypeSlug?
   archetype_stats      Json?
-  archetype_computed_at  DateTime?
-  last_feed_visit_at     DateTime?
+  archetype_computed_at    DateTime?
+  last_feed_visit_at       DateTime?
+
+  // Onboarding
+  onboarding_state         OnboardingState @default(pending)
+  onboarding_started_at    DateTime?
+  onboarding_completed_at  DateTime?
+  onboarding_picked_topic  String?
 
   // Moderation
   role            UserRole  @default(user)
@@ -224,12 +237,13 @@ model List {
   taken_down_by_id  Int?
   taken_down_by     User?    @relation("ListTakenDownBy", fields: [taken_down_by_id], references: [id], onDelete: SetNull)
 
-  items          Item[]          @relation("ItemToList")
-  tiers          Tier[]          @relation("ListToTier")
-  pins           UserListPin[]
-  rankings       Ranking[]
-  invites        ListInvite[]
-  activityEvents ActivityEvent[]
+  items               Item[]               @relation("ItemToList")
+  tiers               Tier[]               @relation("ListToTier")
+  pins                UserListPin[]
+  rankings            Ranking[]
+  invites             ListInvite[]
+  activityEvents      ActivityEvent[]
+  onboardingStarters  OnboardingStarter[]
 }
 
 model UserListPin {
@@ -322,6 +336,19 @@ model Report {
   @@unique([reporter_session_hash, reportable_type, reportable_id])
   @@index([status, created_at])
   @@index([reportable_type, reportable_id])
+}
+
+model OnboardingStarter {
+  id            Int     @id @default(autoincrement())
+  topic         String
+  listId        Int
+  display_order Int     @default(0)
+  is_active     Boolean @default(true)
+
+  list List @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([topic, listId])
+  @@index([topic, is_active])
 }
 
 model ModerationAction {
