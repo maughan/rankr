@@ -15,6 +15,7 @@ import QueryProvider from "./components/QueryProvider";
 import PostHogProvider from "./components/PostHogProvider";
 import OnboardingBanner from "./components/OnboardingBanner";
 import AnnouncementBanner from "./components/AnnouncementBanner";
+import HttpInterceptor from "./components/HttpInterceptor";
 import ImpersonationBanner from "./components/ImpersonationBanner";
 import { ImpersonationProvider } from "./components/ImpersonationProvider";
 import { getImpersonationPayload } from "@/lib/server/impersonation";
@@ -84,6 +85,7 @@ export default async function RootLayout({
                 targetUserId={imp?.targetUserId ?? null}
               >
                 <RouteChangeHandler />
+                <HttpInterceptor />
                 <AuthModal />
                 <PasswordModal />
                 {/* Impersonation banner renders above everything — not dismissable */}

@@ -83,7 +83,7 @@ function InviteParamReader({
   const searchParams = useSearchParams();
   useEffect(() => {
     const token = searchParams.get("invite");
-    console.log('TOKEN', token)
+    console.log("TOKEN", token);
     if (!token) return;
     const maxAge = 60 * 60 * 24 * 365;
     document.cookie = `rankr_invite_${listId}=${token}; path=/; max-age=${maxAge}; SameSite=Lax`;
@@ -108,11 +108,15 @@ const TIER_STYLE: Record<string, { bg: string; text: string }> = {
 // ── Item card ────────────────────────────────────────────────────────────────
 
 function AgreementBadge({ pct, tier }: { pct: number; tier: AgreementTier }) {
-  const base = "flex items-center gap-0.5 px-1.5 py-0.5 rounded-[5px] text-[9px] font-[600] leading-none w-full justify-center";
+  const base =
+    "flex items-center gap-0.5 px-1.5 py-0.5 rounded-[5px] text-[9px] font-[600] leading-none w-full justify-center";
 
   if (tier === "unique") {
     return (
-      <div className={base} style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#F87171" }}>
+      <div
+        className={base}
+        style={{ backgroundColor: "rgba(239,68,68,0.15)", color: "#F87171" }}
+      >
         <Zap size={8} />
         <span>only you</span>
       </div>
@@ -120,7 +124,10 @@ function AgreementBadge({ pct, tier }: { pct: number; tier: AgreementTier }) {
   }
   if (tier === "rare") {
     return (
-      <div className={base} style={{ backgroundColor: "rgba(239,68,68,0.12)", color: "#F87171" }}>
+      <div
+        className={base}
+        style={{ backgroundColor: "rgba(239,68,68,0.12)", color: "#F87171" }}
+      >
         <Flame size={8} />
         <span>{pct}% · rare</span>
       </div>
@@ -128,14 +135,20 @@ function AgreementBadge({ pct, tier }: { pct: number; tier: AgreementTier }) {
   }
   if (tier === "mid") {
     return (
-      <div className={base} style={{ backgroundColor: "rgba(148,163,184,0.10)", color: "#94A3B8" }}>
+      <div
+        className={base}
+        style={{ backgroundColor: "rgba(148,163,184,0.10)", color: "#94A3B8" }}
+      >
         <span>{pct}% agree</span>
       </div>
     );
   }
   // high
   return (
-    <div className={base} style={{ backgroundColor: "rgba(134,239,172,0.12)", color: "#86EFAC" }}>
+    <div
+      className={base}
+      style={{ backgroundColor: "rgba(134,239,172,0.12)", color: "#86EFAC" }}
+    >
       <span>{pct}% agree</span>
     </div>
   );
@@ -166,7 +179,12 @@ export default function ListDetail({
   const queryClient = useQueryClient();
   const listKey = ["list", listId] as const;
 
-  const { data: list, isPending, isError, refetch } = useQuery({
+  const {
+    data: list,
+    isPending,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: listKey,
     queryFn: async () => {
       const res = await fetch(`/api/s/${listId}`);
@@ -288,7 +306,8 @@ export default function ListDetail({
         .filter((i) => i >= 0);
       if (indices.length < 2) continue;
 
-      const mean = indices.reduce((s: number, v: number) => s + v, 0) / indices.length;
+      const mean =
+        indices.reduce((s: number, v: number) => s + v, 0) / indices.length;
       const variance =
         indices.reduce((s: number, v: number) => s + (v - mean) ** 2, 0) /
         indices.length;
@@ -320,7 +339,8 @@ export default function ListDetail({
     for (const item of list.items) {
       const nonZero = (item.rankings as any[]).filter((r: any) => r.value > 0);
       if (!nonZero.length) continue;
-      const avg = nonZero.reduce((s: number, r: any) => s + r.value, 0) / nonZero.length;
+      const avg =
+        nonZero.reduce((s: number, r: any) => s + r.value, 0) / nonZero.length;
       map.set(item.id, Math.round(avg));
     }
     return map;
@@ -333,7 +353,12 @@ export default function ListDetail({
     agreeable: AwardUser | null;
     spiciest: SpiciestPick | null;
   } | null>(() => {
-    if (!list || distinctRankerCount < MIN_RANKERS_FOR_INSIGHTS || users.length === 0) return null;
+    if (
+      !list ||
+      distinctRankerCount < MIN_RANKERS_FOR_INSIGHTS ||
+      users.length === 0
+    )
+      return null;
 
     const itemNameMap = new Map<number, string>(
       (list.items as any[]).map((i: any) => [i.id, i.name ?? "?"])
@@ -355,7 +380,8 @@ export default function ListDetail({
         if (r) userValueMap.set(item.id, r.value);
       }
 
-      let within = 0, both = 0;
+      let within = 0,
+        both = 0;
       let userMaxDelta = 0;
       let userMaxDeltaItemId = 0;
 
@@ -365,14 +391,23 @@ export default function ListDetail({
         both++;
         const delta = Math.abs(userValue - crowdAvg);
         if (delta <= 1) within++;
-        if (delta > userMaxDelta) { userMaxDelta = delta; userMaxDeltaItemId = itemId; }
+        if (delta > userMaxDelta) {
+          userMaxDelta = delta;
+          userMaxDeltaItemId = itemId;
+        }
       }
 
       // Contrarian / Most Agreeable — only meaningful with >= 2 comparable users
       if (users.length >= 2 && both > 0) {
         const pct = Math.round((within / both) * 100);
-        if (pct < lowestPct) { lowestPct = pct; contrarian = { userId: user.id, username: user.username, pct }; }
-        if (pct > highestPct) { highestPct = pct; agreeable = { userId: user.id, username: user.username, pct }; }
+        if (pct < lowestPct) {
+          lowestPct = pct;
+          contrarian = { userId: user.id, username: user.username, pct };
+        }
+        if (pct > highestPct) {
+          highestPct = pct;
+          agreeable = { userId: user.id, username: user.username, pct };
+        }
       }
 
       // Spiciest Pick — person with the single most extreme individual placement
@@ -388,19 +423,30 @@ export default function ListDetail({
     }
 
     // Suppress contrarian/agreeable if only one user scored valid rankings.
-    if (contrarian?.userId === agreeable?.userId) { contrarian = null; agreeable = null; }
+    if (contrarian?.userId === agreeable?.userId) {
+      contrarian = null;
+      agreeable = null;
+    }
 
     if (!contrarian && !agreeable && !spiciest) return null;
     return { contrarian, agreeable, spiciest };
   }, [list, users, crowdAvgByItemId, distinctRankerCount]);
 
   // Per-item agreement data — only when viewing own ranking with enough rankers.
-  const agreementByItemId = useMemo<Map<number, { pct: number; tier: AgreementTier } | null>>(() => {
-    const empty = new Map<number, { pct: number; tier: AgreementTier } | null>();
+  const agreementByItemId = useMemo<
+    Map<number, { pct: number; tier: AgreementTier } | null>
+  >(() => {
+    const empty = new Map<
+      number,
+      { pct: number; tier: AgreementTier } | null
+    >();
     if (!list || !currentUserId || userfilter !== currentUserId) return empty;
     if (distinctRankerCount < MIN_RANKERS_FOR_INSIGHTS) return empty;
 
-    const result = new Map<number, { pct: number; tier: AgreementTier } | null>();
+    const result = new Map<
+      number,
+      { pct: number; tier: AgreementTier } | null
+    >();
     for (const item of list.items) {
       const allRankings = (item.rankings as any[]).filter((r) => r.value !== 0);
       if (allRankings.length < MIN_ITEM_RANKERS_FOR_BADGE) {
@@ -412,7 +458,9 @@ export default function ListDetail({
         result.set(item.id, null);
         continue;
       }
-      const matches = allRankings.filter((r) => r.value === myRanking.value).length;
+      const matches = allRankings.filter(
+        (r) => r.value === myRanking.value
+      ).length;
       const pct = Math.round((matches / allRankings.length) * 100);
       const tier = classifyAgreement(pct, allRankings.length);
       result.set(item.id, { pct, tier });
@@ -443,7 +491,6 @@ export default function ListDetail({
       dispatch(uiActions.filterRankingsByUser({ user: null, list }));
     }
   }, [list, dispatch]);
-
 
   const handleFilterByUser = (userId: number | null) => {
     if (!list) return;
@@ -651,8 +698,9 @@ export default function ListDetail({
             <div className="hidden sm:flex items-center gap-2">
               <Link
                 href="/feed"
-                className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+                className="flex px-3 py-1.5 text-[13px] font-[500] items-center text-rk-secondary border border-rk-stroke rounded-[8px]"
               >
+                <Undo2 size={13} />
                 Back
               </Link>
             </div>
@@ -660,8 +708,9 @@ export default function ListDetail({
           <div className="flex sm:hidden items-center gap-2 pb-3">
             <Link
               href="/feed"
-              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+              className="px-3 py-1.5 flex gap-1.5 text-[13px] font-[500] items-center text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
+              <Undo2 size={13} />
               Back
             </Link>
           </div>
@@ -692,8 +741,9 @@ export default function ListDetail({
           <div className="flex sm:hidden items-center justify-between gap-2 pb-3">
             <Link
               href="/feed"
-              className="px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px]"
+              className="flex gap-1.5 px-3 py-1.5 text-[13px] font-[500] items-center text-rk-secondary border border-rk-stroke rounded-[8px]"
             >
+              <Undo2 size={13} />
               Back
             </Link>
 
@@ -711,8 +761,9 @@ export default function ListDetail({
         <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
           <Link
             href="/feed"
-            className="px-3 hidden sm:block py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
+            className="px-3 hidden sm:flex gap-1.5 py-1.5 items-center text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
           >
+            <Undo2 size={13} />
             Back
           </Link>
           {/* Header skeleton — icon tile is real chrome */}
@@ -758,9 +809,7 @@ export default function ListDetail({
     const BAR_MAX_H = 40; // px
 
     return (
-      <div
-        className="rounded-[10px] border border-rk-stroke bg-rk-surface p-4 flex flex-col gap-3"
-      >
+      <div className="rounded-[10px] border border-rk-stroke bg-rk-surface p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-col gap-1 min-w-0">
             <p className="text-[10px] font-[500] text-rk-tertiary uppercase tracking-widest">
@@ -784,17 +833,26 @@ export default function ListDetail({
         {/* Histogram */}
         <div className="flex items-end gap-1.5">
           {distribution.map((d) => (
-            <div key={d.title} className="flex flex-col items-center gap-1 flex-1">
+            <div
+              key={d.title}
+              className="flex flex-col items-center gap-1 flex-1"
+            >
               <div
                 className="w-full rounded-t-[3px]"
                 style={{
-                  height: Math.max(2, Math.round((d.count / maxCount) * BAR_MAX_H)),
-                  backgroundColor: d.count > 0 ? d.color : "rgba(255,255,255,0.06)",
+                  height: Math.max(
+                    2,
+                    Math.round((d.count / maxCount) * BAR_MAX_H)
+                  ),
+                  backgroundColor:
+                    d.count > 0 ? d.color : "rgba(255,255,255,0.06)",
                   opacity: d.count > 0 ? 1 : 0.4,
                   minWidth: 8,
                 }}
               />
-              <span className="text-[10px] font-[600] text-rk-tertiary">{d.title}</span>
+              <span className="text-[10px] font-[600] text-rk-tertiary">
+                {d.title}
+              </span>
             </div>
           ))}
         </div>
@@ -826,7 +884,8 @@ export default function ListDetail({
   );
 
   const { role: currentUserRole } = getUserFromToken();
-  const isPrivileged = isListOwner ||
+  const isPrivileged =
+    isListOwner ||
     currentUserRole === "admin" ||
     currentUserRole === "super_admin";
 
@@ -842,810 +901,823 @@ export default function ListDetail({
 
   return (
     <>
-    {/* useSearchParams must be inside Suspense to avoid blocking static prerender */}
-    <Suspense>
-      <InviteParamReader listId={listId} onToken={refetch} />
-    </Suspense>
-    {isPublishingList && <PublishingLoader />}
-    {showCelebration && (
-      <PublishCelebration
-        listTitle={list?.title ?? ""}
-        listHref={listHref}
-        onDismiss={() => setShowCelebration(false)}
-        onShare={() => {
-          setShowCelebration(false);
-          setShareOpen(true);
-        }}
-      />
-    )}
-    <div className=" z-10 bg-rk-page overflow-y-auto sm:pb-24">
-      {/* ── Top bar ───────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
-        <div className="flex justify-between items-center h-12">
-          {/* Logo */}
-          <Link
-            href={isLoggedIn ? "/feed" : "/"}
-            className="flex items-center gap-2"
-          >
-            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
-            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
-              tierstack.dev
-            </span>
-          </Link>
-          <div className="flex items-center gap-2">
-            {isLoggedIn ? (
-              <>
-                <NavAvatar username={getUserFromToken().username} />
-                {/* Desktop actions */}
-                <div className="hidden sm:flex items-center gap-2">
-                  {list && currentUserId === list.createdBy.id && (
+      {/* useSearchParams must be inside Suspense to avoid blocking static prerender */}
+      <Suspense>
+        <InviteParamReader listId={listId} onToken={refetch} />
+      </Suspense>
+      {isPublishingList && <PublishingLoader />}
+      {showCelebration && (
+        <PublishCelebration
+          listTitle={list?.title ?? ""}
+          listHref={listHref}
+          onDismiss={() => setShowCelebration(false)}
+          onShare={() => {
+            setShowCelebration(false);
+            setShareOpen(true);
+          }}
+        />
+      )}
+      <div className=" z-10 bg-rk-page overflow-y-auto sm:pb-24">
+        {/* ── Top bar ───────────────────────────────────────────────────────── */}
+        <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+          <div className="flex justify-between items-center h-12">
+            {/* Logo */}
+            <Link
+              href={isLoggedIn ? "/feed" : "/"}
+              className="flex items-center gap-2"
+            >
+              <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+              <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+                tierstack.dev
+              </span>
+            </Link>
+            <div className="flex items-center gap-2">
+              {isLoggedIn ? (
+                <>
+                  <NavAvatar username={getUserFromToken().username} />
+                  {/* Desktop actions */}
+                  <div className="hidden sm:flex items-center gap-2">
+                    {list && currentUserId === list.createdBy.id && (
+                      <button
+                        onClick={() => setShareOpen(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+                      >
+                        <Share2 size={13} />
+                        Share
+                      </button>
+                    )}
                     <button
-                      onClick={() => setShareOpen(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+                      onClick={handleCopyList}
+                      disabled={isCopying}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
                     >
-                      <Share2 size={13} />
-                      Share
+                      <Copy size={13} />
+                      Copy
                     </button>
-                  )}
+                    <Link
+                      href={`${listHref}/s`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+                    >
+                      <Pencil size={12} strokeWidth={2.5} />
+                      Stack it
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <div className="hidden sm:flex items-center gap-2">
                   <button
-                    onClick={handleCopyList}
-                    disabled={isCopying}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+                    onClick={() => dispatch(uiActions.openAuthModal())}
+                    className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
                   >
-                    <Copy size={13} />
-                    Copy
+                    Log in / Sign up
                   </button>
-                  <Link
-                    href={`${listHref}/s`}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-                  >
-                    <Pencil size={12} strokeWidth={2.5} />
-                    Stack it
-                  </Link>
                 </div>
-              </>
-            ) : (
-              <div className="hidden sm:flex items-center gap-2">
+              )}
+            </div>
+          </div>
+          {/* Mobile action row */}
+          <div className="flex sm:hidden items-center justify-between pb-3">
+            <div>
+              <Link
+                href="/feed"
+                className="px-3 gap-1.5 flex items-center py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+              >
+                <Undo2 size={13} />
+                Back
+              </Link>
+            </div>
+
+            <div className="flex gap-2">
+              {!isLoggedIn && (
                 <button
                   onClick={() => dispatch(uiActions.openAuthModal())}
                   className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
                 >
                   Log in / Sign up
                 </button>
-              </div>
-            )}
+              )}
+              {isLoggedIn && list && currentUserId === list.createdBy.id && (
+                <button
+                  onClick={() => setShareOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+                >
+                  <Share2 size={13} />
+                  Share
+                </button>
+              )}
+              {isLoggedIn && (
+                <button
+                  onClick={handleCopyList}
+                  disabled={isCopying}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <Copy size={13} />
+                  Copy
+                </button>
+              )}
+              {isLoggedIn && (
+                <Link
+                  href={`${listHref}/s`}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+                >
+                  <Pencil size={12} strokeWidth={2.5} />
+                  Stack it
+                </Link>
+              )}
+            </div>
           </div>
         </div>
-        {/* Mobile action row */}
-        <div className="flex sm:hidden items-center justify-between pb-3">
-          <div>
+
+        {/* ── Content ───────────────────────────────────────────────────────── */}
+        <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
+          <div className="flex items-center justify-end sm:justify-between">
             <Link
               href="/feed"
-              className="px-3 gap-1.5 flex items-center py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+              className="px-3 hidden sm:flex items-center gap-1.5 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
             >
               <Undo2 size={13} />
               Back
             </Link>
-          </div>
 
-          <div className="flex gap-2">
-            {!isLoggedIn && (
-              <button
-                onClick={() => dispatch(uiActions.openAuthModal())}
-                className="px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer"
+            {isListOwner && (
+              <p
+                className="flex px-3 items-center gap-1.5 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke cursor-pointer rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
+                onClick={handleEditList}
               >
-                Log in / Sign up
-              </button>
-            )}
-            {isLoggedIn && list && currentUserId === list.createdBy.id && (
-              <button
-                onClick={() => setShareOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
-              >
-                <Share2 size={13} />
-                Share
-              </button>
-            )}
-            {isLoggedIn && (
-              <button
-                onClick={handleCopyList}
-                disabled={isCopying}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
-              >
-                <Copy size={13} />
-                Copy
-              </button>
-            )}
-            {isLoggedIn && (
-              <Link
-                href={`${listHref}/s`}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-              >
-                <Pencil size={12} strokeWidth={2.5} />
-                Stack it
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ── Content ───────────────────────────────────────────────────────── */}
-      <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
-        <div className="flex items-center justify-end sm:justify-between">
-          <Link
-            href="/feed"
-            className="px-3 hidden sm:flex items-center gap-1.5 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
-          >
-            <Undo2 size={13} />
-            Back
-          </Link>
-
-          {isListOwner && (
-            <p
-              className="flex px-3 items-center gap-1.5 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke cursor-pointer rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors w-fit"
-              onClick={handleEditList}
-            >
-              <SquarePen size={13} />
-              Edit stack
-            </p>
-          )}
-        </div>
-        {/* ── Header block ──────────────────────────────────────────────── */}
-        <div className="flex items-start gap-3">
-          {/* Category icon tile */}
-          {(() => {
-            const cat = getCategoryMeta(list.category);
-            return (
-              <div
-                className="w-11 h-11 rounded-[10px] border flex-shrink-0 flex items-center justify-center"
-                style={{
-                  backgroundColor: `${cat.color}40`,
-                  borderColor: cat.color,
-                  color: cat.color,
-                }}
-              >
-                <CategoryIcon slug={list.category} size={20} />
-              </div>
-            );
-          })()}
-
-          <div className="min-w-0">
-            <p
-              className="text-rk-primary font-[500] leading-tight"
-              style={{ fontSize: 22, letterSpacing: "-0.4px" }}
-            >
-              {list.title}
-            </p>
-            {list.description && (
-              <p className="text-[12px] text-rk-muted mt-0.5 leading-snug">
-                {list.description}
+                <SquarePen size={13} />
+                Edit stack
               </p>
             )}
-            <div className="flex items-center flex-wrap mt-1.5">
-              <span className="text-[11px] text-rk-tertiary">
-                by{" "}
-                <Link
-                  href={`/u/${list.createdBy.username.toLowerCase()}`}
-                  className="text-rk-primary hover:text-rk-secondary transition-colors font-bold"
+          </div>
+          {/* ── Header block ──────────────────────────────────────────────── */}
+          <div className="flex items-start gap-3">
+            {/* Category icon tile */}
+            {(() => {
+              const cat = getCategoryMeta(list.category);
+              return (
+                <div
+                  className="w-11 h-11 rounded-[10px] border flex-shrink-0 flex items-center justify-center"
+                  style={{
+                    backgroundColor: `${cat.color}40`,
+                    borderColor: cat.color,
+                    color: cat.color,
+                  }}
                 >
-                  {isListOwner ? "You" : list.createdBy.username}
-                </Link>
-              </span>
-              <Dot />
-              <span className="text-[11px] text-rk-tertiary">{timeAgo}</span>
-              <Dot />
-              <span className="text-[11px] text-rk-tertiary">
-                {list.items.length} items
-              </span>
-              {rankerCount > 0 && (
-                <>
-                  <Dot />
-                  <span className="text-[11px] text-rk-tertiary">
-                    {rankerCount} stacker{rankerCount !== 1 ? "s" : ""}
-                  </span>
-                </>
-              )}
-              <Dot />
-              <div className="flex gap-1 items-center">
-                {list.visibility === "public" ? (
-                  <Eye size={11} className="text-rk-tertiary" />
-                ) : list.visibility === "private" ? (
-                  <Lock size={11} className="text-rk-tertiary" />
-                ) : (
-                  <EyeOff size={11} className="text-rk-tertiary" />
-                )}
-                <p className="text-[11px] text-rk-tertiary capitalize">
-                  {list.visibility === "public" ? "Visible" : list.visibility}
-                </p>
-              </div>
-              <Dot />
-              <div className="flex gap-1 items-center">
-                {list.allow_contributions ? (
-                  <Lock size={11} className="text-rk-tertiary" />
-                ) : (
-                  <LockOpen size={11} className="text-rk-tertiary" />
-                )}
+                  <CategoryIcon slug={list.category} size={20} />
+                </div>
+              );
+            })()}
 
-                <p className="text-[11px] text-rk-tertiary">
-                  {list.allow_contributions
-                    ? "Contributions enabled"
-                    : "Contributions disabled"}
+            <div className="min-w-0">
+              <p
+                className="text-rk-primary font-[500] leading-tight"
+                style={{ fontSize: 22, letterSpacing: "-0.4px" }}
+              >
+                {list.title}
+              </p>
+              {list.description && (
+                <p className="text-[12px] text-rk-muted mt-0.5 leading-snug">
+                  {list.description}
                 </p>
+              )}
+              <div className="flex items-center flex-wrap mt-1.5">
+                <span className="text-[11px] text-rk-tertiary">
+                  by{" "}
+                  <Link
+                    href={`/u/${list.createdBy.username.toLowerCase()}`}
+                    className="text-rk-primary hover:text-rk-secondary transition-colors font-bold"
+                  >
+                    {isListOwner ? "You" : list.createdBy.username}
+                  </Link>
+                </span>
+                <Dot />
+                <span className="text-[11px] text-rk-tertiary">{timeAgo}</span>
+                <Dot />
+                <span className="text-[11px] text-rk-tertiary">
+                  {list.items.length} items
+                </span>
+                {rankerCount > 0 && (
+                  <>
+                    <Dot />
+                    <span className="text-[11px] text-rk-tertiary">
+                      {rankerCount} stacker{rankerCount !== 1 ? "s" : ""}
+                    </span>
+                  </>
+                )}
+                <Dot />
+                <div className="flex gap-1 items-center">
+                  {list.visibility === "public" ? (
+                    <Eye size={11} className="text-rk-tertiary" />
+                  ) : list.visibility === "private" ? (
+                    <Lock size={11} className="text-rk-tertiary" />
+                  ) : (
+                    <EyeOff size={11} className="text-rk-tertiary" />
+                  )}
+                  <p className="text-[11px] text-rk-tertiary capitalize">
+                    {list.visibility === "public" ? "Visible" : list.visibility}
+                  </p>
+                </div>
+                <Dot />
+                <div className="flex gap-1 items-center">
+                  {list.allow_contributions ? (
+                    <Lock size={11} className="text-rk-tertiary" />
+                  ) : (
+                    <LockOpen size={11} className="text-rk-tertiary" />
+                  )}
+
+                  <p className="text-[11px] text-rk-tertiary">
+                    {list.allow_contributions
+                      ? "Contributions enabled"
+                      : "Contributions disabled"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Report button — non-owners only */}
-        {isLoggedIn && !isListOwner && list && (
-          <div>
-            <button
-              onClick={() => setReportOpen(true)}
-              className="flex items-center gap-1 text-[11px] text-rk-tertiary hover:text-rk-muted transition-colors cursor-pointer"
-            >
-              <Flag size={11} />
-              Report
-            </button>
-          </div>
-        )}
-
-        {/* ── Hidden read-only banner ───────────────────────────────────── */}
-        {list.visibility === "hidden" && (
-          <div
-            className="flex items-center justify-between gap-3 px-4 py-3 rounded-[10px] border"
-            style={{ backgroundColor: "#0F1828", borderColor: "#1E2C44" }}
-          >
-            <p className="text-[13px] text-rk-secondary">
-              {isListOwner
-                ? S.hidden.creatorBanner
-                : S.hidden.rankerBanner}
-            </p>
-            {isListOwner && (
+          {/* Report button — non-owners only */}
+          {isLoggedIn && !isListOwner && list && (
+            <div>
               <button
-                onClick={() => {
-                  // Open edit modal then pre-select "public" visibility
-                  handleEditList();
-                  dispatch(uiActions.updateListMeta({ visibility: "public" }));
-                }}
-                className="flex-shrink-0 text-[12px] font-[500] text-rk-accent hover:opacity-80 transition-opacity cursor-pointer whitespace-nowrap"
+                onClick={() => setReportOpen(true)}
+                className="flex items-center gap-1 text-[11px] text-rk-tertiary hover:text-rk-muted transition-colors cursor-pointer"
               >
-                {S.hidden.creatorCta}
+                <Flag size={11} />
+                Report
               </button>
-            )}
-          </div>
-        )}
+            </div>
+          )}
 
-        {/* ── Filter / compare pills ─────────────────────────────────────── */}
-        {(!!users.length || hasMyRankings) && (
-          <div className="flex flex-col gap-2">
-            <span className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest">
-              {isLoggedIn ? "View" : "Rankings"}
-            </span>
-            {isLoggedIn ? (
-              <div className="flex gap-2 flex-wrap">
-                {/* My ranking pill */}
-                {hasMyRankings && (
-                  <button
-                    onClick={() =>
-                      handleFilterByUser(
-                        userfilter === currentUserId ? null : currentUserId
-                      )
-                    }
-                    className={`px-2.5 py-1.5 rounded-[8px] text-[12px] cursor-pointer font-[500] transition-colors ${
-                      userfilter === currentUserId
-                        ? "bg-rk-accent text-white"
-                        : "text-rk-secondary hover:text-rk-primary"
-                    }`}
-                    style={
-                      userfilter !== currentUserId
-                        ? { backgroundColor: "rgba(255,255,255,0.04)" }
-                        : undefined
-                    }
-                  >
-                    My ranking
-                  </button>
-                )}
+          {/* ── Hidden read-only banner ───────────────────────────────────── */}
+          {list.visibility === "hidden" && (
+            <div
+              className="flex items-center justify-between gap-3 px-4 py-3 rounded-[10px] border"
+              style={{ backgroundColor: "#0F1828", borderColor: "#1E2C44" }}
+            >
+              <p className="text-[13px] text-rk-secondary">
+                {isListOwner ? S.hidden.creatorBanner : S.hidden.rankerBanner}
+              </p>
+              {isListOwner && (
+                <button
+                  onClick={() => {
+                    // Open edit modal then pre-select "public" visibility
+                    handleEditList();
+                    dispatch(
+                      uiActions.updateListMeta({ visibility: "public" })
+                    );
+                  }}
+                  className="flex-shrink-0 text-[12px] font-[500] text-rk-accent hover:opacity-80 transition-opacity cursor-pointer whitespace-nowrap"
+                >
+                  {S.hidden.creatorCta}
+                </button>
+              )}
+            </div>
+          )}
 
-                {/* Other rankers — clicking triggers TierComparison */}
-                {users.map((user) => {
-                  const isActive = userfilter === user.id;
-                  const avatarColor = nameToColor(user.username);
-                  return (
+          {/* ── Filter / compare pills ─────────────────────────────────────── */}
+          {(!!users.length || hasMyRankings) && (
+            <div className="flex flex-col gap-2">
+              <span className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest">
+                {isLoggedIn ? "View" : "Rankings"}
+              </span>
+              {isLoggedIn ? (
+                <div className="flex gap-2 flex-wrap">
+                  {/* My ranking pill */}
+                  {hasMyRankings && (
                     <button
-                      key={user.id}
                       onClick={() =>
-                        handleFilterByUser(isActive ? null : user.id)
+                        handleFilterByUser(
+                          userfilter === currentUserId ? null : currentUserId
+                        )
                       }
-                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] text-[12px] cursor-pointer font-[500] transition-colors ${
-                        isActive
+                      className={`px-2.5 py-1.5 rounded-[8px] text-[12px] cursor-pointer font-[500] transition-colors ${
+                        userfilter === currentUserId
                           ? "bg-rk-accent text-white"
                           : "text-rk-secondary hover:text-rk-primary"
                       }`}
                       style={
-                        !isActive
+                        userfilter !== currentUserId
                           ? { backgroundColor: "rgba(255,255,255,0.04)" }
                           : undefined
                       }
                     >
-                      <div
-                        className="w-5 h-5 rounded-[4px] flex items-center justify-center text-[10px] font-[700] text-white flex-shrink-0"
-                        style={{ backgroundColor: avatarColor }}
-                      >
-                        {user.username[0]?.toUpperCase()}
-                      </div>
-                      {user.username}
+                      My ranking
                     </button>
-                  );
-                })}
+                  )}
 
-                {userfilter && (
-                  <button
-                    onClick={() => handleFilterByUser(null)}
-                    className="px-2.5 py-1.5 rounded-[8px] text-[12px] text-rk-muted hover:text-rk-secondary transition-colors cursor-pointer"
-                    style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                  {/* Other rankers — clicking triggers TierComparison */}
+                  {users.map((user) => {
+                    const isActive = userfilter === user.id;
+                    const avatarColor = nameToColor(user.username);
+                    return (
+                      <button
+                        key={user.id}
+                        onClick={() =>
+                          handleFilterByUser(isActive ? null : user.id)
+                        }
+                        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-[8px] text-[12px] cursor-pointer font-[500] transition-colors ${
+                          isActive
+                            ? "bg-rk-accent text-white"
+                            : "text-rk-secondary hover:text-rk-primary"
+                        }`}
+                        style={
+                          !isActive
+                            ? { backgroundColor: "rgba(255,255,255,0.04)" }
+                            : undefined
+                        }
+                      >
+                        <div
+                          className="w-5 h-5 rounded-[4px] flex items-center justify-center text-[10px] font-[700] text-white flex-shrink-0"
+                          style={{ backgroundColor: avatarColor }}
+                        >
+                          {user.username[0]?.toUpperCase()}
+                        </div>
+                        {user.username}
+                      </button>
+                    );
+                  })}
+
+                  {userfilter && (
+                    <button
+                      onClick={() => handleFilterByUser(null)}
+                      className="px-2.5 py-1.5 rounded-[8px] text-[12px] text-rk-muted hover:text-rk-secondary transition-colors cursor-pointer"
+                      style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <button
+                  onClick={() => dispatch(uiActions.openAuthModal())}
+                  className="flex items-center gap-2 px-3 py-2 rounded-[8px] cursor-pointer text-[12px] text-rk-muted hover:text-rk-secondary transition-colors self-start"
+                  style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                >
+                  <Lock size={12} className="flex-shrink-0" />
+                  Log in or sign up to see how {users.length} other
+                  {users.length !== 1 ? "s" : ""} stacked
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* ── No items state ────────────────────────────────────────────── */}
+          {list.items.length === 0 && (
+            <EmptyState
+              icon={IconStack2}
+              heading={S.empty.listNoItems.heading}
+              subhead={S.empty.listNoItems.subhead}
+              ctaLabel={
+                isLoggedIn && (isListOwner || list.allow_contributions)
+                  ? S.empty.listNoItems.cta
+                  : undefined
+              }
+              ctaAction={
+                isLoggedIn && (isListOwner || list.allow_contributions)
+                  ? () => setAddItemsOpen(true)
+                  : undefined
+              }
+            />
+          )}
+
+          {/* ── List awards — aggregate view only ───────────────────────── */}
+          {!userfilter && (
+            <ListAwards
+              contrarian={listAwards?.contrarian ?? null}
+              agreeable={listAwards?.agreeable ?? null}
+              spiciest={listAwards?.spiciest ?? null}
+              onSelectUser={handleFilterByUser}
+            />
+          )}
+
+          {/* ── Divisive item callout — aggregate view only ──────────────── */}
+          {!userfilter && <DivisiveItemCallout />}
+
+          {/* ── Tier rows — always shown, driven by filteredListRankings ──── */}
+          {list.items.length > 0 && (
+            <div className="flex flex-col gap-[6px]">
+              {filteredListRankings.map((tier) => {
+                if (tier.value === 0) return null;
+
+                const style = TIER_STYLE[tier.title] ?? {
+                  bg: tier.color,
+                  text: "#000000",
+                };
+                const tierItems = tier.items
+                  .map((itemId) =>
+                    list.items.find((i: TierItem) => i.id === itemId)
+                  )
+                  .filter(
+                    (i): i is TierItem => !!i && i.id !== pendingDeleteId
+                  );
+
+                return (
+                  <div
+                    key={tier.id}
+                    className="flex overflow-hidden border border-rk-stroke"
+                    style={{ borderRadius: 10 }}
                   >
-                    Clear
-                  </button>
+                    <div
+                      className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px]"
+                      style={{ backgroundColor: style.bg, minHeight: 76 }}
+                    >
+                      <span
+                        className="text-[26px] font-[500] leading-none select-none"
+                        style={{ color: style.text }}
+                      >
+                        {tier.title}
+                      </span>
+                      <span
+                        className="text-[10px] leading-none"
+                        style={{ color: style.text, opacity: 0.65 }}
+                      >
+                        {tierItems.length}
+                      </span>
+                    </div>
+                    <div
+                      className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
+                      style={{ backgroundColor: "#0F1828", borderRadius: 9 }}
+                    >
+                      {tierItems.map((item) => {
+                        const badge = agreementByItemId.get(item.id);
+                        return (
+                          <div
+                            key={item.id}
+                            className="flex flex-col items-stretch gap-1"
+                            style={{ width: 70 }}
+                          >
+                            <ItemCard item={item} onEdit={getOnEdit(item)} />
+                            {badge && (
+                              <AgreementBadge
+                                pct={badge.pct}
+                                tier={badge.tier}
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Unranked pool — only relevant when viewing own or aggregate rankings */}
+          {(!userfilter || userfilter === currentUserId) &&
+          ((isLoggedIn && unranked.length > 0) || pendingItems.length > 0) ? (
+            <div>
+              <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
+                Unstacked
+              </p>
+              <div className="flex flex-wrap gap-2 p-3">
+                {isLoggedIn &&
+                  unranked.map((item: TierItem) => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      onEdit={getOnEdit(item)}
+                    />
+                  ))}
+                {pendingItems.map((ghost, i) => (
+                  <div
+                    key={ghost.id}
+                    className="transition-opacity duration-300"
+                    style={{
+                      opacity: fadingItemIds.has(ghost.id) ? 0 : 0.65,
+                    }}
+                  >
+                    <ItemCardSkeleton index={i} dashed />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Comparison matrix — shown below tier rows when viewing another user */}
+          {userfilter && userfilter !== currentUserId && (
+            <div className="pt-2 border-t border-rk-stroke">
+              <TierComparison
+                list={list}
+                compareUserId={userfilter}
+                compareUsername={
+                  users.find((u) => u.id === userfilter)?.username ?? ""
+                }
+              />
+            </div>
+          )}
+
+          {/* ── Share card buttons ──────────────────────────────────────── */}
+          {hasMyRankings && list.is_shareable && list.share_token && (
+            <div className="pt-2 border-t border-rk-stroke flex items-center gap-2 flex-wrap">
+              {!isListOwner && (
+                <button
+                  onClick={() => setShareCardTemplate("head-to-head")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+                >
+                  <ImageIcon size={13} />
+                  Share your results
+                </button>
+              )}
+              <button
+                onClick={() => setShareCardTemplate("hot-takes")}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+              >
+                <ImageIcon size={13} />
+                Share hot takes
+              </button>
+              {divisiveItem && (
+                <button
+                  onClick={() => setShareCardTemplate("divisive-item")}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+                >
+                  <ImageIcon size={13} />
+                  {S.divisive.shareLabel}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* ── Add items ────────────────────────────────────────────────── */}
+          {isLoggedIn && (isListOwner || list.allow_contributions) && (
+            <button
+              onClick={() => setAddItemsOpen(true)}
+              className="self-start px-4 py-2 text-[13px] cursor-pointer font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+            >
+              + Add items
+            </button>
+          )}
+        </div>
+
+        {/* ── Bulk add modal ────────────────────────────────────────────────── */}
+        <Modal
+          open={addItemsOpen}
+          handleClose={() => {
+            setAddItemsOpen(false);
+            setItemsText("");
+          }}
+        >
+          <div className="p-6 flex flex-col gap-4">
+            <p className="text-rk-primary text-[17px] font-[500]">Add items</p>
+            <p className="text-[12px] text-rk-muted">{S.lists.addItemsHint}</p>
+            <textarea
+              className="bg-rk-row border border-rk-stroke rounded-[8px] p-3 text-rk-primary text-[13px] outline-none resize-none h-40 placeholder:text-rk-tertiary"
+              placeholder={"Tim Tams\nKit Kat\nSnickers"}
+              value={itemsText}
+              onChange={(e) => setItemsText(e.target.value)}
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setAddItemsOpen(false);
+                  setItemsText("");
+                }}
+                className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddItems}
+                disabled={isCreating}
+                className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
+              >
+                {isCreating && (
+                  <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
                 )}
+                Add
+              </button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* ── Share modal ──────────────────────────────────────────────────── */}
+        <ShareModal
+          listId={listId}
+          visibility={list?.visibility ?? "draft"}
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+        />
+
+        {/* ── Report modal ─────────────────────────────────────────────────── */}
+        {list && (
+          <ReportModal
+            open={reportOpen}
+            onClose={() => setReportOpen(false)}
+            reportableType="list"
+            reportableId={list.id}
+          />
+        )}
+
+        {/* ── Share card modal ─────────────────────────────────────────────── */}
+        {shareCardTemplate && list.share_token && (
+          <ShareCardModal
+            token={list.share_token}
+            template={shareCardTemplate}
+            open={shareCardTemplate !== null}
+            onClose={() => setShareCardTemplate(null)}
+          />
+        )}
+
+        {/* ── Edit item modal ───────────────────────────────────────────────── */}
+        {editItem && (
+          <EditItemModal
+            item={editItem}
+            listId={listId}
+            open={!!editItem}
+            onClose={() => setEditItem(null)}
+            onDeleteRequest={handleDeleteRequest}
+          />
+        )}
+
+        {/* ── Legacy image zoom modal ──────────────────────────────────────── */}
+        <Modal
+          open={modals.imageModal}
+          handleClose={() => dispatch(uiActions.closeImageModal())}
+        >
+          <div className="relative w-full max-w-md">
+            <Image
+              loader={ImageKitLoader}
+              src={imageModalUrl}
+              alt=""
+              width={400}
+              height={300}
+              className="w-full h-auto object-contain"
+              priority
+            />
+          </div>
+        </Modal>
+
+        <Modal
+          open={modals.editList}
+          handleClose={() => {
+            dispatch(uiActions.closeEditListModal());
+            setVisibilityWarning(null);
+          }}
+        >
+          <div className="p-6 flex flex-col gap-4">
+            <p className="text-rk-primary text-[17px] font-[500]">Edit list</p>
+
+            <input
+              className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary"
+              placeholder="List name"
+              value={editList.title}
+              onChange={(e) =>
+                dispatch(uiActions.updateListMeta({ title: e.target.value }))
+              }
+              autoFocus
+            />
+
+            <input
+              className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary"
+              placeholder="Description"
+              value={editList.description}
+              onChange={(e) =>
+                dispatch(
+                  uiActions.updateListMeta({ description: e.target.value })
+                )
+              }
+            />
+
+            <CategoryPicker
+              value={editList.category}
+              onChange={(slug) =>
+                dispatch(uiActions.updateListMeta({ category: slug }))
+              }
+            />
+
+            {/* ── Cover image ─────────────────────────────────────────────── */}
+            {editList.img ? (
+              <div className="flex items-center gap-3">
+                <div className="relative w-16 h-16 rounded-[6px] overflow-hidden">
+                  <Image
+                    loader={ImageKitLoader}
+                    src={editList.img}
+                    alt=""
+                    fill
+                    style={{ objectFit: "cover" }}
+                  />
+                </div>
+                <button
+                  onClick={() =>
+                    dispatch(uiActions.updateListMeta({ img: "" }))
+                  }
+                  className="text-[12px] text-rk-muted hover:text-rk-secondary transition-colors"
+                >
+                  Remove
+                </button>
               </div>
             ) : (
               <button
-                onClick={() => dispatch(uiActions.openAuthModal())}
-                className="flex items-center gap-2 px-3 py-2 rounded-[8px] cursor-pointer text-[12px] text-rk-muted hover:text-rk-secondary transition-colors self-start"
-                style={{ backgroundColor: "rgba(255,255,255,0.04)" }}
+                onClick={() => fileInputRef.current?.click()}
+                className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
               >
-                <Lock size={12} className="flex-shrink-0" />
-                Log in or sign up to see how {users.length} other
-                {users.length !== 1 ? "s" : ""} stacked
+                Upload cover image (optional)
               </button>
             )}
-          </div>
-        )}
 
-        {/* ── No items state ────────────────────────────────────────────── */}
-        {list.items.length === 0 && (
-          <EmptyState
-            icon={IconStack2}
-            heading={S.empty.listNoItems.heading}
-            subhead={S.empty.listNoItems.subhead}
-            ctaLabel={
-              isLoggedIn && (isListOwner || list.allow_contributions)
-                ? S.empty.listNoItems.cta
-                : undefined
-            }
-            ctaAction={
-              isLoggedIn && (isListOwner || list.allow_contributions)
-                ? () => setAddItemsOpen(true)
-                : undefined
-            }
-          />
-        )}
-
-        {/* ── List awards — aggregate view only ───────────────────────── */}
-        {!userfilter && (
-          <ListAwards
-            contrarian={listAwards?.contrarian ?? null}
-            agreeable={listAwards?.agreeable ?? null}
-            spiciest={listAwards?.spiciest ?? null}
-            onSelectUser={handleFilterByUser}
-          />
-        )}
-
-        {/* ── Divisive item callout — aggregate view only ──────────────── */}
-        {!userfilter && <DivisiveItemCallout />}
-
-        {/* ── Tier rows — always shown, driven by filteredListRankings ──── */}
-        {list.items.length > 0 && (
-          <div className="flex flex-col gap-[6px]">
-            {filteredListRankings.map((tier) => {
-              if (tier.value === 0) return null;
-
-              const style = TIER_STYLE[tier.title] ?? {
-                bg: tier.color,
-                text: "#000000",
-              };
-              const tierItems = tier.items
-                .map((itemId) =>
-                  list.items.find((i: TierItem) => i.id === itemId)
-                )
-                .filter((i): i is TierItem => !!i && i.id !== pendingDeleteId);
-
-              return (
-                <div
-                  key={tier.id}
-                  className="flex overflow-hidden border border-rk-stroke"
-                  style={{ borderRadius: 10 }}
-                >
-                  <div
-                    className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px]"
-                    style={{ backgroundColor: style.bg, minHeight: 76 }}
-                  >
-                    <span
-                      className="text-[26px] font-[500] leading-none select-none"
-                      style={{ color: style.text }}
-                    >
-                      {tier.title}
-                    </span>
-                    <span
-                      className="text-[10px] leading-none"
-                      style={{ color: style.text, opacity: 0.65 }}
-                    >
-                      {tierItems.length}
-                    </span>
-                  </div>
-                  <div
-                    className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
-                    style={{ backgroundColor: "#0F1828", borderRadius: 9 }}
-                  >
-                    {tierItems.map((item) => {
-                      const badge = agreementByItemId.get(item.id);
-                      return (
-                        <div key={item.id} className="flex flex-col items-stretch gap-1" style={{ width: 70 }}>
-                          <ItemCard item={item} onEdit={getOnEdit(item)} />
-                          {badge && <AgreementBadge pct={badge.pct} tier={badge.tier} />}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Unranked pool — only relevant when viewing own or aggregate rankings */}
-        {(!userfilter || userfilter === currentUserId) &&
-        ((isLoggedIn && unranked.length > 0) || pendingItems.length > 0) ? (
-          <div>
-            <p className="text-[11px] font-[500] text-rk-tertiary uppercase tracking-widest mb-2">
-              Unstacked
-            </p>
-            <div className="flex flex-wrap gap-2 p-3">
-              {isLoggedIn &&
-                unranked.map((item: TierItem) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    onEdit={getOnEdit(item)}
-                  />
-                ))}
-              {pendingItems.map((ghost, i) => (
-                <div
-                  key={ghost.id}
-                  className="transition-opacity duration-300"
-                  style={{
-                    opacity: fadingItemIds.has(ghost.id) ? 0 : 0.65,
-                  }}
-                >
-                  <ItemCardSkeleton index={i} dashed />
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {/* Comparison matrix — shown below tier rows when viewing another user */}
-        {userfilter && userfilter !== currentUserId && (
-          <div className="pt-2 border-t border-rk-stroke">
-            <TierComparison
-              list={list}
-              compareUserId={userfilter}
-              compareUsername={
-                users.find((u) => u.id === userfilter)?.username ?? ""
-              }
+            <input
+              ref={fileInputRef}
+              type="file"
+              hidden
+              accept="image/*"
+              onChange={handleImageUpload}
             />
-          </div>
-        )}
 
-        {/* ── Share card buttons ──────────────────────────────────────── */}
-        {hasMyRankings && list.is_shareable && list.share_token && (
-          <div className="pt-2 border-t border-rk-stroke flex items-center gap-2 flex-wrap">
-            {!isListOwner && (
-              <button
-                onClick={() => setShareCardTemplate("head-to-head")}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
+            <label className="flex items-center justify-between">
+              <span className="text-[13px] text-rk-secondary">Visibility</span>
+              <select
+                value={editList.visibility}
+                onChange={(e) => handleVisibilityChange(e.target.value)}
+                className="text-[13px] text-rk-primary bg-rk-bg border border-rk-stroke rounded-[6px] px-2 py-1"
               >
-                <ImageIcon size={13} />
-                Share your results
-              </button>
-            )}
-            <button
-              onClick={() => setShareCardTemplate("hot-takes")}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
-            >
-              <ImageIcon size={13} />
-              Share hot takes
-            </button>
-            {divisiveItem && (
-              <button
-                onClick={() => setShareCardTemplate("divisive-item")}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
-              >
-                <ImageIcon size={13} />
-                {S.divisive.shareLabel}
-              </button>
-            )}
-          </div>
-        )}
+                <option value="draft">Draft</option>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+                <option value="hidden">Hidden</option>
+              </select>
+            </label>
 
-        {/* ── Add items ────────────────────────────────────────────────── */}
-        {isLoggedIn && (isListOwner || list.allow_contributions) && (
-          <button
-            onClick={() => setAddItemsOpen(true)}
-            className="self-start px-4 py-2 text-[13px] cursor-pointer font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
-          >
-            + Add items
-          </button>
-        )}
-      </div>
-
-      {/* ── Bulk add modal ────────────────────────────────────────────────── */}
-      <Modal
-        open={addItemsOpen}
-        handleClose={() => {
-          setAddItemsOpen(false);
-          setItemsText("");
-        }}
-      >
-        <div className="p-6 flex flex-col gap-4">
-          <p className="text-rk-primary text-[17px] font-[500]">Add items</p>
-          <p className="text-[12px] text-rk-muted">{S.lists.addItemsHint}</p>
-          <textarea
-            className="bg-rk-row border border-rk-stroke rounded-[8px] p-3 text-rk-primary text-[13px] outline-none resize-none h-40 placeholder:text-rk-tertiary"
-            placeholder={"Tim Tams\nKit Kat\nSnickers"}
-            value={itemsText}
-            onChange={(e) => setItemsText(e.target.value)}
-            autoFocus
-          />
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => {
-                setAddItemsOpen(false);
-                setItemsText("");
-              }}
-              className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAddItems}
-              disabled={isCreating}
-              className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
-            >
-              {isCreating && (
-                <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
-              )}
-              Add
-            </button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* ── Share modal ──────────────────────────────────────────────────── */}
-      <ShareModal
-        listId={listId}
-        visibility={list?.visibility ?? "draft"}
-        open={shareOpen}
-        onClose={() => setShareOpen(false)}
-      />
-
-      {/* ── Report modal ─────────────────────────────────────────────────── */}
-      {list && (
-        <ReportModal
-          open={reportOpen}
-          onClose={() => setReportOpen(false)}
-          reportableType="list"
-          reportableId={list.id}
-        />
-      )}
-
-      {/* ── Share card modal ─────────────────────────────────────────────── */}
-      {shareCardTemplate && list.share_token && (
-        <ShareCardModal
-          token={list.share_token}
-          template={shareCardTemplate}
-          open={shareCardTemplate !== null}
-          onClose={() => setShareCardTemplate(null)}
-        />
-      )}
-
-      {/* ── Edit item modal ───────────────────────────────────────────────── */}
-      {editItem && (
-        <EditItemModal
-          item={editItem}
-          listId={listId}
-          open={!!editItem}
-          onClose={() => setEditItem(null)}
-          onDeleteRequest={handleDeleteRequest}
-        />
-      )}
-
-      {/* ── Legacy image zoom modal ──────────────────────────────────────── */}
-      <Modal
-        open={modals.imageModal}
-        handleClose={() => dispatch(uiActions.closeImageModal())}
-      >
-        <div className="relative w-full max-w-md">
-          <Image
-            loader={ImageKitLoader}
-            src={imageModalUrl}
-            alt=""
-            width={400}
-            height={300}
-            className="w-full h-auto object-contain"
-            priority
-          />
-        </div>
-      </Modal>
-
-      <Modal
-        open={modals.editList}
-        handleClose={() => {
-          dispatch(uiActions.closeEditListModal());
-          setVisibilityWarning(null);
-        }}
-      >
-        <div className="p-6 flex flex-col gap-4">
-          <p className="text-rk-primary text-[17px] font-[500]">Edit list</p>
-
-          <input
-            className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary"
-            placeholder="List name"
-            value={editList.title}
-            onChange={(e) =>
-              dispatch(uiActions.updateListMeta({ title: e.target.value }))
-            }
-            autoFocus
-          />
-
-          <input
-            className="bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-base sm:text-[13px] outline-none placeholder:text-rk-tertiary"
-            placeholder="Description"
-            value={editList.description}
-            onChange={(e) =>
-              dispatch(
-                uiActions.updateListMeta({ description: e.target.value })
-              )
-            }
-          />
-
-          <CategoryPicker
-            value={editList.category}
-            onChange={(slug) =>
-              dispatch(uiActions.updateListMeta({ category: slug }))
-            }
-          />
-
-          {/* ── Cover image ─────────────────────────────────────────────── */}
-          {editList.img ? (
-            <div className="flex items-center gap-3">
-              <div className="relative w-16 h-16 rounded-[6px] overflow-hidden">
-                <Image
-                  loader={ImageKitLoader}
-                  src={editList.img}
-                  alt=""
-                  fill
-                  style={{ objectFit: "cover" }}
-                />
+            {visibilityWarning === "hidden-suggest-draft" && (
+              <div className="rounded-[8px] border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 flex flex-col gap-1.5">
+                <p className="text-[12px] text-amber-400 leading-snug">
+                  {S.visibility.hiddenNoRankings}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    dispatch(uiActions.updateListMeta({ visibility: "draft" }));
+                    setVisibilityWarning(null);
+                  }}
+                  className="text-[12px] font-[500] text-amber-400 underline self-start cursor-pointer"
+                >
+                  {S.visibility.hiddenNoRankingsCta}
+                </button>
               </div>
+            )}
+
+            {visibilityWarning === "public-to-private-anon" && (
+              <div className="rounded-[8px] border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 flex flex-col gap-1.5">
+                <p className="text-[12px] text-amber-400 leading-snug">
+                  {S.visibility.publicToPrivateAnon(anonRankingCount)}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setVisibilityWarning(null)}
+                  className="text-[12px] font-[500] text-amber-400 underline self-start cursor-pointer"
+                >
+                  {S.visibility.publicToPrivateAnonCta}
+                </button>
+              </div>
+            )}
+
+            <label className="flex items-center justify-between">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[13px] text-rk-secondary">
+                  Allow contributions
+                </span>
+                <span className="text-[11px] text-rk-muted">
+                  Let logged-in users add items to this list
+                </span>
+              </div>
+              <input
+                type="checkbox"
+                checked={editList.allow_contributions}
+                onChange={(e) =>
+                  dispatch(
+                    uiActions.updateListMeta({
+                      allow_contributions: e.target.checked,
+                    })
+                  )
+                }
+                className="accent-rk-accent"
+              />
+            </label>
+
+            <div className="flex justify-end gap-2">
               <button
-                onClick={() => dispatch(uiActions.updateListMeta({ img: "" }))}
-                className="text-[12px] text-rk-muted hover:text-rk-secondary transition-colors"
-              >
-                Remove
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
-            >
-              Upload cover image (optional)
-            </button>
-          )}
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            hidden
-            accept="image/*"
-            onChange={handleImageUpload}
-          />
-
-          <label className="flex items-center justify-between">
-            <span className="text-[13px] text-rk-secondary">Visibility</span>
-            <select
-              value={editList.visibility}
-              onChange={(e) => handleVisibilityChange(e.target.value)}
-              className="text-[13px] text-rk-primary bg-rk-bg border border-rk-stroke rounded-[6px] px-2 py-1"
-            >
-              <option value="draft">Draft</option>
-              <option value="public">Public</option>
-              <option value="private">Private</option>
-              <option value="hidden">Hidden</option>
-            </select>
-          </label>
-
-          {visibilityWarning === "hidden-suggest-draft" && (
-            <div className="rounded-[8px] border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 flex flex-col gap-1.5">
-              <p className="text-[12px] text-amber-400 leading-snug">
-                {S.visibility.hiddenNoRankings}
-              </p>
-              <button
-                type="button"
                 onClick={() => {
-                  dispatch(uiActions.updateListMeta({ visibility: "draft" }));
+                  dispatch(uiActions.closeEditListModal());
                   setVisibilityWarning(null);
                 }}
-                className="text-[12px] font-[500] text-amber-400 underline self-start cursor-pointer"
+                className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary transition-colors"
               >
-                {S.visibility.hiddenNoRankingsCta}
+                Cancel
               </button>
-            </div>
-          )}
-
-          {visibilityWarning === "public-to-private-anon" && (
-            <div className="rounded-[8px] border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 flex flex-col gap-1.5">
-              <p className="text-[12px] text-amber-400 leading-snug">
-                {S.visibility.publicToPrivateAnon(anonRankingCount)}
-              </p>
               <button
-                type="button"
-                onClick={() => setVisibilityWarning(null)}
-                className="text-[12px] font-[500] text-amber-400 underline self-start cursor-pointer"
+                onClick={handleSaveList}
+                disabled={isSaving}
+                className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
               >
-                {S.visibility.publicToPrivateAnonCta}
+                {isSaving && (
+                  <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
+                )}
+                Save
               </button>
             </div>
-          )}
-
-          <label className="flex items-center justify-between">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[13px] text-rk-secondary">
-                Allow contributions
-              </span>
-              <span className="text-[11px] text-rk-muted">
-                Let logged-in users add items to this list
-              </span>
-            </div>
-            <input
-              type="checkbox"
-              checked={editList.allow_contributions}
-              onChange={(e) =>
-                dispatch(
-                  uiActions.updateListMeta({
-                    allow_contributions: e.target.checked,
-                  })
-                )
-              }
-              className="accent-rk-accent"
-            />
-          </label>
-
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => {
-                dispatch(uiActions.closeEditListModal());
-                setVisibilityWarning(null);
-              }}
-              className="px-4 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSaveList}
-              disabled={isSaving}
-              className="px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
-            >
-              {isSaving && (
-                <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
-              )}
-              Save
-            </button>
           </div>
-        </div>
-      </Modal>
-    </div>
+        </Modal>
+      </div>
     </>
   );
 }
