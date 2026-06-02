@@ -25,7 +25,7 @@ export async function PATCH(req: Request, { params }: Params) {
 
   const authResult = await authorize(listId, user.sub, user.tokenVersion);
   if (authResult === "unauthorized") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (authResult === "forbidden") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (authResult === "forbidden" && !['admin', 'super_admin'].includes(user.role || '')) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const item = await prisma.item.findFirst({
     where: { id: itemIdNum, lists: { some: { id: listId } } },
