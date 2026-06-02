@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { formatDistanceStrict } from "date-fns";
-import { Loader2, ChevronDown } from "lucide-react";
+import { Loader2, ChevronDown, ShieldAlert, Wrench } from "lucide-react";
+import { getUserFromToken } from "@/lib/helpers";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -328,20 +330,58 @@ export default function AdminPage() {
     );
   }
 
+  const { role } = getUserFromToken();
+  const isSuperAdmin = role === "super_admin";
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: "#0A1220" }}>
-      <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-[18px] font-[600] text-rk-primary">Moderation</h1>
-          {stats && (
-            <div className="flex items-center gap-4">
-              <Stat label="Open" value={stats.openReports} alert={stats.openReports > 0} />
-              <Stat label="Reviewing" value={stats.reviewingReports} />
-              <Stat label="Actions (7d)" value={stats.recentActions} />
+      {/* ── Top nav ─────────────────────────────────────────────────────────── */}
+      <div className="sticky top-0 z-20 border-b border-rk-stroke px-4 sm:px-8" style={{ backgroundColor: "#0A1220" }}>
+        <div className="flex items-center justify-between h-12">
+          <Link href="/feed" className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-[3px] bg-rk-accent flex-shrink-0" />
+            <span className="text-[17px] font-[500] text-rk-primary tracking-tight">
+              tierstack.dev
+            </span>
+          </Link>
+          
+          <div className="flex items-center gap-20">
+             <div className="flex items-center gap-2">
+                <ShieldAlert size={15} className="text-rk-accent" />
+                <span className="text-[15px] font-[600] text-rk-primary">Admin</span>
+                <span className="text-rk-tertiary text-[13px] ml-1">/ Moderation</span>
+              </div>
+          </div>
+
+        <div className="flex items-center gap-3">
+          {isSuperAdmin && (
+              <Link
+                href="/admin/tools"
+                className="flex items-center bg-rk-accent gap-1.5 px-3 py-1.5 text-[12px] font-[500] text-rk-primary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+              >
+                <Wrench size={12} />
+                Tools
+              </Link>
+            )}
+            <Link
+              href="/feed"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+            >
+              ← Feed
+            </Link>
             </div>
-          )}
         </div>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
+        {/* Mobile stats */}
+        {stats && (
+          <div className="flex items-center gap-4 mx-auto">
+            <Stat label="Open" value={stats.openReports} alert={stats.openReports > 0} />
+            <Stat label="Reviewing" value={stats.reviewingReports} />
+            <Stat label="Actions (7d)" value={stats.recentActions} />
+          </div>
+        )}
 
         {/* Filters */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -425,7 +465,7 @@ function Stat({
   alert?: boolean;
 }) {
   return (
-    <div className="text-right">
+    <div className="flex items-end text-right gap-2">
       <p className={`text-[16px] font-[600] ${alert ? "text-amber-400" : "text-rk-primary"}`}>
         {value}
       </p>

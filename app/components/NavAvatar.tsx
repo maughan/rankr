@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { User, Settings, LogOut } from "lucide-react";
+import { User, Settings, LogOut, ShieldAlert } from "lucide-react";
 import { useAppDispatch } from "@/lib/hooks";
 import { baseApi } from "@/lib/api/baseApi";
 import { nameToColor } from "@/lib/itemColor";
+import { getUserFromToken } from "@/lib/helpers";
 import { usePostHog } from "posthog-js/react";
 
 export default function NavAvatar({ username }: { username: string }) {
@@ -39,6 +40,9 @@ export default function NavAvatar({ username }: { username: string }) {
     dispatch(baseApi.util.resetApiState());
     window.location.href = "/";
   };
+
+  const { role } = getUserFromToken();
+  const isSuperAdmin = role === "super_admin";
 
   const color = nameToColor(username);
   const initial = username[0]?.toUpperCase() ?? "?";
@@ -78,6 +82,17 @@ export default function NavAvatar({ username }: { username: string }) {
             <Settings size={13} />
             Settings
           </Link>
+
+          {isSuperAdmin && (
+            <Link
+              href="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2.5 text-[13px] text-rk-accent hover:text-rk-primary hover:bg-rk-row transition-colors"
+            >
+              <ShieldAlert size={13} />
+              Admin
+            </Link>
+          )}
 
           <div className="border-t border-rk-stroke">
             <button

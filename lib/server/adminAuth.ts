@@ -37,3 +37,10 @@ export async function getAdminViewer(): Promise<AdminViewer | null> {
     return null;
   }
 }
+
+/** Like getAdminViewer but restricted to super_admin only. */
+export async function getSuperAdminViewer(): Promise<{ id: number } | null> {
+  const viewer = await getAdminViewer();
+  if (!viewer || viewer.role !== "super_admin") return null;
+  return { id: viewer.id };
+}
