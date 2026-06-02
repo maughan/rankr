@@ -1,9 +1,8 @@
 import { cache } from "react";
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { getEffectiveViewerId } from "@/lib/server/impersonation";
 import { resolveProfileParam } from "@/lib/server/resolveProfile";
 import { getProfileData } from "@/lib/server/profileData";
 import { getServerQueryClient } from "@/lib/query/client";
@@ -15,15 +14,6 @@ type Props = { params: Promise<{ username: string }> };
 
 const getProfile = cache(resolveProfileParam);
 
-function softAuth(token: string | undefined): number | null {
-  if (!token) return null;
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    return decoded.sub ?? null;
-  } catch {
-    return null;
-  }
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { username } = await params;
@@ -81,8 +71,7 @@ export default async function ProfilePage({ params }: Props) {
   // Read auth cookie server-side so the prefetch is viewer-aware.
   // This produces identical data to what the client would fetch,
   // preventing a mismatch that would trigger a background refetch on hydration.
-  const cookieStore = await cookies();
-  const viewerId = softAuth(cookieStore.get("auth_token")?.value);
+  const viewerId = await getEffectiveViewerId();
 
   const queryClient = getServerQueryClient();
   await queryClient.prefetchQuery({

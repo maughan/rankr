@@ -16,6 +16,7 @@ interface MeResponse {
   display_name: string | null;
   bio: string | null;
   username_changed_at: string | null;
+  isImpersonating?: boolean;
 }
 
 const RENAME_COOLDOWN_DAYS = 30;
@@ -313,13 +314,20 @@ export default function ProfileSettingsPage() {
 
             <label className={labelCls}>
               <span className={labelTextCls}>Email</span>
-              <input
-                className={inputCls}
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled
-              />
+              {me?.isImpersonating ? (
+                <div className={`${inputCls} flex items-center gap-2 text-rk-tertiary select-none`}>
+                  <span>•••••••••••••</span>
+                  <span className="text-[11px] text-rk-muted ml-auto">(redacted in impersonation)</span>
+                </div>
+              ) : (
+                <input
+                  className={inputCls}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled
+                />
+              )}
             </label>
 
             <div className="flex items-center gap-3">

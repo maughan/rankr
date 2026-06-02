@@ -2,15 +2,19 @@
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
+import { getImpersonationPayload } from "./impersonation";
 
 export interface AuthedViewer {
   id: number;
+  /** True when the caller is an admin viewing as another user. */
+  isImpersonating?: boolean;
 }
 
 /**
  * Reads and validates the auth_token cookie.
- * Returns the authenticated user or null for anonymous/invalid sessions.
- * Never throws — invalid tokens are treated as anonymous.
+ * During impersonation, returns the target user's id so read-path
+ * queries automatically reflect the target's data.
+ * Returns null for anonymous/invalid sessions.
  */
 export async function getAuthedViewer(): Promise<AuthedViewer | null> {
   try {
@@ -29,7 +33,14 @@ export async function getAuthedViewer(): Promise<AuthedViewer | null> {
     });
 
     if (!user || user.tokenVersion !== decoded.tokenVersion) return null;
-    return { id: user.id };
+
+    // Check for active impersonation — reads run as the target user.
+    const imp = await getImpersonationPayload();
+    if (imp && imp.adminId === user.id) {
+      return { id: imp.targetUserId, isImpersonating: true };
+    }
+
+    return { id: user.id, isImpersonating: false };
   } catch {
     return null;
   }

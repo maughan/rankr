@@ -45,6 +45,17 @@ export const E = {
   SURPRISE_ME_CLICKED:              "surprise_me_clicked",     // client
   BROWSE_CATEGORY_VISITED:          "browse_category_visited", // server
   PROFILE_VIEWED:                   "profile_viewed",          // server
+
+  // Announcements
+  ANNOUNCEMENT_SHOWN:               "announcement_shown",      // client
+  ANNOUNCEMENT_DISMISSED:           "announcement_dismissed",  // client
+  ANNOUNCEMENT_CTA_CLICKED:         "announcement_cta_clicked", // client
+
+  // Impersonation (always admin-attributed, never target-attributed)
+  IMPERSONATION_STARTED:            "impersonation_started",   // server
+  IMPERSONATION_ENDED:              "impersonation_ended",     // client+server
+  IMPERSONATION_EXTENDED:           "impersonation_extended",  // server
+  IMPERSONATION_WRITE_BLOCKED:      "impersonation_write_blocked", // client
 } as const;
 
 export type EventName = (typeof E)[keyof typeof E];
@@ -89,4 +100,13 @@ export interface EventProperties {
   [E.SURPRISE_ME_CLICKED]:              Record<string, never>;
   [E.BROWSE_CATEGORY_VISITED]:          { category: string };
   [E.PROFILE_VIEWED]:                   { is_own_profile: boolean };
+
+  [E.ANNOUNCEMENT_SHOWN]:              { announcement_id: number; severity: string };
+  [E.ANNOUNCEMENT_DISMISSED]:          { announcement_id: number; severity: string };
+  [E.ANNOUNCEMENT_CTA_CLICKED]:        { announcement_id: number };
+
+  [E.IMPERSONATION_STARTED]:           { target_user_id: number; reason: string | null };
+  [E.IMPERSONATION_ENDED]:             { target_user_id: number; duration_seconds: number; ended_by: "manual" | "expiry" };
+  [E.IMPERSONATION_EXTENDED]:          { target_user_id: number };
+  [E.IMPERSONATION_WRITE_BLOCKED]:     { target_user_id: number; attempted_path: string };
 }

@@ -1,18 +1,7 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
 import { getProfileData } from "@/lib/server/profileData";
 import { computeETag, checkETagMatch } from "@/lib/server/etag";
-
-function softAuth(token: string | undefined): number | null {
-  if (!token) return null;
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
-    return decoded.sub ?? null;
-  } catch {
-    return null;
-  }
-}
+import { getEffectiveViewerId } from "@/lib/server/impersonation";
 
 export async function GET(
   _req: Request,
@@ -21,8 +10,7 @@ export async function GET(
   const { username: rawUsername } = await params;
   const username = rawUsername.toLowerCase();
 
-  const biscuits = await cookies();
-  const viewerId = softAuth(biscuits.get("auth_token")?.value);
+  const viewerId = await getEffectiveViewerId();
 
   const data = await getProfileData(username, viewerId);
   if (!data) return new Response(null, { status: 404 });

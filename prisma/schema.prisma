@@ -68,6 +68,18 @@ enum OnboardingState {
   skipped
 }
 
+enum AnnouncementSeverity {
+  info
+  warning
+  critical
+}
+
+enum AnnouncementAudience {
+  all
+  authed
+  anon
+}
+
 enum ModerationActionType {
   dismiss_report
   take_down
@@ -156,8 +168,14 @@ model User {
   activityEvents       ActivityEvent[]
   reports_filed        Report[]              @relation("ReporterUser")
   reports_reviewed     Report[]              @relation("ReviewerUser")
-  moderation_actions   ModerationAction[]    @relation("AdminActions")
-  taken_down_lists     List[]                @relation("ListTakenDownBy")
+  moderation_actions       ModerationAction[]       @relation("AdminActions")
+  taken_down_lists         List[]                   @relation("ListTakenDownBy")
+  announcements_created    Announcement[]           @relation("AnnouncementsCreated")
+  impersonations_as_admin  ImpersonationSession[]   @relation("AdminImpersonations")
+  impersonations_as_target ImpersonationSession[]   @relation("TargetImpersonations")
+
+  // Privacy
+  impersonation_opt_out    Boolean  @default(false)
 }
 
 model Follow {
@@ -349,6 +367,46 @@ model OnboardingStarter {
 
   @@unique([topic, listId])
   @@index([topic, is_active])
+}
+
+model ImpersonationSession {
+  id              Int       @id @default(autoincrement())
+  admin_user_id   Int
+  target_user_id  Int
+  started_at      DateTime  @default(now())
+  ended_at        DateTime?
+  expires_at      DateTime
+  ip_address      String?
+  user_agent      String?
+  reason          String?
+  write_attempts  Json?
+  ended_by        String?   // "manual" | "expiry"
+
+  admin_user  User @relation("AdminImpersonations",  fields: [admin_user_id],  references: [id])
+  target_user User @relation("TargetImpersonations", fields: [target_user_id], references: [id])
+
+  @@index([admin_user_id])
+  @@index([target_user_id])
+  @@index([started_at])
+}
+
+model Announcement {
+  id            Int                  @id @default(autoincrement())
+  message       String
+  severity      AnnouncementSeverity @default(info)
+  audience      AnnouncementAudience @default(all)
+  is_active     Boolean              @default(true)
+  starts_at     DateTime?
+  ends_at       DateTime?
+  cta_label     String?
+  cta_url       String?
+  created_at    DateTime             @default(now())
+  updated_at    DateTime             @default(now()) @updatedAt
+  created_by_id Int
+
+  created_by User @relation("AnnouncementsCreated", fields: [created_by_id], references: [id])
+
+  @@index([is_active, ends_at])
 }
 
 model ModerationAction {

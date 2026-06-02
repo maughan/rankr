@@ -14,6 +14,10 @@ import FooterWrapper from "./components/FooterWrapper";
 import QueryProvider from "./components/QueryProvider";
 import PostHogProvider from "./components/PostHogProvider";
 import OnboardingBanner from "./components/OnboardingBanner";
+import AnnouncementBanner from "./components/AnnouncementBanner";
+import ImpersonationBanner from "./components/ImpersonationBanner";
+import { ImpersonationProvider } from "./components/ImpersonationProvider";
+import { getImpersonationPayload } from "@/lib/server/impersonation";
 import { SITE_NAME, SITE_URL, TWITTER_HANDLE } from "./siteConfig";
 
 const geistSans = Geist({
@@ -62,6 +66,9 @@ export default async function RootLayout({
   const biscuits = await cookies();
   const obState = biscuits.get("rk_ob_state")?.value;
 
+  // Impersonation state — decoded server-side, passed to client components.
+  const imp = await getImpersonationPayload();
+
   return (
     <html lang="en">
       <body
@@ -71,16 +78,32 @@ export default async function RootLayout({
         <PostHogProvider>
           <StoreProvider>
             <QueryProvider>
-              <RouteChangeHandler />
-              <AuthModal />
-              <PasswordModal />
-              <OnboardingBanner initialObState={obState} />
-              {children}
-              <div className="sm:bottom-0 sm:left-0 sm:right-0 z-[60]">
-                <FooterWrapper />
-              </div>
-              <Analytics />
-              <SpeedInsights />
+              <ImpersonationProvider
+                isImpersonating={imp !== null}
+                targetUsername={imp?.targetUsername ?? null}
+                targetUserId={imp?.targetUserId ?? null}
+              >
+                <RouteChangeHandler />
+                <AuthModal />
+                <PasswordModal />
+                {/* Impersonation banner renders above everything — not dismissable */}
+                {imp && (
+                  <ImpersonationBanner
+                    targetUsername={imp.targetUsername}
+                    targetUserId={imp.targetUserId}
+                    startedAt={imp.startedAt}
+                    expiresAt={imp.expiresAt}
+                  />
+                )}
+                <AnnouncementBanner />
+                <OnboardingBanner initialObState={obState} />
+                {children}
+                <div className="sm:bottom-0 sm:left-0 sm:right-0 z-[60]">
+                  <FooterWrapper />
+                </div>
+                <Analytics />
+                <SpeedInsights />
+              </ImpersonationProvider>
             </QueryProvider>
           </StoreProvider>
         </PostHogProvider>

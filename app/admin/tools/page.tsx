@@ -193,6 +193,12 @@ export default function AdminToolsPage() {
             <h1 className="text-[18px] font-[600] text-rk-primary">Admin tools</h1>
           </div>
           <Link
+            href="/admin/impersonation-log"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+          >
+            Imp. log
+          </Link>
+          <Link
             href="/admin"
             className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
           >

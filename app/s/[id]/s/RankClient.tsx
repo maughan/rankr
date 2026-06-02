@@ -28,6 +28,7 @@ import {
 } from "@/lib/helpers";
 import { TierItem } from "@/app/types";
 import NavAvatar from "@/app/components/NavAvatar";
+import { useImpersonation } from "@/app/components/ImpersonationProvider";
 import LandingFooter from "@/app/landing/LandingFooter";
 import { SubmissionLoader } from "@/app/components/SubmissionLoader";
 import { ItemCard } from "@/app/components/item/ItemCard";
@@ -98,6 +99,7 @@ export default function RankClient({
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [, setCurrentUserId] = useState(0);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const { isImpersonating } = useImpersonation();
   const rankingStartTrackedRef = useRef(false);
   const [justDroppedId, setJustDroppedId] = useState<number | null>(null);
   const [pulsingTiers, setPulsingTiers] = useState<Set<number>>(new Set());
@@ -295,7 +297,8 @@ export default function RankClient({
                 </Link>
                 <button
                   onClick={handleRankSubmit}
-                  disabled={isSubmitting || isRedirecting}
+                  disabled={isSubmitting || isRedirecting || isImpersonating}
+                  title={isImpersonating ? "Disabled during impersonation" : undefined}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50"
                 >
                   {isSubmitting || isRedirecting ? (

@@ -6,6 +6,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { useAppDispatch } from "@/lib/hooks";
 import { uiActions } from "@/lib/store/uiSlice";
 import { getUserFromToken } from "@/lib/helpers";
+import { useImpersonation } from "./ImpersonationProvider";
 import {
   useBlockUserMutation,
   useUnblockUserMutation,
@@ -35,6 +36,7 @@ export default function FollowButton({
   const dispatch = useAppDispatch();
   const viewer = getUserFromToken();
   const isLoggedIn = viewer.id !== 0;
+  const { isImpersonating } = useImpersonation();
 
   const makeFollowMutationOpts = (method: "POST" | "DELETE", delta: 1 | -1) => ({
     mutationFn: () =>
@@ -128,7 +130,8 @@ export default function FollowButton({
     <div className="flex items-center gap-1.5">
       <button
         onClick={handleFollowToggle}
-        disabled={isLoading}
+        disabled={isLoading || isImpersonating}
+        title={isImpersonating ? "Disabled during impersonation" : undefined}
         onMouseEnter={() => setFollowHover(true)}
         onMouseLeave={() => setFollowHover(false)}
         className={`text-[13px] font-[500] rounded-[8px] px-4 py-1.5 transition-colors min-w-[88px] disabled:opacity-60 ${

@@ -8,11 +8,34 @@ function isOnboardingSkip(pathname: string): boolean {
   return ONBOARDING_SKIP_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
-export function middleware(req: NextRequest) {
-  const hasAuth = req.cookies.has("auth_token");
-  const { pathname } = req.nextUrl;
+const MUTATING_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
-  // Unauthenticated users can't access the feed.
+// Impersonation control endpoints are the only mutations allowed during impersonation.
+const IMP_CONTROL_PREFIX = "/api/impersonation/";
+
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  const hasAuth = req.cookies.has("auth_token");
+
+  // ── Impersonation write-block ─────────────────────────────────────────────
+  // The rk_imp cookie is httpOnly — only the server can set it.
+  // Presence means an admin has an active impersonation session.
+  // Block all mutations except the impersonation control endpoints themselves.
+  if (
+    req.cookies.has("rk_imp") &&
+    MUTATING_METHODS.has(req.method) &&
+    !pathname.startsWith(IMP_CONTROL_PREFIX)
+  ) {
+    return NextResponse.json(
+      {
+        error: "Action not allowed during impersonation.",
+        code: "IMPERSONATION_WRITE_BLOCKED",
+      },
+      { status: 403 }
+    );
+  }
+
+  // ── Auth + onboarding routing ─────────────────────────────────────────────
   if (pathname === "/feed" && !hasAuth) {
     return NextResponse.redirect(new URL("/", req.url));
   }
@@ -20,12 +43,10 @@ export function middleware(req: NextRequest) {
   if (hasAuth) {
     const obState = req.cookies.get("rk_ob_state")?.value;
 
-    // Pending users are funnelled into onboarding before they can do anything else.
     if (obState === "pending" && !isOnboardingSkip(pathname)) {
       return NextResponse.redirect(new URL("/onboarding/topic", req.url));
     }
 
-    // Landing page → feed for everyone who has already onboarded.
     if (pathname === "/") {
       return NextResponse.redirect(new URL("/feed", req.url));
     }
@@ -37,5 +58,6 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/((?!api|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/api/:path*",
   ],
 };
