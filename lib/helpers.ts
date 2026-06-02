@@ -155,7 +155,7 @@ export const fetchUserRankings = (list: TierList, user: number) => {
 };
 
 export const getUserFromToken = () => {
-  if (typeof document === "undefined") return { username: "", id: 0, email: "" };
+  if (typeof document === "undefined") return { username: "", id: 0, email: "", role: "user" as string };
 
   const token = document.cookie
     .split("; ")
@@ -165,19 +165,22 @@ export const getUserFromToken = () => {
   let username = "";
   let id = 0;
   let email = "";
+  let role = "user";
 
   if (token) {
-    const decoded = jwtDecode<{ sub: number; username: string; email: string }>(
+    const decoded = jwtDecode<{ sub: number; username: string; email: string; role?: string }>(
       token
     );
     username = decoded.username;
     id = decoded.sub;
     email = decoded.email ?? "";
+    role = decoded.role ?? "user";
   }
 
   return {
     username,
     id,
     email,
+    role,
   };
 };

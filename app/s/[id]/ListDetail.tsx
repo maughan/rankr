@@ -825,9 +825,14 @@ export default function ListDetail({
     (item: TierItem) => !rankedIds.has(item.id) && item.id !== pendingDeleteId
   );
 
-  // Owner can edit everything; contributors can only edit items with no rankings yet
+  const { role: currentUserRole } = getUserFromToken();
+  const isPrivileged = isListOwner ||
+    currentUserRole === "admin" ||
+    currentUserRole === "super_admin";
+
+  // Owner and admins can edit everything; contributors can only edit unranked items
   const getOnEdit = (item: TierItem) => {
-    if (isListOwner) return () => setEditItem(item);
+    if (isPrivileged) return () => setEditItem(item);
     if (list.allow_contributions) {
       const isRanked = item.rankings?.some((r) => r.value !== 0);
       if (!isRanked) return () => setEditItem(item);

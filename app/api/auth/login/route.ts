@@ -33,6 +33,7 @@ export async function POST(req: Request) {
         username: user.username,
         email: user.email,
         tokenVersion: user.tokenVersion,
+        role: user.role,
       },
       JWT_SECRET,
       { expiresIn: "7d" }

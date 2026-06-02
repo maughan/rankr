@@ -5,9 +5,21 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import type { OnboardingTopic } from "@/lib/onboardingTopics";
+import { CategoryIcon } from "@/app/components/item/CategoryIcon";
 import { trackEvent } from "@/lib/analytics/client";
 import { E } from "@/lib/analytics/events";
 import ProgressDots from "@/app/components/ProgressDots";
+
+const TOPIC_CATEGORY: Record<string, string> = {
+  "chocolate": "food",
+  "fast-food":  "food",
+  "pizza":      "food",
+  "pokemon":    "gaming",
+  "gaming":     "gaming",
+  "marvel":     "movies",
+  "disney":     "movies",
+  "streaming":  "tv",
+};
 
 export default function OnboardingTopicPage() {
   const router = useRouter();
@@ -131,7 +143,12 @@ export default function OnboardingTopicPage() {
                     style={{ backgroundColor: `${topic.color}10` }}
                   />
 
-                  <span className="text-3xl">{topic.emoji}</span>
+                  <div
+                    className="w-11 h-11 rounded-[10px] flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: `${topic.color}22`, color: topic.color }}
+                  >
+                    <CategoryIcon slug={TOPIC_CATEGORY[topic.slug] ?? "other"} size={22} />
+                  </div>
                   <div className="relative z-10 flex flex-col gap-0.5 text-center">
                     <p className="text-[13px] font-[600] text-rk-primary leading-snug">
                       {topic.displayName}
