@@ -9,11 +9,15 @@ import type { EventName, EventProperties } from "./events";
 let _client: PostHog | null = null;
 
 function getClient(): PostHog | null {
-  const key = process.env.POSTHOG_KEY;
+  const key = process.env.NEXT_PUBLIC_POSTHOG_KEY;
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
   // Skip in dev/test or when the key is the placeholder.
-  if (!key || key === "phc_REPLACE_ME" || process.env.NODE_ENV !== "production") {
+  if (
+    !key ||
+    key === "phc_REPLACE_ME" ||
+    process.env.NODE_ENV !== "production"
+  ) {
     return null;
   }
 
