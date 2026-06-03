@@ -6,7 +6,7 @@ const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const PERSONAL_CAP = 3;         // max personal-reward items per page
 const REENGAGEMENT_MAX = 2;     // max re-engagement items per page
-const REENGAGEMENT_THRESHOLD = 10; // min new rankers to surface a re-engagement item
+const REENGAGEMENT_THRESHOLD = 3; // min new rankers to surface a re-engagement item
 const REENGAGEMENT_WINDOW_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export async function GET(req: Request) {
@@ -119,7 +119,7 @@ export async function GET(req: Request) {
   if (isFirstPage) {
     // ── 1a. Engagement on viewer's created public lists ─────────────────────
     const viewerLists = await prisma.list.findMany({
-      where: { createdById: viewer.id, visibility: "public", deleted_at: null, taken_down_at: null } as any,
+      where: { createdById: viewer.id, visibility: { in: ["public", "hidden"] }, deleted_at: null, taken_down_at: null } as any,
       select: {
         id: true,
         short_id: true,

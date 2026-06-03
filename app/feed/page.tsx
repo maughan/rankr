@@ -292,7 +292,7 @@ function ReEngagementCard({ event }: { event: ReEngagementFeedItem }) {
         {S.feed.reEngagementLabel(event.newRankerCount, event.list.title)}
       </p>
       <Link
-        href={`${listUrl(event.list)}/s`}
+        href={`${listUrl(event.list)}/results`}
         className="inline-block mt-2 text-[12px] text-rk-accent hover:underline"
       >
         {S.feed.reEngagementCta} →
