@@ -27,6 +27,7 @@ export async function GET() {
         bio: true,
         username_changed_at: true,
         tokenVersion: true,
+        deletion_scheduled_at: true,
       },
     }) as {
       id: number;
@@ -36,6 +37,7 @@ export async function GET() {
       bio: string | null;
       username_changed_at: Date | null;
       tokenVersion: number;
+      deletion_scheduled_at: Date | null;
     } | null;
 
     if (!user) return new Response(null, { status: 401 });
@@ -53,6 +55,7 @@ export async function GET() {
       display_name: user.display_name,
       bio: user.bio,
       username_changed_at: user.username_changed_at?.toISOString() ?? null,
+      deletion_scheduled_at: isImpersonating ? null : (user.deletion_scheduled_at?.toISOString() ?? null),
       // Signal to the settings page that it's in read-only impersonation mode.
       isImpersonating,
     });

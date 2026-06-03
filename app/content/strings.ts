@@ -513,6 +513,25 @@ export const S = {
     },
   } as const,
 
+  // ── Data export ───────────────────────────────────────────────────────────
+  dataExport: {
+    requestSent: "Request queued. You'll get an email when it's ready.",
+    requestFailed: "Couldn't queue the export. Try again.",
+    alreadyPending: "An export is already in progress.",
+    downloadLabel: "Download your data",
+    expiredLabel: "Link expired — request a new one below.",
+  },
+
+  // ── Account deletion ──────────────────────────────────────────────────────
+  accountDeletion: {
+    initiated: "Deletion scheduled. Check your email for details.",
+    initFailed: "Couldn't schedule deletion. Try again.",
+    wrongPassword: "Wrong password.",
+    cancelled: "Deletion cancelled. Welcome back.",
+    cancelFailed: "Couldn't cancel deletion. Try again.",
+    usernameTypo: "That doesn't match your username.",
+  },
+
   // ── Archetype forming state (own profile, not yet enough data) ────────────
   archetypeForming: {
     heading: "Your type is still forming.",

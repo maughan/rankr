@@ -65,6 +65,16 @@ export default function AuthModal() {
           password: data.get("password"),
         }),
       });
+      if (res.status === 403) {
+        const body = await res.json().catch(() => ({}));
+        if (body.code === "PENDING_DELETION") {
+          // Account is in the deletion grace period — let them cancel
+          router.push("/settings/account/cancel-deletion");
+          return;
+        }
+        toast.error(S.auth.loginFailed);
+        return;
+      }
       if (!res.ok) {
         toast.error(S.auth.loginFailed);
         return;

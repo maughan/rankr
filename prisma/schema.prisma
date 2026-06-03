@@ -91,6 +91,14 @@ enum ModerationActionType {
   unban_user
 }
 
+enum DataExportStatus {
+  pending
+  processing
+  ready
+  failed
+  expired
+}
+
 model Tier {
   id    Int    @id @default(autoincrement())
   title String
@@ -101,11 +109,12 @@ model Tier {
 }
 
 model Item {
-  id          Int       @id @default(autoincrement())
-  img         String?
-  name        String?
-  color       String?
-  short_label String?
+  id               Int       @id @default(autoincrement())
+  img              String?
+  imagekit_file_id String?
+  name             String?
+  color            String?
+  short_label      String?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @default(now()) @updatedAt
   createdById Int
@@ -176,6 +185,12 @@ model User {
 
   // Privacy
   impersonation_opt_out    Boolean  @default(false)
+
+  // Account lifecycle
+  deletion_scheduled_at    DateTime?
+
+  data_export_requests     DataExportRequest[]
+  deletion_request         AccountDeletionRequest?
 }
 
 model Follow {
@@ -222,7 +237,8 @@ model List {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
   visibility  ListVisibility @default(draft)
-  img         String?
+  img              String?
+  imagekit_file_id String?
   createdById Int
   createdBy   User     @relation("CreatedLists", fields: [createdById], references: [id])
 
@@ -424,4 +440,35 @@ model ModerationAction {
   @@index([admin_user_id])
   @@index([target_type, target_id])
   @@index([created_at])
+}
+
+model DataExportRequest {
+  id             Int              @id @default(autoincrement())
+  user_id        Int
+  requested_at   DateTime         @default(now())
+  status         DataExportStatus @default(pending)
+  download_url   String?
+  expires_at     DateTime?
+  download_count Int              @default(0)
+  completed_at   DateTime?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([status])
+}
+
+model AccountDeletionRequest {
+  id                    Int       @id @default(autoincrement())
+  user_id               Int       @unique
+  requested_at          DateTime  @default(now())
+  scheduled_deletion_at DateTime
+  cancelled_at          DateTime?
+  completed_at          DateTime?
+  deleted_username      String?
+  reason                String?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([scheduled_deletion_at])
 }

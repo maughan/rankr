@@ -27,6 +27,33 @@ export async function POST(req: Request) {
     if (!isValidPass)
       return new Response("Invalid credentials", { status: 401 });
 
+    // Account is in the deletion grace period — block normal login but issue
+    // a short-lived token so the cancel-deletion page can authenticate the POST.
+    if ((user as any).deletion_scheduled_at) {
+      const cancelToken = jwt.sign(
+        { sub: user.id },
+        JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+      const biscuits = await cookies();
+      biscuits.set({
+        name: "auth_token",
+        value: cancelToken,
+        httpOnly: false,
+        secure: true,
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60,
+      });
+      return Response.json(
+        {
+          code: "PENDING_DELETION",
+          scheduledAt: (user as any).deletion_scheduled_at,
+        },
+        { status: 403 }
+      );
+    }
+
     const token = jwt.sign(
       {
         sub: user.id,

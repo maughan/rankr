@@ -363,15 +363,22 @@ export default function ProfileSettingsPage() {
           </div>
         </SectionCard>
 
-        {/* Profile link */}
-        <p className="text-[12px] text-rk-tertiary text-center">
+        {/* Footer links */}
+        <div className="flex items-center justify-center gap-4 text-[12px] text-rk-tertiary">
           <Link
             href={`/u/${me?.username ?? ""}`}
             className="underline underline-offset-2 hover:text-rk-muted transition-colors"
           >
             View your public profile →
           </Link>
-        </p>
+          <span>·</span>
+          <Link
+            href="/settings/account"
+            className="underline underline-offset-2 hover:text-rk-muted transition-colors"
+          >
+            Privacy &amp; data →
+          </Link>
+        </div>
       </div>
     </div>
   );
