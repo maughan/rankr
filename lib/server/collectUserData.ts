@@ -1,7 +1,9 @@
 // Server-only. Collects all exportable data for a given user ID.
 import { prisma } from "@/lib/prisma";
 
-export async function collectUserData(userId: number): Promise<Record<string, unknown>> {
+export async function collectUserData(
+  userId: number
+): Promise<Record<string, unknown>> {
   const user = await (prisma.user as any).findUnique({
     where: { id: userId },
     select: {
@@ -28,7 +30,14 @@ export async function collectUserData(userId: number): Promise<Record<string, un
       createdAt: true,
       updatedAt: true,
       items: {
-        select: { id: true, name: true, short_label: true, img: true, color: true, createdAt: true },
+        select: {
+          id: true,
+          name: true,
+          short_label: true,
+          img: true,
+          color: true,
+          createdAt: true,
+        },
       },
     },
   });
@@ -58,7 +67,13 @@ export async function collectUserData(userId: number): Promise<Record<string, un
   // Reports they filed — reportee identity redacted
   const reportsRaw = await (prisma.report as any).findMany({
     where: { reporter_user_id: userId },
-    select: { reportable_type: true, reason: true, context: true, status: true, created_at: true },
+    select: {
+      reportable_type: true,
+      reason: true,
+      context: true,
+      status: true,
+      created_at: true,
+    },
   });
 
   const moderationHistory = await (prisma.moderationAction as any).findMany({
@@ -99,8 +114,14 @@ export async function collectUserData(userId: number): Promise<Record<string, un
       is_anonymous: r.is_anonymous,
     })),
     follows: {
-      following: following.map((f: any) => ({ username: f.following.username, since: f.createdAt })),
-      followers: followers.map((f: any) => ({ username: f.follower.username, since: f.createdAt })),
+      following: following.map((f: any) => ({
+        username: f.following.username,
+        since: f.createdAt,
+      })),
+      followers: followers.map((f: any) => ({
+        username: f.follower.username,
+        since: f.createdAt,
+      })),
     },
     reports_filed: reportsRaw.map((r: any) => ({
       reportable_type: r.reportable_type,

@@ -1,5 +1,5 @@
 // Server-only. Never import from client components.
-import { resend, FROM, SITE_NAME } from "./client";
+import { getResend, FROM, SITE_NAME } from "./client";
 
 interface ExportReadyOptions {
   to: string;
@@ -54,7 +54,7 @@ function html(body: string): string {
 }
 
 export async function sendExportReady(opts: ExportReadyOptions) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: opts.to,
     subject: "Your data export is ready",
@@ -69,7 +69,7 @@ export async function sendExportReady(opts: ExportReadyOptions) {
 }
 
 export async function sendDeletionScheduled(opts: DeletionScheduledOptions) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: opts.to,
     subject: "Your account is scheduled for deletion",
@@ -86,7 +86,7 @@ export async function sendDeletionScheduled(opts: DeletionScheduledOptions) {
 
 export async function sendDeletionReminder(opts: DeletionReminderOptions) {
   const timeLabel = opts.hoursLeft <= 24 ? "tomorrow" : `in ${Math.round(opts.hoursLeft / 24)} days`;
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: opts.to,
     subject: `Reminder: your account deletes ${timeLabel}`,
@@ -100,7 +100,7 @@ export async function sendDeletionReminder(opts: DeletionReminderOptions) {
 }
 
 export async function sendDeletionCancelled(opts: DeletionCancelledOptions) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: opts.to,
     subject: "Account deletion cancelled",
@@ -113,7 +113,7 @@ export async function sendDeletionCancelled(opts: DeletionCancelledOptions) {
 }
 
 export async function sendDeletionCompleted(opts: DeletionCompletedOptions) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: opts.to,
     subject: "Your account has been deleted",
