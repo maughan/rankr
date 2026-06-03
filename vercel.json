@@ -11,10 +11,6 @@
     {
       "path": "/api/cron/hard-delete-users",
       "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/data-export",
-      "schedule": "*/15 * * * *"
     }
   ]
 }

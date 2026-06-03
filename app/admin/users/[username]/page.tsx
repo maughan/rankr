@@ -11,6 +11,7 @@ import {
   Clock,
   AlertTriangle,
   Undo2,
+  Download,
 } from "lucide-react";
 import { getUserFromToken } from "@/lib/helpers";
 import { formatDistanceStrict } from "date-fns";
@@ -415,6 +416,18 @@ export default function AdminUserDetailPage({
             >
               View impersonation history for this user →
             </Link>
+
+            {/* Data export */}
+            {role === "super_admin" && (
+              <a
+                href={`/api/admin/users/${user.username.toLowerCase()}/export`}
+                download
+                className="self-start flex items-center gap-2 px-3 py-1.5 text-[12px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+              >
+                <Download size={12} />
+                Export user data (JSON)
+              </a>
+            )}
           </>
         )}
       </div>

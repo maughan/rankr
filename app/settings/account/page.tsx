@@ -1,21 +1,11 @@
 "use client";
 
-import { useEffect, useState, FormEvent, useRef } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronLeft, Download, Trash2, Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, Download, Trash2, Loader2, AlertTriangle } from "lucide-react";
 import { S } from "@/app/content/strings";
-
-interface ExportRequest {
-  id: number;
-  status: "pending" | "processing" | "ready" | "failed" | "expired";
-  download_url: string | null;
-  expires_at: string | null;
-  download_count: number;
-  requested_at: string;
-  completed_at: string | null;
-}
 
 interface MeResponse {
   username: string;
@@ -52,87 +42,19 @@ function daysLeft(iso: string) {
 // ── Export section ────────────────────────────────────────────────────────────
 
 function ExportSection() {
-  const [exportReq, setExportReq] = useState<ExportRequest | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [requesting, setRequesting] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/user/data-export")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d) setExportReq(d.request); })
-      .finally(() => setLoading(false));
-  }, []);
-
-  const handleRequest = async () => {
-    setRequesting(true);
-    try {
-      const res = await fetch("/api/user/data-export", { method: "POST" });
-      const data = await res.json();
-      setExportReq(data.request);
-      toast.success(S.dataExport.requestSent);
-    } catch {
-      toast.error(S.dataExport.requestFailed);
-    } finally {
-      setRequesting(false);
-    }
-  };
-
-  const isExpired = exportReq?.status === "expired" ||
-    (exportReq?.expires_at && new Date(exportReq.expires_at) < new Date());
-  const isReady = exportReq?.status === "ready" && !isExpired;
-  const isInFlight = exportReq && ["pending", "processing"].includes(exportReq.status);
-
   return (
     <SectionCard title="Download your data">
       <p className="text-[13px] text-rk-secondary leading-relaxed">
-        Get a copy of everything we hold on you — your profile, lists, rankings, follows, and more — packaged as JSON files in a zip archive. Useful if you want a backup or you're moving on.
+        Get a copy of everything we hold on you — your profile, lists, rankings, follows, and more — as a JSON file. Useful if you want a backup or you're moving on.
       </p>
-
-      {loading ? (
-        <Loader2 size={14} className="animate-spin text-rk-muted" />
-      ) : isReady && exportReq ? (
-        <div className="flex flex-col gap-3">
-          <div className="flex items-start gap-2 rounded-[8px] border border-green-900/40 bg-green-900/10 px-3 py-2.5">
-            <CheckCircle2 size={14} className="text-green-400 flex-shrink-0 mt-0.5" />
-            <div className="flex flex-col gap-0.5">
-              <p className="text-[12px] font-[500] text-green-300">Export ready</p>
-              <p className="text-[11px] text-green-400/70">
-                Link expires {exportReq.expires_at ? fmt(exportReq.expires_at) : "soon"}.
-              </p>
-            </div>
-          </div>
-          <a
-            href={exportReq.download_url!}
-            download
-            className="self-start flex items-center gap-2 px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-          >
-            <Download size={13} />
-            {S.dataExport.downloadLabel}
-          </a>
-        </div>
-      ) : isInFlight ? (
-        <div className="flex items-center gap-2 text-[13px] text-rk-muted">
-          <Loader2 size={13} className="animate-spin" />
-          Processing your export — we'll email you when it's ready.
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {isExpired && (
-            <p className="text-[12px] text-rk-muted">{S.dataExport.expiredLabel}</p>
-          )}
-          <button
-            onClick={handleRequest}
-            disabled={requesting}
-            className="self-start flex items-center gap-2 px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
-          >
-            {requesting ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
-            Request data download
-          </button>
-          <p className="text-[11px] text-rk-tertiary">
-            One export per 14 days. Link valid for 7 days once ready.
-          </p>
-        </div>
-      )}
+      <a
+        href="/api/user/data-export"
+        download
+        className="self-start flex items-center gap-2 px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+      >
+        <Download size={13} />
+        {S.dataExport.downloadLabel}
+      </a>
     </SectionCard>
   );
 }
