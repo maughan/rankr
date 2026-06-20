@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/archetypes",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/hard-delete-lists",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/hard-delete-users",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/taste-matches",
+      "schedule": "30 3 * * *"
+    }
+  ]
+}

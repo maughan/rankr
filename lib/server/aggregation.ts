@@ -1,0 +1,183 @@
+// Server-only. Never import from client components.
+import { prisma } from "@/lib/prisma";
+import { computeItemDistribution } from "@/lib/itemDistribution";
+import type { ItemDistribution } from "@/lib/itemDistribution";
+
+export interface AggregatedTier {
+  id: number;
+  title: string;
+  color: string;
+  value: number;
+  items: number[];
+}
+
+export interface AggregatedItem {
+  id: number;
+  img: string | null;
+  name: string | null;
+  color: string | null;
+  short_label: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: { id: number; username: string };
+  distribution: ItemDistribution;
+}
+
+export interface AggregatedList {
+  id: number;
+  title: string;
+  description: string;
+  img: string | null;
+  visibility: "public" | "hidden" | "draft" | "private";
+  is_shareable: boolean;
+  anonymous_rankings_enabled: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  createdBy: { id: number; username: string };
+  tiers: AggregatedTier[];
+  items: AggregatedItem[];
+  ranker_count: number;
+  // Moderation state — checked before serving share-link content
+  deleted_at: Date | null;
+  taken_down_at: Date | null;
+  taken_down_reason: string | null;
+}
+
+// Fetch a list and compute tier placements from averaged rankings.
+// Individual user/session rankings are NOT included — safe to expose publicly.
+export async function computeListAggregates(
+  listId: number
+): Promise<AggregatedList | null> {
+  const list = await (prisma.list as any).findUnique({
+    where: { id: listId },
+    include: {
+      tiers: true,
+      items: {
+        select: {
+          id: true,
+          img: true,
+          name: true,
+          color: true,
+          short_label: true,
+          createdAt: true,
+          updatedAt: true,
+          createdBy: { select: { id: true, username: true } },
+        },
+      },
+      createdBy: { select: { id: true, username: true } },
+    },
+  });
+
+  if (!list) return null;
+
+  const itemIds = list.items.map((i: { id: number }) => i.id);
+
+  // Average value per item, excluding N/A (value = 0)
+  const grouped = await (prisma.ranking as any).groupBy({
+    by: ["itemId"],
+    where: { itemId: { in: itemIds }, value: { not: 0 } },
+    _avg: { value: true },
+  });
+
+  const avgByItemId = new Map<number, number>(
+    (grouped as { itemId: number; _avg: { value: number | null } }[]).map(
+      (r) => [r.itemId, Math.round(r._avg.value ?? 0)]
+    )
+  );
+
+  // Per-item tier distribution (counts only — no individual rankings exposed)
+  const distGrouped = (await (prisma.ranking as any).groupBy({
+    by: ["itemId", "value"],
+    where: { itemId: { in: itemIds }, value: { not: 0 } },
+    _count: { id: true },
+  })) as { itemId: number; value: number; _count: { id: number } }[];
+
+  const countsByItem = new Map<number, Map<number, number>>();
+  for (const row of distGrouped) {
+    let m = countsByItem.get(row.itemId);
+    if (!m) {
+      m = new Map();
+      countsByItem.set(row.itemId, m);
+    }
+    m.set(row.value, row._count.id);
+  }
+
+  const sortedTiers = [...list.tiers]
+    .map((t: { title: string; value: number }) => ({
+      title: t.title,
+      value: t.value,
+    }))
+    .filter((t) => t.value > 0) // exclude the N/A (value 0) tier
+    .sort((a, b) => b.value - a.value);
+
+  // Count distinct rankers: unique userId values + unique anonymous_session_token values.
+  // The identity CHECK on Ranking ensures exactly one is set per row, so there's no overlap.
+  const [authedCount, anonCount] = await Promise.all([
+    (prisma.ranking as any).findMany({
+      where: { itemId: { in: itemIds }, userId: { not: null } },
+      select: { userId: true },
+      distinct: ["userId"],
+    }) as Promise<{ userId: number }[]>,
+    (prisma.ranking as any).findMany({
+      where: {
+        itemId: { in: itemIds },
+        anonymous_session_token: { not: null },
+      },
+      select: { anonymous_session_token: true },
+      distinct: ["anonymous_session_token"],
+    }) as Promise<{ anonymous_session_token: string }[]>,
+  ]);
+
+  const ranker_count = authedCount.length + anonCount.length;
+
+  // Populate tiers from averaged values
+  const tiers: AggregatedTier[] = list.tiers.map((t: AggregatedTier) => ({
+    ...t,
+    items: [] as number[],
+  }));
+
+  for (const item of list.items) {
+    const avgVal = avgByItemId.get(item.id);
+    if (avgVal === undefined) continue;
+    tiers.find((t) => t.value === avgVal)?.items.push(item.id);
+  }
+
+  return {
+    id: list.id,
+    title: list.title,
+    description: list.description,
+    img: list.img,
+    visibility: (list as any).visibility,
+    is_shareable: (list as any).is_shareable,
+    anonymous_rankings_enabled: (list as any).anonymous_rankings_enabled,
+    createdAt: list.createdAt,
+    updatedAt: list.updatedAt,
+    createdBy: list.createdBy,
+    tiers,
+    items: list.items.map((it: any) => ({
+      ...it,
+      distribution: computeItemDistribution(
+        countsByItem.get(it.id) ?? new Map(),
+        sortedTiers
+      ),
+    })),
+    ranker_count,
+    deleted_at: (list as any).deleted_at ?? null,
+    taken_down_at: (list as any).taken_down_at ?? null,
+    taken_down_reason: (list as any).taken_down_reason ?? null,
+  };
+}
+
+// Same as above but looks up the list by share_token instead of id.
+// Used by the public /r/:token route.
+export async function computeListAggregatesByToken(
+  token: string
+): Promise<AggregatedList | null> {
+  const list = await (prisma.list as any).findUnique({
+    where: { share_token: token },
+    select: { id: true },
+  });
+
+  if (!list) return null;
+  return computeListAggregates(list.id);
+}

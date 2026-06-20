@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* ── Design tokens ─────────────────────────────────────────────────────────── */
+
+@theme {
+  /* Backgrounds */
+  --color-rk-page:      #0A1220;
+  --color-rk-surface:   #142036;
+  --color-rk-row:       #0F1828;
+
+  /* Borders */
+  --color-rk-stroke:    #1E2C44;
+
+  /* Text */
+  --color-rk-primary:   #E0E6F0;
+  --color-rk-secondary: #B0BCD0;
+  --color-rk-muted:     #6E7A92;
+  --color-rk-tertiary:  #4E5A72;
+
+  /* Accent */
+  --color-rk-accent:    #4A8AE8;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: #0A1220;
+  color: #E0E6F0;
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 0.85; }
+}
+
+/* ── Drag & drop animations ─────────────────────────────────────────────────
+   All motion is gated — when reduced-motion is preferred the classes are
+   imported but produce no visible animation.
+   ────────────────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Item settle — spring overshoot on drop */
+  @keyframes item-drop {
+    0%   { transform: scale(1.1); }
+    55%  { transform: scale(0.96); }
+    100% { transform: scale(1.0); }
+  }
+
+  /* Chip ripple — radial flash that fires from the item's centre */
+  @keyframes chip-ripple {
+    from { opacity: 0.5; transform: scale(0.6); }
+    to   { opacity: 0;   transform: scale(1.4); }
+  }
+
+  /* Tier label pulse — fires when a tier receives its very first item */
+  @keyframes tier-pulse {
+    0%   { transform: scale(1.0); }
+    35%  { transform: scale(1.1); filter: brightness(1.25); }
+    100% { transform: scale(1.0); filter: brightness(1.0); }
+  }
+
+  .rk-item-drop {
+    animation: item-drop 280ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Ripple fires as a sibling overlay; caller must set position:relative */
+  .rk-item-drop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 8px;
+    background: radial-gradient(circle, rgba(255,255,255,0.22) 0%, transparent 68%);
+    animation: chip-ripple 350ms ease-out forwards;
+    pointer-events: none;
+  }
+
+  .rk-tier-pulse {
+    animation: tier-pulse 400ms ease-out forwards;
+  }
+
+  /* Confetti — fires once on first-complete submission */
+  @keyframes confetti-fall {
+    0%   { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+    100% { opacity: 0; transform: translateY(140px) rotate(var(--rot, 360deg)) scale(0.7); }
+  }
+
+  .rk-confetti {
+    animation: confetti-fall 1.6s ease-out forwards;
+    pointer-events: none;
+  }
+
+  /* Submission loader — narrator icon pulse */
+  @keyframes rk-loader-pulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.12); }
+  }
+
+  /* Submission loader — tier chip equalizer bounce */
+  @keyframes rk-tier-chip-bounce {
+    0%, 100% { height: 26px; }
+    50%      { height: 44px; }
+  }
+
+  /* Publish celebration — confetti fall */
+  @keyframes rk-confetti-fall {
+    0%   { transform: translateY(-10px) rotate(var(--rot-start)); opacity: 1; }
+    100% { transform: translateY(110vh) rotate(var(--rot-end)); opacity: 0.2; }
+  }
+
+  /* Publish celebration — title pop-in */
+  @keyframes rk-pub-pop {
+    0%   { opacity: 0; transform: scale(0.9) translateY(12px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* Payoff reveal — fade + slide up */
+  @keyframes rk-reveal-up {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .rk-reveal-up  { animation: rk-reveal-up 320ms ease-out both; }
+  .rk-reveal-pop { animation: rk-reveal-up 400ms cubic-bezier(0.34, 1.2, 0.64, 1) both; }
+
+  /* Scrollable item-name text — ping-pong scroll */
+  @keyframes mq-ping-pong {
+    0%,  12%  { transform: translateX(0); }
+    44%, 56%  { transform: translateX(var(--mq-end, 0px)); }
+    88%, 100% { transform: translateX(0); }
+  }
+
+  /* Touch one-shot (class added/removed by JS) */
+  .mq-scroll-active {
+    animation: mq-ping-pong 3s linear 1;
+  }
+
+  /* Desktop: infinite loop while card is hovered or focused */
+  @media (hover: hover) {
+    .mq-card:hover .mq-candidate,
+    .mq-card:focus-visible .mq-candidate {
+      animation: mq-ping-pong 3s linear infinite;
+    }
+  }
+}

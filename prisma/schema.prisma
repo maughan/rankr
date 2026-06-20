@@ -1,0 +1,483 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ListVisibility {
+  public
+  hidden
+  draft
+  private
+}
+
+enum ArchetypeSlug {
+  contrarian
+  oracle
+  purist
+  diplomat
+  enthusiast
+  critic
+  wildcard
+}
+
+enum ActivityEventType {
+  published
+  ranked
+  hot_take
+  milestone
+}
+
+enum UserRole {
+  user
+  admin
+  super_admin
+}
+
+enum ReportReason {
+  spam
+  harassment
+  hateful
+  sexual
+  copyright
+  minors
+  violence
+  other
+}
+
+enum ReportStatus {
+  open
+  reviewing
+  actioned
+  dismissed
+}
+
+enum ReportableType {
+  list
+  item
+  profile
+}
+
+enum OnboardingState {
+  pending
+  in_progress
+  completed
+  skipped
+}
+
+enum AnnouncementSeverity {
+  info
+  warning
+  critical
+}
+
+enum AnnouncementAudience {
+  all
+  authed
+  anon
+}
+
+enum ModerationActionType {
+  dismiss_report
+  take_down
+  restore
+  warn_user
+  suspend_user
+  ban_user
+  unsuspend_user
+  unban_user
+}
+
+enum DataExportStatus {
+  pending
+  processing
+  ready
+  failed
+  expired
+}
+
+model Tier {
+  id    Int    @id @default(autoincrement())
+  title String
+  color String
+  value Int
+  items Int[]
+  lists List[] @relation("ListToTier")
+}
+
+model Item {
+  id               Int       @id @default(autoincrement())
+  img              String?
+  imagekit_file_id String?
+  name             String?
+  color            String?
+  short_label      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  createdById Int
+
+  // Edit-audit fields
+  name_updated_at      DateTime?
+  image_uploaded_at    DateTime?
+  short_label_user_set Boolean   @default(false)
+
+  // Moderation
+  deleted_at    DateTime?
+  taken_down_at DateTime?
+
+  createdBy      User            @relation(fields: [createdById], references: [id])
+  rankings       Ranking[]
+  lists          List[]          @relation("ItemToList")
+  activityEvents ActivityEvent[]
+}
+
+model User {
+  id                   Int                   @id @default(autoincrement())
+  username             String                @unique
+  password             String
+  email                String?               @unique
+  tokenVersion         Int                   @default(0)
+  display_name         String?
+  bio                  String?
+  username_changed_at  DateTime?
+  createdAt            DateTime              @default(now())
+  follower_count       Int                   @default(0)
+  following_count      Int                   @default(0)
+  archetype            ArchetypeSlug?
+  archetype_stats      Json?
+  archetype_computed_at    DateTime?
+  taste_matches            Json?
+  profile_private          Boolean               @default(false)
+  last_feed_visit_at       DateTime?
+
+  // Onboarding
+  onboarding_state         OnboardingState @default(pending)
+  onboarding_started_at    DateTime?
+  onboarding_completed_at  DateTime?
+  onboarding_picked_topic  String?
+
+  // Moderation
+  role            UserRole  @default(user)
+  suspended_until DateTime?
+  banned_at       DateTime?
+  ban_reason      String?
+
+  lists                List[]                @relation("CreatedLists")
+  rankings             Ranking[]
+  items                Item[]
+  pins                 UserListPin[]
+  usernameHistory      UserUsernameHistory[]
+  following            Follow[]              @relation("Follower")
+  followers            Follow[]              @relation("Following")
+  blocking             Block[]               @relation("Blocker")
+  blockedBy            Block[]               @relation("Blocked")
+  invitesReceived      ListInvite[]          @relation("InvitedUser")
+  invitesSent          ListInvite[]          @relation("InvitedBy")
+  activityEvents       ActivityEvent[]
+  reports_filed        Report[]              @relation("ReporterUser")
+  reports_reviewed     Report[]              @relation("ReviewerUser")
+  moderation_actions       ModerationAction[]       @relation("AdminActions")
+  taken_down_lists         List[]                   @relation("ListTakenDownBy")
+  announcements_created    Announcement[]           @relation("AnnouncementsCreated")
+  impersonations_as_admin  ImpersonationSession[]   @relation("AdminImpersonations")
+  impersonations_as_target ImpersonationSession[]   @relation("TargetImpersonations")
+
+  // Privacy
+  impersonation_opt_out    Boolean  @default(false)
+
+  // Account lifecycle
+  deletion_scheduled_at    DateTime?
+
+  data_export_requests     DataExportRequest[]
+  deletion_request         AccountDeletionRequest?
+}
+
+model Follow {
+  followerId   Int
+  followingId  Int
+  createdAt    DateTime @default(now())
+
+  follower  User @relation("Follower",  fields: [followerId],  references: [id], onDelete: Cascade)
+  following User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model Block {
+  blockerId  Int
+  blockedId  Int
+  createdAt  DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+model UserUsernameHistory {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  username  String
+  changedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([username])
+}
+
+model List {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  visibility  ListVisibility @default(draft)
+  img              String?
+  imagekit_file_id String?
+  createdById Int
+  createdBy   User     @relation("CreatedLists", fields: [createdById], references: [id])
+
+  category       String   @default("other")
+
+  // Human-readable URL fields
+  short_id                   String    @unique
+  slug                       String
+
+  // Shareable-link fields
+  is_shareable               Boolean   @default(false)
+  share_token                String?   @unique
+  share_token_created_at     DateTime?
+  anonymous_rankings_enabled Boolean   @default(true)
+
+  // Community contributions
+  allow_contributions        Boolean   @default(false)
+
+  // Editorial curation
+  is_featured                Boolean   @default(false)
+
+  // Publish tracking
+  has_been_published         Boolean   @default(false)
+  published_at               DateTime?
+
+  // Moderation
+  deleted_at        DateTime?
+  taken_down_at     DateTime?
+  taken_down_reason String?
+  taken_down_by_id  Int?
+  taken_down_by     User?    @relation("ListTakenDownBy", fields: [taken_down_by_id], references: [id], onDelete: SetNull)
+
+  items               Item[]               @relation("ItemToList")
+  tiers               Tier[]               @relation("ListToTier")
+  pins                UserListPin[]
+  rankings            Ranking[]
+  invites             ListInvite[]
+  activityEvents      ActivityEvent[]
+  onboardingStarters  OnboardingStarter[]
+}
+
+model UserListPin {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  listId    Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  list List @relation(fields: [listId], references: [id])
+
+  @@unique([userId, listId])
+}
+
+model ListInvite {
+  id            Int      @id @default(autoincrement())
+  listId        Int
+  invite_token  String    @unique
+  invitedUserId Int?
+  invitedById   Int
+  createdAt     DateTime  @default(now())
+  revoked_at    DateTime?
+
+  list        List  @relation(fields: [listId], references: [id], onDelete: Cascade)
+  invitedUser User? @relation("InvitedUser", fields: [invitedUserId], references: [id], onDelete: SetNull)
+  invitedBy   User  @relation("InvitedBy",   fields: [invitedById],   references: [id], onDelete: Cascade)
+
+  @@index([listId])
+  @@index([invitedUserId])
+}
+
+model Ranking {
+  id        Int      @id @default(autoincrement())
+  itemId    Int
+  userId    Int?
+  value     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // Anonymous-ranking fields
+  listId                  Int?
+  is_anonymous            Boolean @default(false)
+  anonymous_session_token String?
+  submitter_ip_hash       String?
+
+  item Item  @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id])
+  list List? @relation(fields: [listId], references: [id])
+
+  @@index([listId, anonymous_session_token])
+}
+
+model ActivityEvent {
+  id        Int               @id @default(autoincrement())
+  actorId   Int
+  type      ActivityEventType
+  listId    Int
+  itemId    Int?
+  meta      Json?
+  createdAt DateTime          @default(now())
+
+  actor User  @relation(fields: [actorId], references: [id], onDelete: Cascade)
+  list  List  @relation(fields: [listId], references: [id], onDelete: Cascade)
+  item  Item? @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([listId])
+  @@index([createdAt])
+  @@index([actorId, createdAt(sort: Desc)])
+}
+
+model Report {
+  id                    Int            @id @default(autoincrement())
+  reporter_user_id      Int?
+  reporter_session_hash String?
+  reportable_type       ReportableType
+  reportable_id         Int
+  reason                ReportReason
+  context               String?
+  status                ReportStatus   @default(open)
+  created_at            DateTime       @default(now())
+  reviewed_by_id        Int?
+  reviewed_at           DateTime?
+  resolution_notes      String?
+
+  reporter    User? @relation("ReporterUser",  fields: [reporter_user_id], references: [id], onDelete: SetNull)
+  reviewed_by User? @relation("ReviewerUser",  fields: [reviewed_by_id],   references: [id], onDelete: SetNull)
+
+  @@unique([reporter_user_id, reportable_type, reportable_id])
+  @@unique([reporter_session_hash, reportable_type, reportable_id])
+  @@index([status, created_at])
+  @@index([reportable_type, reportable_id])
+}
+
+model OnboardingStarter {
+  id            Int     @id @default(autoincrement())
+  topic         String
+  listId        Int
+  display_order Int     @default(0)
+  is_active     Boolean @default(true)
+
+  list List @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@unique([topic, listId])
+  @@index([topic, is_active])
+}
+
+model ImpersonationSession {
+  id              Int       @id @default(autoincrement())
+  admin_user_id   Int
+  target_user_id  Int
+  started_at      DateTime  @default(now())
+  ended_at        DateTime?
+  expires_at      DateTime
+  ip_address      String?
+  user_agent      String?
+  reason          String?
+  write_attempts  Json?
+  ended_by        String?   // "manual" | "expiry"
+
+  admin_user  User @relation("AdminImpersonations",  fields: [admin_user_id],  references: [id])
+  target_user User @relation("TargetImpersonations", fields: [target_user_id], references: [id])
+
+  @@index([admin_user_id])
+  @@index([target_user_id])
+  @@index([started_at])
+}
+
+model Announcement {
+  id            Int                  @id @default(autoincrement())
+  message       String
+  severity      AnnouncementSeverity @default(info)
+  audience      AnnouncementAudience @default(all)
+  is_active     Boolean              @default(true)
+  starts_at     DateTime?
+  ends_at       DateTime?
+  cta_label     String?
+  cta_url       String?
+  created_at    DateTime             @default(now())
+  updated_at    DateTime             @default(now()) @updatedAt
+  created_by_id Int
+
+  created_by User @relation("AnnouncementsCreated", fields: [created_by_id], references: [id])
+
+  @@index([is_active, ends_at])
+}
+
+model FeatureFlag {
+  key         String   @id
+  enabled     Boolean  @default(true)
+  description String?
+  updatedAt   DateTime @updatedAt
+}
+
+model ModerationAction {
+  id            Int                  @id @default(autoincrement())
+  admin_user_id Int
+  action_type   ModerationActionType
+  target_type   ReportableType
+  target_id     Int
+  reason        String?
+  notes         String?
+  created_at    DateTime             @default(now())
+
+  admin User @relation("AdminActions", fields: [admin_user_id], references: [id])
+
+  @@index([admin_user_id])
+  @@index([target_type, target_id])
+  @@index([created_at])
+}
+
+model DataExportRequest {
+  id             Int              @id @default(autoincrement())
+  user_id        Int
+  requested_at   DateTime         @default(now())
+  status         DataExportStatus @default(pending)
+  download_url   String?
+  expires_at     DateTime?
+  download_count Int              @default(0)
+  completed_at   DateTime?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([status])
+}
+
+model AccountDeletionRequest {
+  id                    Int       @id @default(autoincrement())
+  user_id               Int       @unique
+  requested_at          DateTime  @default(now())
+  scheduled_deletion_at DateTime
+  cancelled_at          DateTime?
+  completed_at          DateTime?
+  deleted_username      String?
+  reason                String?
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([scheduled_deletion_at])
+}
