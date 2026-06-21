@@ -99,6 +99,14 @@ enum DataExportStatus {
   expired
 }
 
+enum NotificationType {
+  ranked_your_list
+  new_follower
+  new_taste_twin
+  list_milestone
+  hot_take
+}
+
 model Tier {
   id    Int    @id @default(autoincrement())
   title String
@@ -193,6 +201,9 @@ model User {
 
   data_export_requests     DataExportRequest[]
   deletion_request         AccountDeletionRequest?
+
+  notifications_received   Notification[]           @relation("NotificationsReceived")
+  notifications_acted      Notification[]           @relation("NotificationsActed")
 }
 
 model Follow {
@@ -261,6 +272,7 @@ model List {
 
   // Editorial curation
   is_featured                Boolean   @default(false)
+  is_template                Boolean   @default(false)
 
   // Publish tracking
   has_been_published         Boolean   @default(false)
@@ -280,6 +292,7 @@ model List {
   invites             ListInvite[]
   activityEvents      ActivityEvent[]
   onboardingStarters  OnboardingStarter[]
+  notifications       Notification[]
 }
 
 model UserListPin {
@@ -349,6 +362,27 @@ model ActivityEvent {
   @@index([listId])
   @@index([createdAt])
   @@index([actorId, createdAt(sort: Desc)])
+}
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  recipientId Int
+  type        NotificationType
+  actorId     Int?
+  listId      Int?
+  itemId      Int?
+  count       Int              @default(1)
+  meta        Json?
+  read_at     DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @default(now()) @updatedAt
+
+  recipient User  @relation("NotificationsReceived", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor     User? @relation("NotificationsActed",    fields: [actorId],     references: [id], onDelete: SetNull)
+  list      List? @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, read_at])
+  @@index([recipientId, updatedAt(sort: Desc)])
 }
 
 model Report {

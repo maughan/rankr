@@ -74,7 +74,7 @@ export const S = {
       item: string,
       userTier: string,
       crowdTier: string,
-      n: number
+      n: number,
     ) =>
       `${item}: you said ${userTier}, the crowd says ${crowdTier}. (${n} rankers)`,
   },
@@ -141,8 +141,7 @@ export const S = {
   // ── Divisive item ─────────────────────────────────────────────────────────
   divisive: {
     eyebrow: "most divisive",
-    caption: (n: number) =>
-      `${n} ranker${n !== 1 ? "s" : ""}. Zero consensus.`,
+    caption: (n: number) => `${n} ranker${n !== 1 ? "s" : ""}. Zero consensus.`,
     shareLabel: "Share most divisive",
   },
 
@@ -185,7 +184,7 @@ export const S = {
     hottestTakeSupportLine: (
       tier: string,
       pct: number,
-      dir: "above" | "below"
+      dir: "above" | "below",
     ) =>
       dir === "above"
         ? `${pct}% of rankers put it in ${tier}-tier or lower`
@@ -218,7 +217,8 @@ export const S = {
     // Rank similar
     rankSimilarEyebrow: "Rank next",
     rankSimilarHeading: "Lists your crowd also ranked",
-    rankSimilarCoRankers: (n: number) => `${n} ranker${n !== 1 ? "s" : ""} in common`,
+    rankSimilarCoRankers: (n: number) =>
+      `${n} ranker${n !== 1 ? "s" : ""} in common`,
 
     // No data
     noRankingFound: "No ranking found for this list.",
@@ -252,7 +252,8 @@ export const S = {
     createFailed: "Couldn't create invite link.",
     revokeFailed: "Couldn't remove invite.",
     sectionLabel: "Invite links",
-    sectionHint: "Anyone with an invite link can view and rank this private list.",
+    sectionHint:
+      "Anyone with an invite link can view and rank this private list.",
     createCta: "Create invite link",
     removeLabel: "Remove",
     emptyHint: "No active invite links.",
@@ -452,7 +453,7 @@ export const S = {
       name: "The Contrarian",
       desc: "The crowd zigs, you zag. Your rankings consistently land furthest from consensus — by design or by instinct, you call it differently.",
       tagline: "The crowd is usually wrong.",
-      color: "#EF4444",   // red
+      color: "#EF4444", // red
       icon: "ti-bolt",
       statLine: (pct: number) => `disagrees with the crowd ${pct}% of the time`,
       shareLabel: "Share my archetype",
@@ -461,7 +462,7 @@ export const S = {
       name: "The Oracle",
       desc: "Eerily in tune with the crowd. Your rankings mirror consensus so closely it's almost eerie — you just know what's good.",
       tagline: "You just know.",
-      color: "#4A8AE8",   // blue (accent)
+      color: "#4A8AE8", // blue (accent)
       icon: "ti-brain",
       statLine: (pct: number) => `aligned with the crowd ${pct}% of the time`,
       shareLabel: "Share my archetype",
@@ -470,45 +471,49 @@ export const S = {
       name: "The Purist",
       desc: "No half measures. Things are either S-tier or they belong at the bottom — middle ground is for people who haven't made up their mind.",
       tagline: "Strong opinions. Strongly held.",
-      color: "#C44545",   // S-tier red
+      color: "#C44545", // S-tier red
       icon: "ti-star",
-      statLine: (pct: number) => `puts ${pct}% of items in the top or bottom tier`,
+      statLine: (pct: number) =>
+        `puts ${pct}% of items in the top or bottom tier`,
       shareLabel: "Share my archetype",
     },
     diplomat: {
       name: "The Diplomat",
       desc: "You see nuance where others see extremes. Most things land somewhere in the middle — because most things genuinely deserve it.",
       tagline: "It's complicated.",
-      color: "#5DCAA5",   // teal (C-tier)
+      color: "#5DCAA5", // teal (C-tier)
       icon: "ti-heart",
-      statLine: (pct: number) => `keeps ${pct}% of rankings in the middle tiers`,
+      statLine: (pct: number) =>
+        `keeps ${pct}% of rankings in the middle tiers`,
       shareLabel: "Share my archetype",
     },
     enthusiast: {
       name: "The Enthusiast",
       desc: "Everything deserves a fair shot — and most things earn it. Your rankings skew high because you genuinely find the good in things.",
       tagline: "Love the game. Love the players.",
-      color: "#E08C2C",   // amber (A-tier)
+      color: "#E08C2C", // amber (A-tier)
       icon: "ti-rocket",
-      statLine: (pct: number) => `ranks ${pct}% of items above the crowd average`,
+      statLine: (pct: number) =>
+        `ranks ${pct}% of items above the crowd average`,
       shareLabel: "Share my archetype",
     },
     critic: {
       name: "The Critic",
       desc: "High standards. Very high standards. S-tier is reserved for the genuinely exceptional — and you're not easily impressed.",
       tagline: "Someone has to keep the bar up.",
-      color: "#85B7EB",   // D-tier blue
+      color: "#85B7EB", // D-tier blue
       icon: "ti-movie",
-      statLine: (pct: number) => `ranks ${pct}% of items below the crowd average`,
+      statLine: (pct: number) =>
+        `ranks ${pct}% of items below the crowd average`,
       shareLabel: "Share my archetype",
     },
     wildcard: {
       name: "The Wildcard",
       desc: "No discernible pattern. No predictable bias. Just pure, unfiltered gut feel — a different list, a different person.",
       tagline: "Completely unpredictable.",
-      color: "#AFA9EC",   // F-tier purple
+      color: "#AFA9EC", // F-tier purple
       icon: "ti-mood-happy",
-      statLine: (_pct?: number) => `impossible to predict`,
+      statLine: () => `impossible to predict`,
       shareLabel: "Share my archetype",
     },
   } as const,

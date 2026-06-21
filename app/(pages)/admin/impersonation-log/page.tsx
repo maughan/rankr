@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ShieldAlert, Loader2, ChevronDown, Undo2 } from "lucide-react";
 import { getUserFromToken } from "@/lib/helpers";
-import { formatDistanceStrict, format } from "date-fns";
+import { format } from "date-fns";
 
 interface ImpersonationSession {
   id: number;
@@ -137,7 +137,7 @@ function LogContent() {
       const res = await fetch(`/api/admin/impersonation-log?${params}`);
       return res.ok ? res.json() : null;
     },
-    [prefilterTargetId]
+    [prefilterTargetId],
   );
 
   useEffect(() => {

@@ -1,4 +1,6 @@
-export default function List({ tierData, items, list }) {
+import Image from "next/image";
+
+export default function List({ items, list }) {
   return (
     <>
       <div className="flex flex-col">
@@ -34,7 +36,7 @@ export default function List({ tierData, items, list }) {
                           style={{ objectFit: "cover" }}
                         />
                       </div>
-                    ) : null
+                    ) : null,
                   )}
               </div>
             </div>
@@ -47,7 +49,7 @@ export default function List({ tierData, items, list }) {
       <div className="w-full min-h-20 flex flex-wrap">
         {items.map((item) => {
           const isRanked = list.tiers.find((tier) =>
-            tier.items.includes(item.id)
+            tier.items.includes(item.id),
           );
 
           if (isRanked) return null;

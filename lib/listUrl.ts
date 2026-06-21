@@ -37,6 +37,16 @@ export function slugify(name: string): string {
   return lastHyphen > SLUG_MAX / 2 ? truncated.slice(0, lastHyphen) : truncated;
 }
 
+// ── Clone title ─────────────────────────────────────────────────────────────────
+
+export function cloneTitle(
+  sourceTitle: string,
+  asTemplate: boolean
+): { title: string; slug: string } {
+  const title = asTemplate ? sourceTitle : `Copy of ${sourceTitle}`;
+  return { title, slug: slugify(title) };
+}
+
 // ── URL helpers ───────────────────────────────────────────────────────────────
 
 export function listUrl(list: { slug: string | null; short_id: string | null }): string {

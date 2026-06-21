@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { toast } from "sonner";
 import { LayoutGrid } from "lucide-react";
@@ -73,10 +72,10 @@ function ListsContent({
 }) {
   const myLists = lists.filter((l) => l.createdBy.id === currentUserId);
   const rankedLists = lists.filter(
-    (l) => l.user_has_ranked && l.createdBy.id !== currentUserId
+    (l) => l.user_has_ranked && l.createdBy.id !== currentUserId,
   );
   const exploreLists = lists.filter(
-    (l) => l.createdBy.id !== currentUserId && !l.user_has_ranked
+    (l) => l.createdBy.id !== currentUserId && !l.user_has_ranked,
   );
 
   const sharedProps = { currentUserId };
@@ -284,7 +283,7 @@ export default function Library() {
             value={editList.description}
             onChange={(e) =>
               dispatch(
-                uiActions.updateListMeta({ description: e.target.value })
+                uiActions.updateListMeta({ description: e.target.value }),
               )
             }
           />
@@ -340,7 +339,7 @@ export default function Library() {
                 dispatch(
                   uiActions.updateListMeta({
                     visibility: e.target.value as "public" | "hidden" | "draft",
-                  })
+                  }),
                 )
               }
               className="text-[13px] text-rk-primary bg-rk-bg border border-rk-stroke rounded-[6px] px-2 py-1"

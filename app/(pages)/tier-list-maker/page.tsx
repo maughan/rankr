@@ -6,7 +6,6 @@ import { S } from "@/app/content/strings";
 import LandingNav from "@/app/(pages)/landing/LandingNav";
 import ComparisonFeatureSection from "@/app/(pages)/landing/ComparisonFeatureSection";
 import HeroCta from "@/app/(pages)/landing/HeroCta";
-import LandingFooter from "@/app/(pages)/landing/LandingFooter";
 
 const COPY = S.tierListMakerPage;
 const PAGE_URL = `${SITE_URL}/tier-list-maker`;

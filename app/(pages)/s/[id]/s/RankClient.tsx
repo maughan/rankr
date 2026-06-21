@@ -93,8 +93,9 @@ export default function RankClient({
     },
   });
 
-  const { rankings, modals, selectedItems, openTier, imageModalUrl } =
-    useAppSelector((state) => state.ui);
+  const { rankings, modals, imageModalUrl } = useAppSelector(
+    (state) => state.ui,
+  );
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [, setCurrentUserId] = useState(0);
@@ -115,7 +116,7 @@ export default function RankClient({
       const isFirst =
         isAnon ||
         !list.items.some((item) =>
-          item.rankings.some((r) => r.userId === viewerId)
+          item.rankings.some((r) => r.userId === viewerId),
         );
       trackEvent(E.RANKING_STARTED, {
         list_id: list.id,
@@ -179,7 +180,7 @@ export default function RankClient({
       const userRankings = processRankingData(
         rankings,
         { id: userId, username },
-        list.id
+        list.id,
       );
 
       const minDwell = new Promise<void>((r) => setTimeout(r, 1200));
@@ -367,7 +368,7 @@ export default function RankClient({
               };
               const tierItems = tier.items
                 .map((itemId) =>
-                  list.items.find((i: TierItem) => i.id === itemId)
+                  list.items.find((i: TierItem) => i.id === itemId),
                 )
                 .filter((i): i is TierItem => !!i);
 
@@ -443,7 +444,7 @@ export default function RankClient({
             >
               {list.items.map((item: TierItem) => {
                 const isRanked = rankings.some((tier) =>
-                  tier.items.includes(item.id)
+                  tier.items.includes(item.id),
                 );
                 if (isRanked) return null;
                 return (

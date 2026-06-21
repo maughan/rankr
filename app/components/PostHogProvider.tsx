@@ -26,7 +26,7 @@ if (typeof window !== "undefined" && IS_ENABLED && !posthog.__loaded) {
 
   // Expose on window so the thin client wrapper can reach it without
   // importing posthog-js directly (avoids double-init in edge cases).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   (window as any).__posthog_instance = posthog;
 
   // Identify if already logged in (page hard-refresh while authed).

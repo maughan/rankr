@@ -36,7 +36,7 @@ interface ComputeResult {
 }
 
 async function computeArchetype(userId: number): Promise<ComputeResult | null> {
-  const rawRankings = await (prisma as any).ranking.findMany({
+  const rawRankings = await prisma.ranking.findMany({
     where: { userId, value: { gt: 0 } },
     select: {
       itemId: true,
@@ -73,7 +73,7 @@ async function computeArchetype(userId: number): Promise<ComputeResult | null> {
   for (const r of rawRankings) {
     const list = r.item.lists[0];
     if (!list || list.tiers.length < 2) continue;
-    const sortedTiers = [...list.tiers].sort((a: any, b: any) => b.value - a.value);
+    const sortedTiers = [...list.tiers].sort((a, b) => b.value - a.value);
     rankings.push({
       itemId: r.itemId,
       value: r.value,
@@ -99,13 +99,17 @@ async function computeArchetype(userId: number): Promise<ComputeResult | null> {
     where: { itemId: { in: itemIds }, value: { gt: 0 } },
     _avg: { value: true },
     _count: { id: true },
-  })) as { itemId: number; _avg: { value: number | null }; _count: { id: number } }[];
+  })) as {
+    itemId: number;
+    _avg: { value: number | null };
+    _count: { id: number };
+  }[];
 
   const crowdMap = new Map(
     crowdGrouped.map((r) => [
       r.itemId,
       { avg: r._avg.value ?? 0, count: r._count.id },
-    ])
+    ]),
   );
 
   let withinCount = 0;
@@ -141,7 +145,8 @@ async function computeArchetype(userId: number): Promise<ComputeResult | null> {
         const yourTier =
           r.tiers.find((t) => t.value === r.value)?.title ?? String(r.value);
         const crowdTier =
-          r.tiers.find((t) => t.value === crowdRounded)?.title ?? String(crowdRounded);
+          r.tiers.find((t) => t.value === crowdRounded)?.title ??
+          String(crowdRounded);
         evidenceCandidates.push({
           itemName: r.itemName,
           listName: r.listTitle,
@@ -165,9 +170,7 @@ async function computeArchetype(userId: number): Promise<ComputeResult | null> {
   const harshness = 1 - generosity;
   const meanNorm = generosity;
   const rawVariance =
-    n > 1
-      ? normValues.reduce((s, v) => s + (v - meanNorm) ** 2, 0) / n
-      : 0;
+    n > 1 ? normValues.reduce((s, v) => s + (v - meanNorm) ** 2, 0) / n : 0;
   const selfVariance = Math.min(rawVariance / 0.25, 1);
 
   const scores: [ArchetypeSlug, number][] = [
@@ -191,7 +194,7 @@ async function computeArchetype(userId: number): Promise<ComputeResult | null> {
   evidenceCandidates.sort((a, b) => b.absDelta - a.absDelta);
   const evidence: ArchetypeReceipt[] = evidenceCandidates
     .slice(0, ARCHETYPE_EVIDENCE_COUNT)
-    .map(({ absDelta: _absDelta, ...rest }) => rest);
+    .map(({ ...rest }) => rest);
 
   const round3 = (v: number) => Math.round(v * 1000) / 1000;
 
@@ -261,7 +264,9 @@ async function main() {
       if (result) {
         computed++;
         breakdown[result.archetype] = (breakdown[result.archetype] ?? 0) + 1;
-        console.log(`  ${prefix} → ${result.archetype} (${result.stats.rankedItemCount} items, ${result.stats.rankedListCount} lists)`);
+        console.log(
+          `  ${prefix} → ${result.archetype} (${result.stats.rankedItemCount} items, ${result.stats.rankedListCount} lists)`,
+        );
       } else {
         skipped++;
         console.log(`  ${prefix} → insufficient data, skipped`);
@@ -279,12 +284,17 @@ async function main() {
   console.log(`  Errors    : ${errors}`);
   if (Object.keys(breakdown).length > 0) {
     console.log("\n  Breakdown:");
-    for (const [slug, count] of Object.entries(breakdown).sort((a, b) => b[1] - a[1])) {
+    for (const [slug, count] of Object.entries(breakdown).sort(
+      (a, b) => b[1] - a[1],
+    )) {
       console.log(`    ${slug.padEnd(12)} ${count}`);
     }
   }
 }
 
 main()
-  .catch((e) => { console.error(e); process.exit(1); })
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
   .finally(() => prisma.$disconnect());

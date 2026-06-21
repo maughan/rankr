@@ -8,7 +8,7 @@ import type { EventName, EventProperties } from "./events";
 function getPostHog() {
   if (typeof window === "undefined") return null;
   // posthog-js attaches itself to window after the provider initialises it.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const ph = (window as any).__posthog_instance;
   return ph ?? null;
 }

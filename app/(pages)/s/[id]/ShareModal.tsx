@@ -2,7 +2,15 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Check, RefreshCw, Link2, Users, Plus, Trash2 } from "lucide-react";
+import {
+  Copy,
+  Check,
+  RefreshCw,
+  Link2,
+  Users,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { formatDistanceStrict } from "date-fns";
 
 import Modal from "@/app/components/modal";
@@ -125,7 +133,9 @@ function InvitePanel({ listId }: { listId: number }) {
       ) : (
         <div className="flex flex-col gap-2">
           {invites.length === 0 && (
-            <p className="text-[12px] text-rk-tertiary">{S.invites.emptyHint}</p>
+            <p className="text-[12px] text-rk-tertiary">
+              {S.invites.emptyHint}
+            </p>
           )}
           {invites.map((inv) => (
             <InviteRow
@@ -156,7 +166,7 @@ function InvitePanel({ listId }: { listId: number }) {
 
 // ── Public share-link panel ──────────────────────────────────────────────────
 
-function ShareLinkPanel({ listId, onClose }: { listId: number; onClose: () => void }) {
+function ShareLinkPanel({ listId }: { listId: number }) {
   const queryClient = useQueryClient();
   const listKey = ["list", listId] as const;
 
@@ -335,7 +345,12 @@ function ShareLinkPanel({ listId, onClose }: { listId: number; onClose: () => vo
 
 // ── Modal shell ──────────────────────────────────────────────────────────────
 
-export default function ShareModal({ listId, visibility, open, onClose }: Props) {
+export default function ShareModal({
+  listId,
+  visibility,
+  open,
+  onClose,
+}: Props) {
   const isPrivate = visibility === "private";
 
   return (
@@ -344,11 +359,12 @@ export default function ShareModal({ listId, visibility, open, onClose }: Props)
         <p className="text-rk-primary text-[17px] font-[500]">
           {isPrivate ? S.invites.sectionLabel : "Share stack"}
         </p>
-        {open && (
-          isPrivate
-            ? <InvitePanel listId={listId} />
-            : <ShareLinkPanel listId={listId} onClose={onClose} />
-        )}
+        {open &&
+          (isPrivate ? (
+            <InvitePanel listId={listId} />
+          ) : (
+            <ShareLinkPanel listId={listId} />
+          ))}
       </div>
     </Modal>
   );

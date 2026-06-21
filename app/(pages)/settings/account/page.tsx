@@ -4,7 +4,13 @@ import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ChevronLeft, Download, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import {
+  ChevronLeft,
+  Download,
+  Trash2,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
 import { S } from "@/app/content/strings";
 
 interface MeResponse {
@@ -18,9 +24,19 @@ interface MeResponse {
 const inputCls =
   "bg-rk-row border border-rk-stroke rounded-[8px] px-3 py-2.5 text-rk-primary text-sm outline-none placeholder:text-rk-tertiary w-full focus:border-rk-muted transition-colors disabled:opacity-50";
 
-function SectionCard({ title, danger, children }: { title: string; danger?: boolean; children: React.ReactNode }) {
+function SectionCard({
+  title,
+  danger,
+  children,
+}: {
+  title: string;
+  danger?: boolean;
+  children: React.ReactNode;
+}) {
   return (
-    <div className={`bg-rk-surface rounded-[12px] overflow-hidden border ${danger ? "border-red-900/40" : "border-rk-stroke"}`}>
+    <div
+      className={`bg-rk-surface rounded-[12px] overflow-hidden border ${danger ? "border-red-900/40" : "border-rk-stroke"}`}
+    >
       <div className="px-5 py-4 border-b border-rk-stroke">
         <h2 className="text-[14px] font-[600] text-rk-primary">{title}</h2>
       </div>
@@ -31,12 +47,17 @@ function SectionCard({ title, danger, children }: { title: string; danger?: bool
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
-    day: "numeric", month: "long", year: "numeric",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 }
 
 function daysLeft(iso: string) {
-  return Math.max(0, Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000));
+  return Math.max(
+    0,
+    Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000),
+  );
 }
 
 // ── Export section ────────────────────────────────────────────────────────────
@@ -45,7 +66,9 @@ function ExportSection() {
   return (
     <SectionCard title="Download your data">
       <p className="text-[13px] text-rk-secondary leading-relaxed">
-        Get a copy of everything we hold on you — your profile, lists, rankings, follows, and more — as a JSON file. Useful if you want a backup or you're moving on.
+        Get a copy of everything we hold on you — your profile, lists, rankings,
+        follows, and more — as a JSON file. Useful if you want a backup or
+        you're moving on.
       </p>
       <a
         href="/api/user/data-export"
@@ -107,7 +130,9 @@ function DeletionSection({ me }: { me: MeResponse }) {
   const handleCancel = async () => {
     setCancelling(true);
     try {
-      const res = await fetch("/api/user/delete-account/cancel", { method: "POST" });
+      const res = await fetch("/api/user/delete-account/cancel", {
+        method: "POST",
+      });
       if (!res.ok) {
         toast.error(S.accountDeletion.cancelFailed);
         return;
@@ -125,13 +150,20 @@ function DeletionSection({ me }: { me: MeResponse }) {
     return (
       <SectionCard title="Delete my account" danger>
         <div className="flex items-start gap-3 rounded-[8px] border border-amber-800/40 bg-amber-900/10 px-3 py-3">
-          <AlertTriangle size={14} className="text-amber-400 flex-shrink-0 mt-0.5" />
+          <AlertTriangle
+            size={14}
+            className="text-amber-400 flex-shrink-0 mt-0.5"
+          />
           <div>
-            <p className="text-[13px] font-[500] text-amber-300">Deletion scheduled</p>
+            <p className="text-[13px] font-[500] text-amber-300">
+              Deletion scheduled
+            </p>
             <p className="text-[12px] text-amber-400/80 mt-0.5">
               Your account will be permanently deleted on{" "}
-              <strong>{fmt(pendingDeletion)}</strong> — in {daysLeft(pendingDeletion)} day{daysLeft(pendingDeletion) !== 1 ? "s" : ""}.
-              After that, this cannot be undone.
+              <strong>{fmt(pendingDeletion)}</strong> — in{" "}
+              {daysLeft(pendingDeletion)} day
+              {daysLeft(pendingDeletion) !== 1 ? "s" : ""}. After that, this
+              cannot be undone.
             </p>
           </div>
         </div>
@@ -150,7 +182,10 @@ function DeletionSection({ me }: { me: MeResponse }) {
   return (
     <SectionCard title="Delete my account" danger>
       <p className="text-[13px] text-rk-secondary leading-relaxed">
-        Permanently removes your profile, lists, settings, and follows. Your rankings on public lists become anonymous — they stay to preserve other rankers' data. You'll have 30 days to change your mind before anything is gone for good.
+        Permanently removes your profile, lists, settings, and follows. Your
+        rankings on public lists become anonymous — they stay to preserve other
+        rankers' data. You'll have 30 days to change your mind before anything
+        is gone for good.
       </p>
 
       {!showConfirm ? (
@@ -164,12 +199,16 @@ function DeletionSection({ me }: { me: MeResponse }) {
       ) : (
         <form onSubmit={handleDelete} className="flex flex-col gap-4">
           <div className="rounded-[8px] border border-red-900/40 bg-red-900/10 px-3 py-3 text-[12px] text-red-300 leading-relaxed">
-            This schedules permanent deletion in 30 days. You'll be signed out immediately and emailed a cancellation link. After 30 days, your account cannot be recovered.
+            This schedules permanent deletion in 30 days. You'll be signed out
+            immediately and emailed a cancellation link. After 30 days, your
+            account cannot be recovered.
           </div>
 
           <label className="flex flex-col gap-1.5">
             <span className="text-[13px] text-rk-secondary">
-              Type your username (<strong className="text-rk-primary">@{me.username}</strong>) to confirm
+              Type your username (
+              <strong className="text-rk-primary">@{me.username}</strong>) to
+              confirm
             </span>
             <input
               className={inputCls}
@@ -183,7 +222,9 @@ function DeletionSection({ me }: { me: MeResponse }) {
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] text-rk-secondary">Confirm your password</span>
+            <span className="text-[13px] text-rk-secondary">
+              Confirm your password
+            </span>
             <input
               className={inputCls}
               type="password"
@@ -195,7 +236,10 @@ function DeletionSection({ me }: { me: MeResponse }) {
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-[13px] text-rk-secondary">Why are you leaving? <span className="text-rk-tertiary">(optional)</span></span>
+            <span className="text-[13px] text-rk-secondary">
+              Why are you leaving?{" "}
+              <span className="text-rk-tertiary">(optional)</span>
+            </span>
             <textarea
               className={`${inputCls} resize-none`}
               rows={2}
@@ -217,7 +261,12 @@ function DeletionSection({ me }: { me: MeResponse }) {
             </button>
             <button
               type="button"
-              onClick={() => { setShowConfirm(false); setUsernameInput(""); setPassword(""); setReason(""); }}
+              onClick={() => {
+                setShowConfirm(false);
+                setUsernameInput("");
+                setPassword("");
+                setReason("");
+              }}
               className="px-4 py-2 text-[13px] text-rk-muted border border-rk-stroke rounded-[8px] hover:text-rk-secondary transition-colors cursor-pointer"
             >
               Cancel
@@ -232,15 +281,16 @@ function DeletionSection({ me }: { me: MeResponse }) {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function AccountSettingsPage() {
-  const router = useRouter();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [loadingMe, setLoadingMe] = useState(true);
 
   useEffect(() => {
     fetch("/api/user/me")
-      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then(setMe)
-      .catch(() => { window.location.href = "/"; })
+      .catch(() => {
+        window.location.href = "/";
+      })
       .finally(() => setLoadingMe(false));
   }, []);
 
@@ -256,10 +306,15 @@ export default function AccountSettingsPage() {
     <div className="min-h-screen" style={{ backgroundColor: "#0A1220" }}>
       <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
         <div className="flex items-center gap-3">
-          <Link href="/settings/profile" className="text-rk-muted hover:text-rk-secondary transition-colors">
+          <Link
+            href="/settings/profile"
+            className="text-rk-muted hover:text-rk-secondary transition-colors"
+          >
             <ChevronLeft size={18} />
           </Link>
-          <h1 className="text-[18px] font-[600] text-rk-primary">Privacy & data</h1>
+          <h1 className="text-[18px] font-[600] text-rk-primary">
+            Privacy & data
+          </h1>
         </div>
 
         <ExportSection />

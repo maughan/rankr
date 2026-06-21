@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthedViewer } from "@/lib/server/auth";
 import { readViewerCtx, fetchAccessOpts, canView } from "@/lib/server/listAccess";
-import { generateShortId, slugify } from "@/lib/listUrl";
+import { generateShortId, cloneTitle } from "@/lib/listUrl";
 
 export async function POST(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const body = (await _req.json().catch(() => ({}))) as { asTemplate?: boolean };
+
   const viewer = await getAuthedViewer();
   if (!viewer) return new Response(null, { status: 401 });
 
@@ -42,16 +44,18 @@ export async function POST(
 
   if (!source) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  const { title: newTitle, slug: newSlug } = cloneTitle(source.title, !!body.asTemplate);
+
   const newList = await prisma.list.create({
     data: {
-      title: `Copy of ${source.title}`,
+      title: newTitle,
       description: source.description,
       img: source.img,
       category: source.category,
       visibility: "draft",
       createdById: viewer.id,
       short_id: generateShortId(),
-      slug: slugify(`Copy of ${source.title}`),
+      slug: newSlug,
       tiers: {
         connect: [
           { id: 1 }, { id: 2 }, { id: 3 }, { id: 4 },

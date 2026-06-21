@@ -1,12 +1,18 @@
 "use client";
 
-import { useMemo, useEffect, useRef, useState } from "react";
+import { useMemo } from "react";
 import { S } from "@/app/content/strings";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 
 const CONFETTI_COLORS = [
-  "#F59E0B", "#7C3AED", "#3B82F6", "#10B981",
-  "#EC4899", "#F97316", "#EF4444", "#06B6D4",
+  "#F59E0B",
+  "#7C3AED",
+  "#3B82F6",
+  "#10B981",
+  "#EC4899",
+  "#F97316",
+  "#EF4444",
+  "#06B6D4",
 ];
 
 interface Piece {

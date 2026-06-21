@@ -4,6 +4,7 @@ import { getAuthedViewer } from "@/lib/server/auth";
 import { readViewerCtx, fetchAccessOpts, canRank } from "@/lib/server/listAccess";
 import { captureServer } from "@/lib/analytics/server";
 import { E } from "@/lib/analytics/events";
+import { notify } from "@/lib/server/notify";
 
 interface RankingInput {
   itemId: number;
@@ -61,6 +62,15 @@ export async function PUT(req: Request) {
           data: { actorId: viewer.id, type: "ranked", listId },
         })
       );
+      if (list) {
+        await notify({
+          recipientId: list.createdById,
+          type: "ranked_your_list",
+          actorId: viewer.id,
+          listId,
+          meta: { lastActorName: null },
+        });
+      }
     }
 
     // Hot-take detection: find the user's item furthest from crowd mean (≥2 tiers)
@@ -113,6 +123,14 @@ export async function PUT(req: Request) {
           },
         })
       );
+      if (list) {
+        await notify({
+          recipientId: list.createdById,
+          type: "hot_take",
+          actorId: viewer.id,
+          listId,
+        });
+      }
     }
 
     // ── Milestone check ───────────────────────────────────────────────────
@@ -155,6 +173,12 @@ export async function PUT(req: Request) {
                 },
               })
             );
+            await notify({
+              recipientId: creatorId,
+              type: "list_milestone",
+              listId,
+              meta: { milestone: threshold },
+            });
           }
         }
       }

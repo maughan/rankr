@@ -225,7 +225,7 @@ function ArchetypeSheet({
           <p className="text-[14px] text-rk-secondary leading-relaxed">
             {desc}
           </p>
-          <p className="text-[12px] text-rk-muted italic">"{tagline}"</p>
+          <p className="text-[12px] text-rk-muted italic">{`"${tagline}"`}</p>
           <p className="text-[12px] text-rk-tertiary">
             {(config.statLine as (pct?: number) => string)(pct)}
             {" · "}
@@ -714,14 +714,14 @@ export default function ProfileClient({ username }: { username: string }) {
     currentTab === "draft"
       ? "No drafts."
       : currentTab === "private"
-      ? "No private lists."
-      : currentTab === "hidden"
-      ? "No hidden lists."
-      : currentTab === "public"
-      ? isOwner
-        ? "No public lists yet."
-        : "No public lists."
-      : "No lists yet.";
+        ? "No private lists."
+        : currentTab === "hidden"
+          ? "No hidden lists."
+          : currentTab === "public"
+            ? isOwner
+              ? "No public lists yet."
+              : "No public lists."
+            : "No lists yet.";
 
   return (
     <div className="min-h-screen bg-rk-page flex flex-col">

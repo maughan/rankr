@@ -832,13 +832,22 @@ export default function FeedPage() {
             </select>
           </label>
 
-          <div className="flex justify-end gap-2">
-            <Button
+          <div className="flex items-center justify-between gap-2">
+            <Link
+              href="/templates"
               onClick={() => dispatch(uiActions.closeCreateListModal())}
-              type="secondary"
+              className="flex items-center gap-1.5 text-[13px] font-[500] text-rk-secondary hover:text-rk-primary transition-colors cursor-pointer"
             >
-              Cancel
-            </Button>
+              <Layers size={14} />
+              Start from a template
+            </Link>
+            <div className="flex justify-end gap-2">
+              <Button
+                onClick={() => dispatch(uiActions.closeCreateListModal())}
+                type="secondary"
+              >
+                Cancel
+              </Button>
             <Button
               onClick={handleAddList}
               disabled={isCreating}
@@ -849,6 +858,7 @@ export default function FeedPage() {
               )}
               Create
             </Button>
+            </div>
           </div>
         </div>
       </Modal>

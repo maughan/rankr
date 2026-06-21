@@ -5,7 +5,6 @@ import { NextResponse } from "next/server";
 import { CATEGORY_SLUGS_SET } from "@/lib/categories";
 import { generateShortId, slugify } from "@/lib/listUrl";
 import { computeETag, checkETagMatch } from "@/lib/server/etag";
-import { Ranking } from "@/app/generated/prisma/client";
 import { captureServer } from "@/lib/analytics/server";
 import { E } from "@/lib/analytics/events";
 
@@ -71,7 +70,7 @@ export async function GET(_req: Request) {
           .map((i: any) => i.rankings.map((r: any) => r.userId))
           .flat()
           .some((r: any) => r === viewerId) &&
-          list.visibility === "private")
+          list.visibility === "private"),
     );
 
     const result = filteredLists.map((list) => {
@@ -185,7 +184,9 @@ export async function POST(req: Request) {
         visibility: data.visibility ?? "draft",
         short_id: generateShortId(),
         slug: slugify(data.title ?? "list"),
-        category: CATEGORY_SLUGS_SET.has(data.category) ? data.category : "other",
+        category: CATEGORY_SLUGS_SET.has(data.category)
+          ? data.category
+          : "other",
         tiers: {
           connect: [
             { id: 1 },
@@ -245,7 +246,7 @@ export async function PATCH(req: Request) {
     if (!ownsList) {
       return NextResponse.json(
         { message: "Failed to update list" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -267,7 +268,7 @@ export async function PATCH(req: Request) {
               message:
                 "Cannot revert to draft after rankings have been submitted.",
             },
-            { status: 409 }
+            { status: 409 },
           );
         }
       }

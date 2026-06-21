@@ -82,6 +82,32 @@ git add lib/itemDistribution.ts __tests__/itemDistribution.test.ts \
 git commit -m "feat: consensus + per-item distribution"
 ```
 
+### E — Start-from-template gallery
+```
+git add prisma/schema.prisma prisma/migrations/20260620000002_is_template \
+  lib/listUrl.ts __tests__/cloneTitle.test.ts \
+  "app/api/s/[id]/copy/route.ts" app/api/templates/route.ts \
+  "app/(pages)/templates" \
+  app/api/admin/lists "app/(pages)/admin/lists/page.tsx" "app/(pages)/admin/page.tsx" \
+  "app/(pages)/feed/page.tsx"
+git commit -m "feat: start-from-template gallery + admin curation"
+```
+Second migration to apply: `20260620000002_is_template` (after the taste one).
+
+### F — In-app notifications (Phase 1)
+```
+git add prisma/schema.prisma prisma/migrations/20260620000003_notifications \
+  lib/notificationCopy.ts __tests__/notificationCopy.test.ts \
+  lib/server/notify.ts \
+  app/api/rankings/route.ts "app/api/u/[username]/follow/route.ts" "app/api/cron/taste-matches/route.ts" \
+  app/api/notifications \
+  lib/api/notificationsApi.ts lib/api/baseApi.ts \
+  app/components/NotificationBell.tsx app/components/NavAvatar.tsx
+git commit -m "feat: in-app notifications (phase 1)"
+```
+Third migration to apply: `20260620000003_notifications`.
+Known: the new route files use bare `(prisma as any)` casts (lint `any` debt, same as the rest of the codebase — clean up in the batch `any` pass; add `// eslint-disable-next-line` if your build hard-fails on lint). Web push = Phase 2 (fans out from `notify()`).
+
 > Note: several files (`payoff/index.tsx`, `listsApi.ts`, `lib/insightsConfig.ts`,
 > `ListDetail.tsx`, `/r/[token]/page.tsx`) span more than one feature — git
 > tracks files, not features, so each lands with the first commit that includes
@@ -99,9 +125,9 @@ macOS-only there), so the generated client doesn't yet know the two new `User`
 columns. On your Mac:
 
 ```bash
-npx prisma generate                       # regenerate client w/ taste_matches + profile_private
-npx prisma migrate deploy                 # apply 20260620000001_taste_identity
-# (or: npx prisma migrate dev --name taste_identity if you prefer dev flow)
+npx prisma generate                       # regenerate client w/ taste_matches, profile_private, is_template
+npx prisma migrate deploy                 # apply 20260620000001_taste_identity + 20260620000002_is_template
+# (or: npx prisma migrate dev if you prefer dev flow)
 ```
 
 After `prisma generate`, the many `(prisma.user as any)` casts on `taste_matches`
@@ -148,6 +174,12 @@ npm test    # expect ~193 passing
 - `/s/` and `/r/`: tap an item → histogram with correct %s + "you" marker; no N/A row.
 - Contention dots on divisive items only (past the ranker gate); "most divisive" sort reorders community view only.
 - Item with <3 rankers → "not enough rankings yet".
+
+### E — Start-from-template gallery
+- Flag a public list as a template in admin (`/admin/lists`) → it appears in `/templates` under its category; a non-public list can't be flagged.
+- "Use this template" while signed in → new draft titled cleanly (no "Copy of") → lands in the rank flow.
+- Signed-out "use template" → auth modal → after login, re-click clones.
+- A taken-down (but public) template does NOT appear in the gallery.
 
 ---
 

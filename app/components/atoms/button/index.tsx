@@ -15,7 +15,7 @@ export default function Button({
   children,
   type,
 }: ButtonProps) {
-  let baseClass =
+  const baseClass =
     "px-3 py-1.5 text-[13px] font-[500] rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer";
 
   const getStyleForType = (type: ButtonType) => {

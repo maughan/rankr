@@ -8,6 +8,7 @@ import { baseApi } from "@/lib/api/baseApi";
 import { nameToColor } from "@/lib/itemColor";
 import { getUserFromToken } from "@/lib/helpers";
 import { usePostHog } from "posthog-js/react";
+import NotificationBell from "./NotificationBell";
 
 export default function NavAvatar({ username }: { username: string }) {
   const [open, setOpen] = useState(false);
@@ -48,8 +49,10 @@ export default function NavAvatar({ username }: { username: string }) {
   const initial = username[0]?.toUpperCase() ?? "?";
 
   return (
-    <div ref={ref} className="relative flex-shrink-0">
-      <button
+    <div className="flex items-center gap-1.5">
+      <NotificationBell />
+      <div ref={ref} className="relative flex-shrink-0">
+        <button
         onClick={() => setOpen((v) => !v)}
         className="w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-[500] text-white cursor-pointer hover:opacity-85 transition-opacity"
         style={{ backgroundColor: color }}
@@ -105,6 +108,7 @@ export default function NavAvatar({ username }: { username: string }) {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { getUserFromRequest } from "@/lib/auth";
 import { resolveUserByUsername, getBlockBetween } from "@/lib/server/followHelpers";
 import { captureServer } from "@/lib/analytics/server";
 import { E } from "@/lib/analytics/events";
+import { notify } from "@/lib/server/notify";
 
 // POST /api/u/:username/follow — follow a user (idempotent)
 export async function POST(
@@ -41,6 +42,7 @@ export async function POST(
 
   if (didFollow) {
     await captureServer(String(viewer.sub), E.FOLLOW_ADDED, { target_user_id: target.id });
+    await notify({ recipientId: target.id, type: "new_follower", actorId: viewer.sub });
   }
 
   return new Response(null, { status: 204 });

@@ -4,8 +4,6 @@ import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
 import { resolveUserByUsername } from "@/lib/server/followHelpers";
 
-const PAGE_SIZE = 20;
-
 function softAuth(token: string | undefined): number | null {
   if (!token) return null;
   try {
@@ -20,7 +18,7 @@ function softAuth(token: string | undefined): number | null {
 // Returns: { users: FollowUser[], nextCursor: string | null }
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ username: string }> }
+  { params }: { params: Promise<{ username: string }> },
 ) {
   const { username } = await params;
   const target = await resolveUserByUsername(username);
@@ -31,26 +29,26 @@ export async function GET(
 
   const url = new URL(req.url);
   const cursor = url.searchParams.get("cursor");
-  const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "20", 10), 50);
+  const limit = Math.min(
+    parseInt(url.searchParams.get("limit") ?? "20", 10),
+    50,
+  );
 
   // Blocked user IDs to exclude (both directions), only when viewer is present
   let blockedIds: number[] = [];
   if (viewerId) {
-    const blocks = await (prisma as any).block.findMany({
+    const blocks = (await (prisma as any).block.findMany({
       where: {
-        OR: [
-          { blockerId: viewerId },
-          { blockedId: viewerId },
-        ],
+        OR: [{ blockerId: viewerId }, { blockedId: viewerId }],
       },
       select: { blockerId: true, blockedId: true },
-    }) as { blockerId: number; blockedId: number }[];
+    })) as { blockerId: number; blockedId: number }[];
     blockedIds = blocks.flatMap((b) =>
-      b.blockerId === viewerId ? [b.blockedId] : [b.blockerId]
+      b.blockerId === viewerId ? [b.blockedId] : [b.blockerId],
     );
   }
 
-  const rows = await (prisma as any).follow.findMany({
+  const rows = (await (prisma as any).follow.findMany({
     where: {
       followingId: target.id,
       ...(cursor ? { createdAt: { lt: new Date(cursor) } } : {}),
@@ -65,9 +63,15 @@ export async function GET(
           ...(viewerId
             ? {
                 // Does this follower follow the viewer back?
-                following: { where: { followingId: viewerId }, select: { followingId: true } },
+                following: {
+                  where: { followingId: viewerId },
+                  select: { followingId: true },
+                },
                 // Does the viewer follow this follower?
-                followers: { where: { followerId: viewerId }, select: { followerId: true } },
+                followers: {
+                  where: { followerId: viewerId },
+                  select: { followerId: true },
+                },
               }
             : {}),
         },
@@ -75,11 +79,13 @@ export async function GET(
     },
     orderBy: { createdAt: "desc" },
     take: limit + 1,
-  }) as any[];
+  })) as any[];
 
   const hasMore = rows.length > limit;
   const page = hasMore ? rows.slice(0, limit) : rows;
-  const nextCursor = hasMore ? page[page.length - 1].createdAt.toISOString() : null;
+  const nextCursor = hasMore
+    ? page[page.length - 1].createdAt.toISOString()
+    : null;
 
   const users = page.map((row: any) => ({
     username: row.follower.username,

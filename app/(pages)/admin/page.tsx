@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { formatDistanceStrict } from "date-fns";
-import { Loader2, ChevronDown, ShieldAlert, Wrench, Undo2 } from "lucide-react";
+import { Loader2, ChevronDown, ShieldAlert, Wrench, Undo2, ListChecks } from "lucide-react";
 import { getUserFromToken } from "@/lib/helpers";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -419,15 +419,25 @@ export default function AdminPage() {
               Back
             </Link>
 
-            {isSuperAdmin && (
+            <div className="flex items-center gap-2">
               <Link
-                href="/admin/tools"
-                className="flex items-center bg-rk-accent gap-1.5 px-3 py-1.5 text-[12px] font-[500] text-rk-primary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+                href="/admin/lists"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
               >
-                <Wrench size={12} />
-                Tools
+                <ListChecks size={12} />
+                Lists
               </Link>
-            )}
+
+              {isSuperAdmin && (
+                <Link
+                  href="/admin/tools"
+                  className="flex items-center bg-rk-accent gap-1.5 px-3 py-1.5 text-[12px] font-[500] text-rk-primary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+                >
+                  <Wrench size={12} />
+                  Tools
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -442,15 +452,25 @@ export default function AdminPage() {
             Back
           </Link>
 
-          {isSuperAdmin && (
+          <div className="flex items-center gap-2">
             <Link
-              href="/admin/tools"
-              className="flex items-center bg-rk-accent gap-1.5 px-3 py-1.5 text-[12px] font-[500] text-rk-primary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+              href="/admin/lists"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
             >
-              <Wrench size={12} />
-              Tools
+              <ListChecks size={12} />
+              Lists
             </Link>
-          )}
+
+            {isSuperAdmin && (
+              <Link
+                href="/admin/tools"
+                className="flex items-center bg-rk-accent gap-1.5 px-3 py-1.5 text-[12px] font-[500] text-rk-primary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors"
+              >
+                <Wrench size={12} />
+                Tools
+              </Link>
+            )}
+          </div>
         </div>
         {/* Mobile stats */}
         {stats && (

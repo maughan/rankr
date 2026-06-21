@@ -185,7 +185,6 @@ export default function ListDetail({
 
   const {
     data: list,
-    isPending,
     isError,
     refetch,
   } = useQuery({
@@ -255,7 +254,7 @@ export default function ListDetail({
     return list.items.reduce(
       (acc: number, item: any) =>
         acc + (item.rankings?.filter((r: any) => r.value !== 0).length ?? 0),
-      0
+      0,
     );
   }, [list]);
 
@@ -266,7 +265,7 @@ export default function ListDetail({
         acc +
         (item.rankings?.filter((r: any) => r.value !== 0 && !r.user).length ??
           0),
-      0
+      0,
     );
   }, [list]);
 
@@ -380,7 +379,7 @@ export default function ListDetail({
       return null;
 
     const itemNameMap = new Map<number, string>(
-      (list.items as any[]).map((i: any) => [i.id, i.name ?? "?"])
+      (list.items as any[]).map((i: any) => [i.id, i.name ?? "?"]),
     );
 
     let contrarian: AwardUser | null = null;
@@ -394,7 +393,7 @@ export default function ListDetail({
       const userValueMap = new Map<number, number>();
       for (const item of list.items) {
         const r = (item.rankings as any[]).find(
-          (r: any) => r.user?.id === user.id && r.value > 0
+          (r: any) => r.user?.id === user.id && r.value > 0,
         );
         if (r) userValueMap.set(item.id, r.value);
       }
@@ -480,7 +479,7 @@ export default function ListDetail({
         continue;
       }
       const matches = allRankings.filter(
-        (r) => r.value === subjectRanking.value
+        (r) => r.value === subjectRanking.value,
       ).length;
       const pct = Math.round((matches / allRankings.length) * 100);
       const tier = classifyAgreement(pct, allRankings.length);
@@ -557,7 +556,7 @@ export default function ListDetail({
         visibility: list?.visibility ?? "draft",
         category: list?.category ?? "other",
         allow_contributions: list?.allow_contributions ?? false,
-      })
+      }),
     );
   };
 
@@ -863,7 +862,7 @@ export default function ListDetail({
                 style={{
                   height: Math.max(
                     2,
-                    Math.round((d.count / maxCount) * BAR_MAX_H)
+                    Math.round((d.count / maxCount) * BAR_MAX_H),
                   ),
                   backgroundColor:
                     d.count > 0 ? d.color : "rgba(255,255,255,0.06)",
@@ -894,14 +893,14 @@ export default function ListDetail({
     isLoggedIn &&
     list.items.some((item: TierItem) =>
       item.rankings?.some(
-        (r: any) => r.user?.id === currentUserId && r.value !== 0
-      )
+        (r: any) => r.user?.id === currentUserId && r.value !== 0,
+      ),
     );
 
   // Unranked items (not placed in any tier in the current view)
   const rankedIds = new Set(filteredListRankings.flatMap((t) => t.items));
   const unranked = list.items.filter(
-    (item: TierItem) => !rankedIds.has(item.id) && item.id !== pendingDeleteId
+    (item: TierItem) => !rankedIds.has(item.id) && item.id !== pendingDeleteId,
   );
 
   const { role: currentUserRole } = getUserFromToken();
@@ -930,7 +929,7 @@ export default function ListDetail({
     if (!isLoggedIn) return null;
     const item = (list.items as TierItem[]).find((i) => i.id === itemId);
     const mine = (item?.rankings as ItemRanking[] | undefined)?.find(
-      (r) => r.user?.id === currentUserId && r.value !== 0
+      (r) => r.user?.id === currentUserId && r.value !== 0,
     );
     return mine?.value ?? null;
   };
@@ -1199,7 +1198,7 @@ export default function ListDetail({
                     // Open edit modal then pre-select "public" visibility
                     handleEditList();
                     dispatch(
-                      uiActions.updateListMeta({ visibility: "public" })
+                      uiActions.updateListMeta({ visibility: "public" }),
                     );
                   }}
                   className="flex-shrink-0 text-[12px] font-[500] text-rk-accent hover:opacity-80 transition-opacity cursor-pointer whitespace-nowrap"
@@ -1223,7 +1222,7 @@ export default function ListDetail({
                     <button
                       onClick={() =>
                         handleFilterByUser(
-                          userfilter === currentUserId ? null : currentUserId
+                          userfilter === currentUserId ? null : currentUserId,
                         )
                       }
                       className={`px-2.5 py-1.5 rounded-[8px] text-[12px] cursor-pointer font-[500] transition-colors ${
@@ -1363,17 +1362,18 @@ export default function ListDetail({
                 };
                 let tierItems = tier.items
                   .map((itemId) =>
-                    list.items.find((i: TierItem) => i.id === itemId)
+                    list.items.find((i: TierItem) => i.id === itemId),
                   )
                   .filter(
-                    (i): i is TierItem => !!i && i.id !== pendingDeleteId
+                    (i): i is TierItem => !!i && i.id !== pendingDeleteId,
                   );
 
                 // Community view may sort each tier by divisiveness (sd) desc.
                 if (isCommunityView && sortByDivisive) {
                   tierItems = [...tierItems].sort(
                     (a, b) =>
-                      (distMap.get(b.id)?.sd ?? 0) - (distMap.get(a.id)?.sd ?? 0)
+                      (distMap.get(b.id)?.sd ?? 0) -
+                      (distMap.get(a.id)?.sd ?? 0),
                   );
                 }
 
@@ -1385,102 +1385,102 @@ export default function ListDetail({
 
                 return (
                   <React.Fragment key={tier.id}>
-                  <div
-                    className="flex overflow-hidden border border-rk-stroke"
-                    style={{ borderRadius: 10 }}
-                  >
                     <div
-                      className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px]"
-                      style={{ backgroundColor: style.bg, minHeight: 76 }}
+                      className="flex overflow-hidden border border-rk-stroke"
+                      style={{ borderRadius: 10 }}
                     >
-                      <span
-                        className="text-[26px] font-[500] leading-none select-none"
-                        style={{ color: style.text }}
+                      <div
+                        className="w-16 flex-shrink-0 flex flex-col items-center justify-center py-3 gap-[3px]"
+                        style={{ backgroundColor: style.bg, minHeight: 76 }}
                       >
-                        {tier.title}
-                      </span>
-                      <span
-                        className="text-[10px] leading-none"
-                        style={{ color: style.text, opacity: 0.65 }}
+                        <span
+                          className="text-[26px] font-[500] leading-none select-none"
+                          style={{ color: style.text }}
+                        >
+                          {tier.title}
+                        </span>
+                        <span
+                          className="text-[10px] leading-none"
+                          style={{ color: style.text, opacity: 0.65 }}
+                        >
+                          {tierItems.length}
+                        </span>
+                      </div>
+                      <div
+                        className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
+                        style={{ backgroundColor: "#0F1828", borderRadius: 9 }}
                       >
-                        {tierItems.length}
-                      </span>
-                    </div>
-                    <div
-                      className="flex flex-wrap gap-2 p-3 flex-1 min-h-[96px] content-start"
-                      style={{ backgroundColor: "#0F1828", borderRadius: 9 }}
-                    >
-                      {tierItems.map((item) => {
-                        const badge = agreementByItemId.get(item.id);
-                        const d = distMap.get(item.id);
-                        const level =
-                          d && d.total >= MIN_ITEM_RANKERS_FOR_BADGE
-                            ? divisiveness(d.sd)
-                            : "low";
-                        const contention =
-                          isCommunityView && level !== "low"
-                            ? level
-                            : undefined;
-                        const card = (
-                          <ItemCard
-                            item={item}
-                            onEdit={getOnEdit(item)}
-                            contention={contention}
-                          />
-                        );
-                        return (
-                          <div
-                            key={item.id}
-                            className="flex flex-col items-stretch gap-1"
-                            style={{ width: 70 }}
-                          >
-                            {isCommunityView ? (
-                              <div
-                                role="button"
-                                tabIndex={0}
-                                aria-expanded={expandedItemId === item.id}
-                                onClick={() =>
-                                  setExpandedItemId((id) =>
-                                    id === item.id ? null : item.id
-                                  )
-                                }
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter" || e.key === " ") {
-                                    e.preventDefault();
+                        {tierItems.map((item) => {
+                          const badge = agreementByItemId.get(item.id);
+                          const d = distMap.get(item.id);
+                          const level =
+                            d && d.total >= MIN_ITEM_RANKERS_FOR_BADGE
+                              ? divisiveness(d.sd)
+                              : "low";
+                          const contention =
+                            isCommunityView && level !== "low"
+                              ? level
+                              : undefined;
+                          const card = (
+                            <ItemCard
+                              item={item}
+                              onEdit={getOnEdit(item)}
+                              contention={contention}
+                            />
+                          );
+                          return (
+                            <div
+                              key={item.id}
+                              className="flex flex-col items-stretch gap-1"
+                              style={{ width: 70 }}
+                            >
+                              {isCommunityView ? (
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  aria-expanded={expandedItemId === item.id}
+                                  onClick={() =>
                                     setExpandedItemId((id) =>
-                                      id === item.id ? null : item.id
-                                    );
+                                      id === item.id ? null : item.id,
+                                    )
                                   }
-                                }}
-                                className="cursor-pointer"
-                              >
-                                {card}
-                              </div>
-                            ) : (
-                              card
-                            )}
-                            {badge && (
-                              <AgreementBadge
-                                pct={badge.pct}
-                                tier={badge.tier}
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" || e.key === " ") {
+                                      e.preventDefault();
+                                      setExpandedItemId((id) =>
+                                        id === item.id ? null : item.id,
+                                      );
+                                    }
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  {card}
+                                </div>
+                              ) : (
+                                card
+                              )}
+                              {badge && (
+                                <AgreementBadge
+                                  pct={badge.pct}
+                                  tier={badge.tier}
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                  {expandedItem && (
-                    <div className="rounded-[10px] border border-rk-stroke bg-rk-surface px-4 py-2">
-                      <p className="text-[12px] font-[600] text-rk-primary mb-1 truncate">
-                        {expandedItem.name ?? "—"}
-                      </p>
-                      <ItemDistribution
-                        dist={distMap.get(expandedItem.id)!}
-                        yourValue={yourValueForItem(expandedItem.id)}
-                      />
-                    </div>
-                  )}
+                    {expandedItem && (
+                      <div className="rounded-[10px] border border-rk-stroke bg-rk-surface px-4 py-2">
+                        <p className="text-[12px] font-[600] text-rk-primary mb-1 truncate">
+                          {expandedItem.name ?? "—"}
+                        </p>
+                        <ItemDistribution
+                          dist={distMap.get(expandedItem.id)!}
+                          yourValue={yourValueForItem(expandedItem.id)}
+                        />
+                      </div>
+                    )}
                   </React.Fragment>
                 );
               })}
@@ -1698,7 +1698,7 @@ export default function ListDetail({
               value={editList.description}
               onChange={(e) =>
                 dispatch(
-                  uiActions.updateListMeta({ description: e.target.value })
+                  uiActions.updateListMeta({ description: e.target.value }),
                 )
               }
             />
@@ -1811,7 +1811,7 @@ export default function ListDetail({
                   dispatch(
                     uiActions.updateListMeta({
                       allow_contributions: e.target.checked,
-                    })
+                    }),
                   )
                 }
                 className="accent-rk-accent"

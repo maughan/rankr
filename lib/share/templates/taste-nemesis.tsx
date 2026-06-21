@@ -2,7 +2,7 @@
 // Layout mirrors head-to-head but red-themed; data fetched here like all templates.
 
 import { prisma } from "@/lib/prisma";
-import { Brand, ShareFoot, TierBadge } from "@/lib/share/brand";
+import { Brand, ShareFoot } from "@/lib/share/brand";
 import { ShareCardError } from "@/lib/share/errors";
 import { COLORS } from "@/lib/share/tokens";
 import {
@@ -12,9 +12,7 @@ import {
   TemplateModule,
 } from "@/lib/share/types";
 import { nameToColor } from "@/lib/itemColor";
-import {
-  MIN_OTHER_AUTHED_RANKERS_FOR_NEMESIS,
-} from "@/lib/insightsConfig";
+import { MIN_OTHER_AUTHED_RANKERS_FOR_NEMESIS } from "@/lib/insightsConfig";
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
 
@@ -23,18 +21,26 @@ async function fetchData(params: URLSearchParams): Promise<TasteNemesisData> {
   const listIdRaw = params.get("listId");
   const userIdRaw = params.get("userId");
 
-  if (!userIdRaw) throw new ShareCardError(400, "Sign in to see your taste nemesis");
+  if (!userIdRaw)
+    throw new ShareCardError(400, "Sign in to see your taste nemesis");
   const userId = Number(userIdRaw);
 
-  let list: { id: number; title: string; items: { id: number }[] } | null = null;
+  let list: { id: number; title: string; items: { id: number }[] } | null =
+    null;
   let shareUrl: string;
 
   if (token) {
     const found = await (prisma.list as any).findUnique({
       where: { share_token: token },
-      select: { id: true, title: true, is_shareable: true, items: { select: { id: true } } },
+      select: {
+        id: true,
+        title: true,
+        is_shareable: true,
+        items: { select: { id: true } },
+      },
     });
-    if (!found || !found.is_shareable) throw new ShareCardError(404, "List not found");
+    if (!found || !found.is_shareable)
+      throw new ShareCardError(404, "List not found");
     list = found;
     shareUrl = `tierstack.dev/r/${token}`;
   } else if (listIdRaw) {
@@ -59,9 +65,12 @@ async function fetchData(params: URLSearchParams): Promise<TasteNemesisData> {
     select: { itemId: true, value: true },
   });
 
-  if (!viewerRaw.length) throw new ShareCardError(400, "You haven't ranked this list yet");
+  if (!viewerRaw.length)
+    throw new ShareCardError(400, "You haven't ranked this list yet");
 
-  const userValueMap = new Map<number, number>(viewerRaw.map((r) => [r.itemId, r.value]));
+  const userValueMap = new Map<number, number>(
+    viewerRaw.map((r) => [r.itemId, r.value]),
+  );
 
   // All other authed rankers
   const otherRankings = await prisma.ranking.findMany({
@@ -80,12 +89,18 @@ async function fetchData(params: URLSearchParams): Promise<TasteNemesisData> {
   });
 
   // Group by userId
-  const rankerMap = new Map<number, { username: string; values: Map<number, number> }>();
+  const rankerMap = new Map<
+    number,
+    { username: string; values: Map<number, number> }
+  >();
   for (const row of otherRankings) {
     if (row.userId === null) continue;
     const uid = row.userId as number;
     if (!rankerMap.has(uid)) {
-      rankerMap.set(uid, { username: row.user?.username ?? "?", values: new Map() });
+      rankerMap.set(uid, {
+        username: row.user?.username ?? "?",
+        values: new Map(),
+      });
     }
     rankerMap.get(uid)!.values.set(row.itemId, row.value);
   }
@@ -95,14 +110,25 @@ async function fetchData(params: URLSearchParams): Promise<TasteNemesisData> {
     .slice(0, 500);
 
   if (rankerEntries.length < MIN_OTHER_AUTHED_RANKERS_FOR_NEMESIS) {
-    throw new ShareCardError(400, "Not enough rankers to identify a nemesis yet");
+    throw new ShareCardError(
+      400,
+      "Not enough rankers to identify a nemesis yet",
+    );
   }
 
   let worstPct = Infinity;
-  let nemesis: { uid: number; username: string; pct: number; agreed: number; both: number } | null = null;
+  let nemesis: {
+    uid: number;
+    username: string;
+    pct: number;
+    agreed: number;
+    both: number;
+  } | null = null;
 
   for (const [uid, { username, values: theirValues }] of rankerEntries) {
-    let within = 0, agreed = 0, both = 0;
+    let within = 0,
+      agreed = 0,
+      both = 0;
     for (const [itemId, myValue] of userValueMap) {
       const theirValue = theirValues.get(itemId);
       if (theirValue === undefined) continue;
@@ -226,7 +252,13 @@ const RED_BORDER = "rgba(240,149,149,0.35)";
 function AvatarRow({ data, t }: { data: TasteNemesisData; t: T }) {
   const initial = (data.nemesisHandle[0] ?? "?").toUpperCase();
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: Math.round(t.avatarSize * 0.35) }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: Math.round(t.avatarSize * 0.35),
+      }}
+    >
       {/* Me bubble */}
       <div
         style={{
@@ -240,13 +272,29 @@ function AvatarRow({ data, t }: { data: TasteNemesisData; t: T }) {
           flexShrink: 0,
         }}
       >
-        <span style={{ fontSize: Math.round(t.avatarFont * 0.65), fontWeight: 600, color: "#fff", lineHeight: 1 }}>
+        <span
+          style={{
+            fontSize: Math.round(t.avatarFont * 0.65),
+            fontWeight: 600,
+            color: "#fff",
+            lineHeight: 1,
+          }}
+        >
           me
         </span>
       </div>
 
       {/* Zap separator */}
-      <span style={{ fontSize: t.zapSize, color: RED, lineHeight: 1, flexShrink: 0 }}>⚡</span>
+      <span
+        style={{
+          fontSize: t.zapSize,
+          color: RED,
+          lineHeight: 1,
+          flexShrink: 0,
+        }}
+      >
+        ⚡
+      </span>
 
       {/* Nemesis bubble */}
       <div
@@ -261,7 +309,14 @@ function AvatarRow({ data, t }: { data: TasteNemesisData; t: T }) {
           flexShrink: 0,
         }}
       >
-        <span style={{ fontSize: t.avatarFont, fontWeight: 700, color: "#fff", lineHeight: 1 }}>
+        <span
+          style={{
+            fontSize: t.avatarFont,
+            fontWeight: 700,
+            color: "#fff",
+            lineHeight: 1,
+          }}
+        >
           {initial}
         </span>
       </div>
@@ -290,16 +345,36 @@ function HeroBlock({ data, t }: { data: TasteNemesisData; t: T }) {
         >
           {data.alignmentPct}
         </span>
-        <span style={{ fontSize: t.heroSym, fontWeight: 700, color: RED, lineHeight: 1 }}>
+        <span
+          style={{
+            fontSize: t.heroSym,
+            fontWeight: 700,
+            color: RED,
+            lineHeight: 1,
+          }}
+        >
           %
         </span>
       </div>
 
-      <span style={{ fontSize: t.caption, color: COLORS.secondary, lineHeight: 1.2 }}>
+      <span
+        style={{
+          fontSize: t.caption,
+          color: COLORS.secondary,
+          lineHeight: 1.2,
+        }}
+      >
         aligned with @{data.nemesisHandle}
       </span>
 
-      <span style={{ fontSize: t.listName, fontWeight: 500, color: COLORS.primary, lineHeight: 1.2 }}>
+      <span
+        style={{
+          fontSize: t.listName,
+          fontWeight: 500,
+          color: COLORS.primary,
+          lineHeight: 1.2,
+        }}
+      >
         {listTruncated}
       </span>
     </div>
@@ -329,7 +404,14 @@ function DisagreementBox({ data, t }: { data: TasteNemesisData; t: T }) {
       >
         BIGGEST CLASH
       </span>
-      <span style={{ fontSize: t.clItem, color: RED, fontWeight: 600, lineHeight: 1.2 }}>
+      <span
+        style={{
+          fontSize: t.clItem,
+          color: RED,
+          fontWeight: 600,
+          lineHeight: 1.2,
+        }}
+      >
         Disagree on {data.disagreedCount} of {data.totalCount} items
       </span>
     </div>
@@ -338,7 +420,13 @@ function DisagreementBox({ data, t }: { data: TasteNemesisData; t: T }) {
 
 // ── Format-specific Card layouts ──────────────────────────────────────────────
 
-function SquareOrStoryCard({ data, format }: { data: TasteNemesisData; format: "square" | "story" }) {
+function SquareOrStoryCard({
+  data,
+  format,
+}: {
+  data: TasteNemesisData;
+  format: "square" | "story";
+}) {
   const t = TOKENS[format];
   const { width, height } = FORMATS[format];
 
@@ -355,7 +443,13 @@ function SquareOrStoryCard({ data, format }: { data: TasteNemesisData; format: "
       }}
     >
       {/* Zone A — brand + nemesis pill */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Brand scale={t.brandScale} />
         <div
           style={{
@@ -368,7 +462,15 @@ function SquareOrStoryCard({ data, format }: { data: TasteNemesisData; format: "
             padding: "8px 14px",
           }}
         >
-          <span style={{ fontSize: Math.round(t.brandScale * 14), fontWeight: 700, color: RED, letterSpacing: "0.06em", lineHeight: 1 }}>
+          <span
+            style={{
+              fontSize: Math.round(t.brandScale * 14),
+              fontWeight: 700,
+              color: RED,
+              letterSpacing: "0.06em",
+              lineHeight: 1,
+            }}
+          >
             ⚔ TASTE NEMESIS
           </span>
         </div>
@@ -412,14 +514,30 @@ function WideCard({ data }: { data: TasteNemesisData }) {
       }}
     >
       {/* Zone A — brand left, footer right */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <Brand scale={t.brandScale} />
         <ShareFoot url={data.shareUrl} scale={t.footScale} />
       </div>
 
       {/* Zone B — left: avatars + hero; right: callout */}
-      <div style={{ display: "flex", flex: 1, gap: 56, alignItems: "center", marginTop: 32 }}>
-        <div style={{ display: "flex", flex: 1, flexDirection: "column", gap: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          gap: 56,
+          alignItems: "center",
+          marginTop: 32,
+        }}
+      >
+        <div
+          style={{ display: "flex", flex: 1, flexDirection: "column", gap: 24 }}
+        >
           <AvatarRow data={data} t={t} />
           <HeroBlock data={data} t={t} />
         </div>
