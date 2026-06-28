@@ -73,7 +73,20 @@ export async function GET(_req: Request) {
           list.visibility === "private"),
     );
 
-    const result = filteredLists.map((list) => {
+    // Hide curated templates and active onboarding starters from the library —
+    // they live on /templates and in the onboarding flow respectively.
+    const starterRows = await (prisma as any).onboardingStarter.findMany({
+      where: { is_active: true },
+      select: { listId: true },
+    });
+    const starterIds = new Set<number>(
+      starterRows.map((s: { listId: number }) => s.listId),
+    );
+    const visibleLists = filteredLists.filter(
+      (list) => !list.is_template && !starterIds.has(list.id),
+    );
+
+    const result = visibleLists.map((list) => {
       const creatorRankMap = new Map<number, number>(); // itemId → tier value
       let lastActivity: Date | null = null;
       const rankerSet = new Set<number>();

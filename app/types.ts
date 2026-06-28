@@ -29,6 +29,7 @@ export interface ListPreview {
   pinned: boolean;
   top_tier_items: TopTierItem[];
   user_has_ranked: boolean;
+  is_template?: boolean;
 }
 
 export interface TierList {

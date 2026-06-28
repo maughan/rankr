@@ -102,9 +102,9 @@ export default async function RootLayout({
                 <AnnouncementBanner />
                 <OnboardingBanner initialObState={obState} />
                 {children}
-                <div className="sm:bottom-0 sm:left-0 sm:right-0 z-[60]">
+                {/* <div className="sm:bottom-0 sm:left-0 sm:right-0 z-[60]">
                   <FooterWrapper />
-                </div>
+                </div> */}
                 <Analytics />
                 <SpeedInsights />
               </ImpersonationProvider>

@@ -15,7 +15,12 @@ import GeneratedCover from "@/app/components/feed/GeneratedCover";
 
 // Mirrors the feed RichListCard tier colors.
 const TIER_COLORS: Record<string, string> = {
-  S: "#C44545", A: "#E08C2C", B: "#97C459", C: "#5DCAA5", D: "#85B7EB", F: "#AFA9EC",
+  S: "#C44545",
+  A: "#E08C2C",
+  B: "#97C459",
+  C: "#5DCAA5",
+  D: "#85B7EB",
+  F: "#AFA9EC",
 };
 const COVER_FALLBACK = ["#C44545", "#E08C2C", "#97C459", "#5DCAA5", "#85B7EB"];
 
@@ -28,7 +33,8 @@ export default function ListCard({
 }) {
   const queryClient = useQueryClient();
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteList, { isLoading: deleting, error: deleteError }] = useDeleteListMutation();
+  const [deleteList, { isLoading: deleting, error: deleteError }] =
+    useDeleteListMutation();
 
   const isOwner = list.createdBy.id === currentUserId;
   const canDelete = isOwner;
@@ -71,7 +77,15 @@ export default function ListCard({
   return (
     <div className="relative" onMouseEnter={handleMouseEnter}>
       <Link href={listUrl(list)}>
-        <div className="bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors">
+        <div className="relative bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors min-h-[170px]">
+          {list.is_template && (
+            <span
+              className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-[600] uppercase tracking-wide text-rk-accent"
+              style={{ backgroundColor: "rgba(10,18,32,0.72)" }}
+            >
+              Template
+            </span>
+          )}
           {list.img ? (
             <div className="relative h-[84px]">
               <Image
@@ -115,7 +129,10 @@ export default function ListCard({
                   <span
                     key={t.title}
                     className="rounded-full"
-                    style={{ flex: t.count, backgroundColor: TIER_COLORS[t.title] ?? "#1E2C44" }}
+                    style={{
+                      flex: t.count,
+                      backgroundColor: TIER_COLORS[t.title] ?? "#1E2C44",
+                    }}
                   />
                 ))}
               </div>
@@ -137,7 +154,10 @@ export default function ListCard({
 
       {canDelete && (
         <button
-          onClick={(e) => { e.preventDefault(); setDeleteOpen(true); }}
+          onClick={(e) => {
+            e.preventDefault();
+            setDeleteOpen(true);
+          }}
           title="Delete list"
           className="absolute bottom-2 right-2 w-8 h-8 flex items-center justify-center rounded-[6px] text-rk-muted hover:text-red-400 transition-colors cursor-pointer"
           style={{ backgroundColor: "rgba(10,18,32,0.72)" }}
@@ -146,19 +166,25 @@ export default function ListCard({
         </button>
       )}
 
-      <Modal open={deleteOpen} handleClose={() => !deleting && setDeleteOpen(false)}>
+      <Modal
+        open={deleteOpen}
+        handleClose={() => !deleting && setDeleteOpen(false)}
+      >
         <div className="p-6 pt-8 flex flex-col gap-5">
           <div className="flex flex-col gap-2">
             <p className="text-[17px] font-[500] text-rk-primary">
               Delete &ldquo;{list.title}&rdquo;?
             </p>
             <p className="text-[13px] text-rk-muted leading-snug">
-              The list will be moved to Recently Deleted. You have 30 days to restore it before it&rsquo;s permanently removed.
+              The list will be moved to Recently Deleted. You have 30 days to
+              restore it before it&rsquo;s permanently removed.
             </p>
           </div>
 
           {deleteError && (
-            <p className="text-[12px] text-red-400">Something went wrong. Please try again.</p>
+            <p className="text-[12px] text-red-400">
+              Something went wrong. Please try again.
+            </p>
           )}
 
           <div className="flex gap-2">

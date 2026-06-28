@@ -6,6 +6,7 @@ import { S } from "@/app/content/strings";
 import { CATEGORIES } from "@/lib/categories";
 import { CategoryIcon } from "@/app/components/item/CategoryIcon";
 import LandingNav from "@/app/(pages)/landing/LandingNav";
+import { Logo } from "@/app/components";
 // import { SurpriseButton } from "@/app/components/SurpriseButton";
 
 export const revalidate = 3600;
@@ -53,7 +54,7 @@ async function fetchCategoryCounts(): Promise<Map<string, number>> {
 
 export default async function BrowsePage() {
   const countByCategory = await fetchCategoryCounts().catch(
-    () => new Map<string, number>()
+    () => new Map<string, number>(),
   );
 
   const tiles = CATEGORIES.map((cat) => ({
@@ -69,7 +70,11 @@ export default async function BrowsePage() {
 
   return (
     <div className="min-h-screen bg-rk-page flex flex-col">
-      <LandingNav />
+      <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
+        <div className="flex justify-between items-center h-12">
+          <Logo />
+        </div>
+      </div>
 
       <main className="flex-1 px-6 py-12 sm:px-10 max-w-4xl mx-auto w-full flex flex-col gap-10">
         <div className="flex flex-col gap-2">
