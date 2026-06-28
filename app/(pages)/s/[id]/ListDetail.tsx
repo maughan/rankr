@@ -223,6 +223,35 @@ export default function ListDetail({
 
   const [addItemsOpen, setAddItemsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [usingTemplate, setUsingTemplate] = useState(false);
+
+  // Clone a template into the viewer's own draft and drop them into ranking.
+  const handleUseTemplate = async () => {
+    if (!list || usingTemplate) return;
+    setUsingTemplate(true);
+    try {
+      const res = await fetch(`/api/s/${list.id}/copy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ asTemplate: true }),
+      });
+      if (res.status === 401) {
+        dispatch(uiActions.openAuthModal());
+        setUsingTemplate(false);
+        return;
+      }
+      if (!res.ok) {
+        toast.error("Couldn't start from this template");
+        setUsingTemplate(false);
+        return;
+      }
+      const { slug, short_id } = (await res.json()) as { slug: string; short_id: string };
+      router.push(`/s/${slug}-${short_id}/s`);
+    } catch {
+      toast.error("Something went wrong");
+      setUsingTemplate(false);
+    }
+  };
   const [shareCardTemplate, setShareCardTemplate] = useState<
     "head-to-head" | "hot-takes" | "divisive-item" | null
   >(null);
@@ -911,6 +940,8 @@ export default function ListDetail({
 
   // Owner and admins can edit everything; contributors can only edit unranked items
   const getOnEdit = (item: TierItem) => {
+    // Templates are read-only in this view — clone it to edit your own copy.
+    if (list.is_template) return undefined;
     if (isPrivileged) return () => setEditItem(item);
     if (list.allow_contributions) {
       const isRanked = item.rankings?.some((r) => r.value !== 0);
@@ -989,13 +1020,15 @@ export default function ListDetail({
                       <Copy size={13} />
                       Copy
                     </button>
-                    <Link
-                      href={`${listHref}/s`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
-                    >
-                      <Pencil size={12} strokeWidth={2.5} />
-                      Stack it
-                    </Link>
+                    {!list.is_template && (
+                      <Link
+                        href={`${listHref}/s`}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+                      >
+                        <Pencil size={12} strokeWidth={2.5} />
+                        Stack it
+                      </Link>
+                    )}
                   </div>
                 </>
               ) : (
@@ -1050,7 +1083,7 @@ export default function ListDetail({
                   Copy
                 </button>
               )}
-              {isLoggedIn && (
+              {isLoggedIn && !list.is_template && (
                 <Link
                   href={`${listHref}/s`}
                   className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
@@ -1065,6 +1098,24 @@ export default function ListDetail({
 
         {/* ── Content ───────────────────────────────────────────────────────── */}
         <div className="px-4 sm:px-8 py-6 flex flex-col gap-6 max-w-3xl mx-auto">
+          {list.is_template && (
+            <div
+              className="flex items-center justify-between gap-3 px-4 py-3 rounded-[10px]"
+              style={{ backgroundColor: "rgba(74,138,232,0.08)", border: "1px solid rgba(74,138,232,0.4)" }}
+            >
+              <div className="flex flex-col">
+                <p className="text-[13px] font-[500] text-rk-primary">This is a template</p>
+                <p className="text-[12px] text-rk-muted">Make your own copy to rank and share it.</p>
+              </div>
+              <button
+                onClick={handleUseTemplate}
+                disabled={usingTemplate}
+                className="flex-shrink-0 px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
+              >
+                {usingTemplate ? "Starting…" : "Use this template →"}
+              </button>
+            </div>
+          )}
           <div className="flex items-center justify-end sm:justify-between">
             <Link
               href="/feed"
@@ -1518,16 +1569,37 @@ export default function ListDetail({
             </div>
           ) : null}
 
-          {/* Comparison matrix — shown below tier rows when viewing another user */}
+          {/* Comparison matrix — shown below tier rows when viewing another user.
+              If the viewer hasn't ranked yet, there's nothing to compare against —
+              prompt them to rank instead of showing an empty matrix. */}
           {userfilter && userfilter !== currentUserId && (
             <div className="pt-2 border-t border-rk-stroke">
-              <TierComparison
-                list={list}
-                compareUserId={userfilter}
-                compareUsername={
-                  users.find((u) => u.id === userfilter)?.username ?? ""
-                }
-              />
+              {hasMyRankings ? (
+                <TierComparison
+                  list={list}
+                  compareUserId={userfilter}
+                  compareUsername={
+                    users.find((u) => u.id === userfilter)?.username ?? ""
+                  }
+                />
+              ) : (
+                <div className="flex flex-col items-center text-center gap-2 py-8">
+                  <p className="text-rk-primary text-[15px] font-[500]">
+                    Rank this list to compare
+                  </p>
+                  <p className="text-rk-muted text-[13px] max-w-xs">
+                    You haven&apos;t stacked {list.title} yet — rank it to see how
+                    you line up with @
+                    {users.find((u) => u.id === userfilter)?.username ?? "them"}.
+                  </p>
+                  <Link
+                    href={`${listHref}/s`}
+                    className="mt-1 px-4 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity"
+                  >
+                    Stack this list →
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 

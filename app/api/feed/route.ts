@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getAuthedViewer } from "@/lib/server/auth";
+import { scoreRankerPair } from "@/lib/server/payoff";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
@@ -91,6 +92,70 @@ export async function GET(req: Request) {
     const page = hasMore ? events.slice(0, limit) : events;
     nextCursor = hasMore ? page[page.length - 1].id : null;
 
+    // ── Viewer ↔ actor alignment (two batched queries) ─────────────────────
+    const listIds = [...new Set(page.map((e) => e.list.id))];
+    const actorIds = [...new Set(page.map((e) => e.actor.id))];
+
+    // Viewer's rankings across all the lists on this page
+    const viewerPageRankings =
+      listIds.length > 0
+        ? await prisma.ranking.findMany({
+            where: { userId: viewer.id, listId: { in: listIds }, value: { gt: 0 } },
+            select: { listId: true, itemId: true, value: true },
+          })
+        : [];
+
+    // Actors' rankings across all the lists on this page
+    const actorPageRankings =
+      listIds.length > 0 && actorIds.length > 0
+        ? await prisma.ranking.findMany({
+            where: {
+              userId: { in: actorIds },
+              listId: { in: listIds },
+              value: { gt: 0 },
+            },
+            select: { userId: true, listId: true, itemId: true, value: true },
+          })
+        : [];
+
+    // viewer map keyed by listId → (itemId → value)
+    const viewerMapByList = new Map<number, Map<number, number>>();
+    for (const r of viewerPageRankings) {
+      if (r.listId === null) continue;
+      let m = viewerMapByList.get(r.listId);
+      if (!m) {
+        m = new Map();
+        viewerMapByList.set(r.listId, m);
+      }
+      m.set(r.itemId, r.value);
+    }
+
+    // actor map keyed by `${userId}_${listId}` → (itemId → value)
+    const actorMapByUserList = new Map<string, Map<number, number>>();
+    for (const r of actorPageRankings) {
+      if (r.userId === null || r.listId === null) continue;
+      const k = `${r.userId}_${r.listId}`;
+      let m = actorMapByUserList.get(k);
+      if (!m) {
+        m = new Map();
+        actorMapByUserList.set(k, m);
+      }
+      m.set(r.itemId, r.value);
+    }
+
+    const computeAlign = (
+      actorId: number,
+      listId: number
+    ): { pct: number } | null => {
+      if (actorId === viewer.id) return null;
+      const viewerMap = viewerMapByList.get(listId);
+      if (!viewerMap) return null;
+      const actorMap = actorMapByUserList.get(`${actorId}_${listId}`);
+      if (!actorMap) return null;
+      const { within, both } = scoreRankerPair(viewerMap, actorMap);
+      return both > 0 ? { pct: Math.round((within / both) * 100) } : null;
+    };
+
     networkItems = page.map((e) => ({
       key: String(e.id),
       id: e.id,
@@ -109,6 +174,7 @@ export async function GET(req: Request) {
       ...(e.meta
         ? { meta: e.meta as { userVal: number; crowdMean: number; delta: number } }
         : {}),
+      align: computeAlign(e.actor.id, e.list.id),
     }));
   }
 

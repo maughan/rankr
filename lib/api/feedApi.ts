@@ -26,6 +26,7 @@ export interface NetworkFeedItem {
   list: FeedList;
   item?: { id: number; name: string | null; color: string | null };
   meta?: { userVal: number; crowdMean: number; delta: number };
+  align?: { pct: number } | null;
 }
 
 // ── Personal-reward items (page 1 only, derived at assembly time) ─────────────
@@ -101,7 +102,38 @@ export interface DiscoverUser {
   sharedLists: number | null;
 }
 
+// ── Discover lists (redesigned feed) ──────────────────────────────────────────
+
+export interface TierStripEntry {
+  tierTitle: string;
+  value: number;
+  itemCount: number;
+}
+
+export interface RichListCard {
+  id: number;
+  short_id: string;
+  slug: string;
+  title: string;
+  img: string | null;
+  item_count: number;
+  ranking_count: number;
+  coverColors: string[];
+  tierStrip: TierStripEntry[];
+  divisiveness: "calm" | "spicy" | "divisive";
+  twinSignal: { count: number; sampleName: string | null } | null;
+}
+
 // ── Fetchers ──────────────────────────────────────────────────────────────────
+
+export async function fetchDiscoverLists(): Promise<{
+  madeForYou: RichListCard[];
+  trending: RichListCard[];
+}> {
+  const res = await fetch("/api/feed/discover-lists");
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
 
 export async function fetchDiscoverUsers(): Promise<DiscoverUser[]> {
   const res = await fetch("/api/feed/discover");

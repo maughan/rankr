@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { useAppDispatch } from "@/lib/hooks";
-import { uiActions } from "@/lib/store/uiSlice";
+import Link from "next/link";
 import { getCategoryMeta } from "@/lib/categories";
 import { CategoryIcon } from "@/app/components/item/CategoryIcon";
+import { listUrl } from "@/lib/listUrl";
 import type { TemplateCard } from "@/app/api/templates/route";
 
 type TemplateGroup = { category: string; templates: TemplateCard[] };
@@ -27,18 +24,11 @@ function ColorPreview({ preview }: { preview: TemplateCard["preview"] }) {
   );
 }
 
-function TemplateCardItem({
-  template,
-  busy,
-  onUse,
-}: {
-  template: TemplateCard;
-  busy: boolean;
-  onUse: (t: TemplateCard) => void;
-}) {
+function TemplateCardItem({ template }: { template: TemplateCard }) {
   return (
-    <div
-      className="flex flex-col gap-3 rounded-[12px] p-4 transition-colors"
+    <Link
+      href={listUrl(template)}
+      className="flex flex-col gap-3 rounded-[12px] p-4 transition-colors hover:border-rk-muted"
       style={{ backgroundColor: "#0F1828", border: "1px solid #1E2C44" }}
     >
       <div className="flex flex-col gap-2">
@@ -58,56 +48,14 @@ function TemplateCardItem({
         {template.item_count} item{template.item_count !== 1 ? "s" : ""}
       </p>
 
-      <button
-        onClick={() => onUse(template)}
-        disabled={busy}
-        className="flex items-center justify-center gap-2 mt-1 px-3 py-2 text-[13px] font-[500] bg-rk-accent text-white rounded-[8px] hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 disabled:cursor-default"
-      >
-        {busy && (
-          <span className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
-        )}
-        Use this template
-      </button>
-    </div>
+      <span className="flex items-center justify-center gap-2 mt-1 px-3 py-2 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] group-hover:text-rk-primary transition-colors">
+        View list →
+      </span>
+    </Link>
   );
 }
 
 export default function TemplatesClient({ groups }: { groups: TemplateGroup[] }) {
-  const router = useRouter();
-  const dispatch = useAppDispatch();
-  const [busyId, setBusyId] = useState<number | null>(null);
-
-  async function handleUse(template: TemplateCard) {
-    if (busyId !== null) return;
-    setBusyId(template.id);
-    try {
-      const res = await fetch(`/api/s/${template.id}/copy`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ asTemplate: true }),
-      });
-
-      if (res.status === 401) {
-        dispatch(uiActions.openAuthModal());
-        return;
-      }
-      if (!res.ok) {
-        toast.error("Couldn't start from this template");
-        return;
-      }
-
-      const { slug, short_id } = (await res.json()) as {
-        slug: string;
-        short_id: string;
-      };
-      router.push(`/s/${slug}-${short_id}/s`);
-    } catch {
-      toast.error("Couldn't start from this template");
-    } finally {
-      setBusyId(null);
-    }
-  }
-
   if (groups.length === 0) {
     return (
       <p className="text-[14px] text-rk-muted">No templates available yet.</p>
@@ -134,12 +82,7 @@ export default function TemplatesClient({ groups }: { groups: TemplateGroup[] })
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {group.templates.map((template) => (
-                <TemplateCardItem
-                  key={template.short_id}
-                  template={template}
-                  busy={busyId === template.id}
-                  onUse={handleUse}
-                />
+                <TemplateCardItem key={template.short_id} template={template} />
               ))}
             </div>
           </section>

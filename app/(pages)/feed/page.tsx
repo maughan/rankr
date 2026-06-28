@@ -18,6 +18,7 @@ import { uiActions } from "@/lib/store/uiSlice";
 import {
   fetchFeedPage,
   fetchDiscoverUsers,
+  fetchDiscoverLists,
   markFeedSeen,
   type FeedItem,
   type FeedList,
@@ -26,9 +27,10 @@ import {
   type NewFollowersFeedItem,
   type MilestoneFeedItem,
   type ReEngagementFeedItem,
-  type FallbackList,
   type DiscoverUser,
+  type RichListCard,
 } from "@/lib/api/feedApi";
+import RichListCardView from "@/app/components/feed/RichListCard";
 import { listUrl } from "@/lib/listUrl";
 import { S } from "@/app/content/strings";
 import LandingFooter from "../landing/LandingFooter";
@@ -52,32 +54,6 @@ function isNetworkItem(item: FeedItem): item is NetworkFeedItem {
 }
 
 // ── Network feed cards ────────────────────────────────────────────────────────
-
-function ActorLine({
-  actor,
-  label,
-  createdAt,
-}: {
-  actor: NetworkFeedItem["actor"];
-  label: string;
-  createdAt: string;
-}) {
-  return (
-    <div className="flex items-center gap-1.5 flex-wrap">
-      <Link
-        href={`/u/${actor.username}`}
-        className="text-[13px] font-[600] text-rk-primary hover:underline"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {actor.display_name ?? `@${actor.username}`}
-      </Link>
-      <span className="text-[13px] text-rk-muted">{label}</span>
-      <span className="text-[11px] text-rk-tertiary">
-        · {formatDistanceStrict(new Date(createdAt), new Date())} ago
-      </span>
-    </div>
-  );
-}
 
 function ListMiniCard({ list }: { list: FeedList }) {
   return (
@@ -140,26 +116,60 @@ function HotTakeBody({ event }: { event: NetworkFeedItem }) {
   );
 }
 
+function alignColor(pct: number): string {
+  if (pct >= 70) return "#1D9E75";
+  if (pct >= 40) return "#BA7517";
+  return "var(--rk-muted, #8a8f98)";
+}
+
+function AlignLine({
+  align,
+  list,
+}: {
+  align: { pct: number };
+  list: FeedList;
+}) {
+  return (
+    <span className="text-[12px]">
+      <span style={{ color: alignColor(align.pct) }}>
+        · you align {align.pct}%
+      </span>{" "}
+      <Link
+        href={listUrl(list)}
+        className="text-rk-accent hover:underline"
+        onClick={(e) => e.stopPropagation()}
+      >
+        Compare
+      </Link>
+    </span>
+  );
+}
+
 function NetworkFeedCard({ event }: { event: NetworkFeedItem }) {
   const label =
     event.type === "published"
-      ? "published a stack"
+      ? `ranked ${event.list.title}`
       : event.type === "ranked"
-      ? "ranked a stack"
+      ? `ranked ${event.list.title}`
       : "had a hot take";
 
   return (
-    <div className="py-4 border-b border-rk-stroke last:border-0">
-      <ActorLine
-        actor={event.actor}
-        label={label}
-        createdAt={event.createdAt}
-      />
-      {event.type === "hot_take" ? (
-        <HotTakeBody event={event} />
-      ) : (
-        <ListMiniCard list={event.list} />
-      )}
+    <div className="py-3 border-b border-rk-stroke last:border-0">
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <Link
+          href={`/u/${event.actor.username}`}
+          className="text-[13px] font-[600] text-rk-primary hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {event.actor.display_name ?? `@${event.actor.username}`}
+        </Link>
+        <span className="text-[13px] text-rk-muted">{label}</span>
+        {event.align && <AlignLine align={event.align} list={event.list} />}
+        <span className="text-[11px] text-rk-tertiary">
+          · {formatDistanceStrict(new Date(event.createdAt), new Date())} ago
+        </span>
+      </div>
+      {event.type === "hot_take" && <HotTakeBody event={event} />}
     </div>
   );
 }
@@ -313,65 +323,22 @@ function FeedCard({ event }: { event: FeedItem }) {
   return null;
 }
 
-// ── All-lists fallback ────────────────────────────────────────────────────────
+// ── Discover lists section (Made for you / Trending) ──────────────────────────
 
-function FallbackListCard({ list }: { list: FallbackList }) {
-  const href = listUrl(list);
+function DiscoverListsSection({
+  heading,
+  cards,
+}: {
+  heading: string;
+  cards: RichListCard[];
+}) {
+  if (cards.length === 0) return null;
   return (
-    <div className="rounded-[10px] border border-rk-stroke bg-rk-surface overflow-hidden">
-      {list.img ? (
-        <div className="relative h-24">
-          <Image
-            loader={ImageKitLoader}
-            src={list.img}
-            alt=""
-            fill
-            sizes="200px"
-            style={{ objectFit: "cover" }}
-          />
-        </div>
-      ) : (
-        <div className="h-24 bg-rk-row flex items-center justify-center">
-          <div className="w-6 h-6 rounded-[4px] bg-rk-stroke" />
-        </div>
-      )}
-      <div className="p-3">
-        <p className="text-[13px] font-[500] text-rk-primary truncate leading-snug">
-          {list.title}
-        </p>
-        <p className="text-[11px] text-rk-tertiary mt-0.5">
-          {list.item_count} items
-          {list.ranking_count > 0 && ` · ${list.ranking_count} rankings`}
-        </p>
-        <Link
-          href={`${href}/s`}
-          className="inline-block mt-2 text-[11px] font-[500] text-rk-accent hover:underline"
-        >
-          {S.feed.fallbackRankCta} →
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function FallbackSection({ lists }: { lists: FallbackList[] }) {
-  if (lists.length === 0) return null;
-  return (
-    <div className="pt-6 border-t border-rk-stroke mt-2">
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div>
-          <p className="text-[14px] font-[500] text-rk-primary">
-            {S.feed.fallbackHeading}
-          </p>
-          <p className="text-[12px] text-rk-muted mt-0.5">
-            {S.feed.fallbackSubhead}
-          </p>
-        </div>
-        {/* <SurpriseButton className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-[500] border border-rk-stroke text-rk-secondary rounded-[8px] hover:border-rk-muted hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" /> */}
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {lists.map((l) => (
-          <FallbackListCard key={l.id} list={l} />
+    <div className="pt-6 first:pt-0">
+      <p className="text-[14px] font-[500] text-rk-primary mb-3">{heading}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {cards.map((c) => (
+          <RichListCardView key={c.id} card={c} />
         ))}
       </div>
     </div>
@@ -493,6 +460,46 @@ function DiscoverSection() {
   );
 }
 
+// ── People who rank like you (section 4) ──────────────────────────────────────
+
+function DiscoverPeopleSection() {
+  const { data: suggestions = [], isLoading } = useQuery<DiscoverUser[]>({
+    queryKey: ["feed-discover"],
+    queryFn: fetchDiscoverUsers,
+    staleTime: 5 * 60_000,
+  });
+
+  if (!isLoading && suggestions.length === 0) return null;
+
+  return (
+    <div className="pt-6">
+      <p className="text-[14px] font-[500] text-rk-primary mb-1">
+        People who rank like you
+      </p>
+      {isLoading ? (
+        <div className="space-y-3 animate-pulse">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-3 py-3">
+              <div className="w-8 h-8 rounded-full bg-rk-row flex-shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 w-28 rounded bg-rk-row" />
+                <div className="h-2.5 w-40 rounded bg-rk-row" />
+              </div>
+              <div className="h-7 w-16 rounded-[8px] bg-rk-row flex-shrink-0" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          {suggestions.map((u) => (
+            <DiscoverUserRow key={u.username} user={u} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Feed page ─────────────────────────────────────────────────────────────────
 
 const FEED_KEY = ["feed"] as const;
@@ -574,11 +581,14 @@ export default function FeedPage() {
     [data]
   );
 
-  // Fallback lists come from page 1 only
-  const fallbackLists = useMemo(
-    () => data?.pages[0]?.fallbackLists ?? [],
-    [data]
-  );
+  // Discover lists (Made for you / Trending) — fetched once (page 1)
+  const { data: discover, isPending: discoverPending } = useQuery({
+    queryKey: ["discoverLists"],
+    queryFn: fetchDiscoverLists,
+    staleTime: 5 * 60_000,
+  });
+  const madeForYou = discover?.madeForYou ?? [];
+  const trending = discover?.trending ?? [];
 
   // Mark feed seen once first page loads (fire-and-forget, after a brief delay
   // so the initial query reads the previous visit's timestamp)
@@ -642,8 +652,9 @@ export default function FeedPage() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  // The feed has content if there are items OR a fallback section
-  const hasSomething = allItems.length > 0 || fallbackLists.length > 0;
+  // The feed has content if there are network items OR discover lists to show
+  const hasSomething =
+    allItems.length > 0 || madeForYou.length > 0 || trending.length > 0;
 
   return (
     <div className="fixed inset-0 z-10 bg-rk-page overflow-y-auto">
@@ -687,55 +698,64 @@ export default function FeedPage() {
           </Button>
         )}
 
-        {isPending ? (
+        {isPending && discoverPending ? (
           <FeedSkeleton />
-        ) : isError ? (
+        ) : isError && !hasSomething ? (
           <p className="text-[13px] text-rk-muted text-center py-12">
             Couldn&apos;t load feed.{" "}
             <button
               className="text-rk-accent hover:underline cursor-pointer"
-              onClick={() =>
-                queryClient.invalidateQueries({ queryKey: FEED_KEY })
-              }
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: FEED_KEY });
+                queryClient.invalidateQueries({ queryKey: ["discoverLists"] });
+              }}
             >
               Try again
             </button>
           </p>
         ) : !hasSomething ? (
-          // True zero state: no items, no fallback (very new instance with no public lists)
+          // True zero state: nothing to discover and nothing in network
           <DiscoverSection />
         ) : (
-          <>
+          <div className="flex flex-col gap-2">
+            {/* 1. Made for you */}
+            <DiscoverListsSection heading="Made for you" cards={madeForYou} />
+
+            {/* 2. Trending (cold-start filler) */}
+            <DiscoverListsSection heading="Trending" cards={trending} />
+
+            {/* 3. From your network */}
             {allItems.length > 0 && (
-              <div>
-                {allItems.map((event) => (
-                  <FeedCard key={event.key} event={event} />
-                ))}
-              </div>
-            )}
-
-            {/* Infinite scroll sentinel */}
-            <div ref={sentinelRef} className="h-1" />
-
-            {isFetchingNextPage && (
-              <div className="flex justify-center py-6">
-                <div className="w-4 h-4 rounded-full border-2 border-rk-stroke border-t-rk-accent animate-spin" />
-              </div>
-            )}
-
-            {!hasNextPage &&
-              allItems.length > 0 &&
-              fallbackLists.length === 0 && (
-                <p className="text-center text-[12px] text-rk-tertiary py-6">
-                  You&apos;re all caught up
+              <div className="pt-6">
+                <p className="text-[14px] font-[500] text-rk-primary mb-1">
+                  From your network
                 </p>
-              )}
+                <div>
+                  {allItems.map((event) => (
+                    <FeedCard key={event.key} event={event} />
+                  ))}
+                </div>
 
-            {/* All-lists fallback — always below the main feed when present */}
-            {fallbackLists.length > 0 && (
-              <FallbackSection lists={fallbackLists} />
+                {/* Infinite scroll sentinel */}
+                <div ref={sentinelRef} className="h-1" />
+
+                {isFetchingNextPage && (
+                  <div className="flex justify-center py-6">
+                    <div className="w-4 h-4 rounded-full border-2 border-rk-stroke border-t-rk-accent animate-spin" />
+                  </div>
+                )}
+
+                {!hasNextPage && (
+                  <p className="text-center text-[12px] text-rk-tertiary py-6">
+                    You&apos;re all caught up
+                  </p>
+                )}
+              </div>
             )}
-          </>
+
+            {/* 4. People who rank like you */}
+            <DiscoverPeopleSection />
+          </div>
         )}
       </div>
 

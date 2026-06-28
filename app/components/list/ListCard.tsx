@@ -7,10 +7,17 @@ import { formatDistanceStrict } from "date-fns";
 import { EyeClosed, Trash2 } from "lucide-react";
 import { listUrl } from "@/lib/listUrl";
 import { ImageKitLoader, processResponseData } from "@/lib/helpers";
-import type { ListPreview, TopTierItem } from "@/app/types";
+import type { ListPreview } from "@/app/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDeleteListMutation } from "@/lib/api/listsApi";
 import Modal from "@/app/components/modal";
+import GeneratedCover from "@/app/components/feed/GeneratedCover";
+
+// Mirrors the feed RichListCard tier colors.
+const TIER_COLORS: Record<string, string> = {
+  S: "#C44545", A: "#E08C2C", B: "#97C459", C: "#5DCAA5", D: "#85B7EB", F: "#AFA9EC",
+};
+const COVER_FALLBACK = ["#C44545", "#E08C2C", "#97C459", "#5DCAA5", "#85B7EB"];
 
 export default function ListCard({
   list,
@@ -25,6 +32,23 @@ export default function ListCard({
 
   const isOwner = list.createdBy.id === currentUserId;
   const canDelete = isOwner;
+
+  // Cover colors + tier-preview strip, mirroring the feed card (derived from
+  // the top-tier items already in the ListPreview payload).
+  const coverColors = (() => {
+    const c = list.top_tier_items
+      .map((i) => i.color)
+      .filter((x): x is string => !!x)
+      .slice(0, 5);
+    return c.length ? c : COVER_FALLBACK;
+  })();
+  const tierStrip = (() => {
+    const counts = new Map<string, number>();
+    for (const it of list.top_tier_items) {
+      counts.set(it.tier, (counts.get(it.tier) ?? 0) + 1);
+    }
+    return [...counts.entries()].map(([title, count]) => ({ title, count }));
+  })();
 
   const handleDeleteConfirm = async () => {
     const result = await deleteList(list.id);
@@ -49,7 +73,7 @@ export default function ListCard({
       <Link href={listUrl(list)}>
         <div className="bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors">
           {list.img ? (
-            <div className="relative h-36">
+            <div className="relative h-[84px]">
               <Image
                 loader={ImageKitLoader}
                 src={list.img}
@@ -61,44 +85,41 @@ export default function ListCard({
               />
             </div>
           ) : (
-            <div
-              className="h-36 p-3 flex flex-wrap gap-1.5 content-start overflow-hidden"
-              style={{ backgroundColor: "#0F1828" }}
-            >
-              {list.top_tier_items.map((item: TopTierItem) => (
-                <div
-                  key={item.id}
-                  className="w-[22px] h-[22px] rounded-[4px] flex-shrink-0"
-                  style={{ backgroundColor: item.color ?? "#334155" }}
-                />
-              ))}
-              {list.top_tier_items.length === 0 && (
-                <p className="text-[11px] text-rk-tertiary">No items yet</p>
-              )}
-            </div>
+            <GeneratedCover colors={coverColors} title={list.title} />
           )}
-          <div className="px-3 py-3">
-            <p className="text-[15px] font-[500] text-rk-primary truncate">
+          <div className="px-3 py-3 flex flex-col gap-2">
+            <p className="text-[14px] font-[500] text-rk-primary truncate">
               {list.title}
             </p>
-            <div className="flex items-center gap-1 mt-1 flex-wrap">
-              <span className="text-[11px] text-rk-tertiary">
+            <div className="flex items-center gap-1 flex-wrap">
+              <span className="text-[11px] text-rk-muted">
                 {list.item_count} item{list.item_count !== 1 ? "s" : ""}
-              </span>
-              <span className="text-rk-tertiary text-[11px]">·</span>
-              <span className="text-[11px] text-rk-tertiary">
-                {formatDistanceStrict(new Date(list.updatedAt), new Date())} ago
               </span>
               {list.ranker_count > 0 && (
                 <>
                   <span className="text-rk-tertiary text-[11px]">·</span>
-                  <span className="text-[11px] text-rk-tertiary">
+                  <span className="text-[11px] text-rk-muted">
                     {list.ranker_count} stacker
                     {list.ranker_count !== 1 ? "s" : ""}
                   </span>
                 </>
               )}
+              <span className="text-rk-tertiary text-[11px]">·</span>
+              <span className="text-[11px] text-rk-tertiary">
+                {formatDistanceStrict(new Date(list.updatedAt), new Date())} ago
+              </span>
             </div>
+            {tierStrip.length > 0 && (
+              <div className="flex gap-0.5 h-[5px]">
+                {tierStrip.map((t) => (
+                  <span
+                    key={t.title}
+                    className="rounded-full"
+                    style={{ flex: t.count, backgroundColor: TIER_COLORS[t.title] ?? "#1E2C44" }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Link>

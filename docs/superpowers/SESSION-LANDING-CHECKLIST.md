@@ -108,6 +108,17 @@ git commit -m "feat: in-app notifications (phase 1)"
 Third migration to apply: `20260620000003_notifications`.
 Known: the new route files use bare `(prisma as any)` casts (lint `any` debt, same as the rest of the codebase — clean up in the batch `any` pass; add `// eslint-disable-next-line` if your build hard-fails on lint). Web push = Phase 2 (fans out from `notify()`).
 
+### G — Discovery-first feed redesign (no migration)
+```
+git add lib/server/feedCards.ts __tests__/feedCards.test.ts \
+  app/api/feed/discover-lists/route.ts app/api/feed/route.ts lib/api/feedApi.ts \
+  "app/components/feed/GeneratedCover.tsx" "app/components/feed/RichListCard.tsx" \
+  "app/(pages)/feed/page.tsx"
+git commit -m "feat: discovery-first feed redesign"
+```
+No migration. Rich cards (generated cover, tier strip, divisiveness, twin hook), made-for-you + trending sections, network align%, people-who-rank-like-you.
+Follow-up (not blocking): the feed "new posts" poll re-runs full page-1 assembly every 60s — add a lightweight latest-network-id check endpoint when convenient.
+
 > Note: several files (`payoff/index.tsx`, `listsApi.ts`, `lib/insightsConfig.ts`,
 > `ListDetail.tsx`, `/r/[token]/page.tsx`) span more than one feature — git
 > tracks files, not features, so each lands with the first commit that includes
@@ -180,6 +191,16 @@ npm test    # expect ~193 passing
 - "Use this template" while signed in → new draft titled cleanly (no "Copy of") → lands in the rank flow.
 - Signed-out "use template" → auth modal → after login, re-click clones.
 - A taken-down (but public) template does NOT appear in the gallery.
+
+### F — In-app notifications
+- Rank someone else's list → owner gets one aggregating notification + bell badge; rank again → count bumps (one row).
+- Follow / taste-twin-change → notification; self-actions + blocked users never notify; mark-all-read clears the badge.
+
+### G — Feed redesign
+- "Made for you" shows lists your taste twins ranked (with the twin hook); follow/blocked/already-ranked excluded.
+- Fresh account (no twins) → "Made for you" omitted, "Trending" leads; feed never empty.
+- Lists with no image show generated covers; tier strips reflect crowd placement; divisiveness label matches.
+- Network rows show "you align X%" only where you've ranked that list.
 
 ---
 

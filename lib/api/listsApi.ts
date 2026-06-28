@@ -84,6 +84,7 @@ export interface SharedList {
   description: string;
   img: string | null;
   is_shareable: boolean;
+  is_template?: boolean;
   anonymous_rankings_enabled: boolean;
   createdAt: string;
   updatedAt: string;

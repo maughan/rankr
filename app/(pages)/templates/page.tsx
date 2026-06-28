@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import { prisma } from "@/lib/prisma";
 import { SITE_URL, TWITTER_HANDLE } from "@/app/siteConfig";
-import LandingNav from "@/app/(pages)/landing/LandingNav";
+import TemplatesNav from "./TemplatesNav";
 import type { TemplateCard } from "@/app/api/templates/route";
 import TemplatesClient from "./TemplatesClient";
 
-export const revalidate = 3600;
+// Always reflect the DB — the curated catalog changes rarely but must show
+// newly-seeded templates immediately (no stale fetch cache).
+export const dynamic = "force-dynamic";
 
 const SEO_TITLE = "Start from a template — tierstack.dev";
 const SEO_DESCRIPTION =
@@ -32,26 +34,54 @@ export const metadata: Metadata = {
 
 type TemplateGroup = { category: string; templates: TemplateCard[] };
 
-async function fetchTemplateGroups(): Promise<TemplateGroup[]> {
-  // Resolve an absolute origin so this works during server rendering.
-  const h = await headers();
-  const host = h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  const origin = host ? `${proto}://${host}` : SITE_URL;
+// Query the DB directly — no self-fetch, no fetch cache, no silent [] on error.
+async function getTemplateGroups(): Promise<TemplateGroup[]> {
+  const rows = (await (prisma.list as any).findMany({
+    where: {
+      visibility: "public",
+      is_template: true,
+      deleted_at: null,
+      taken_down_at: null,
+    },
+    select: {
+      id: true,
+      short_id: true,
+      slug: true,
+      title: true,
+      description: true,
+      category: true,
+      img: true,
+      items: { select: { name: true, color: true }, take: 5, orderBy: { createdAt: "asc" } },
+      _count: { select: { items: true } },
+    },
+    orderBy: [{ category: "asc" }, { title: "asc" }],
+  })) as {
+    id: number; short_id: string; slug: string; title: string;
+    description: string | null; category: string; img: string | null;
+    items: { name: string | null; color: string | null }[];
+    _count: { items: number };
+  }[];
 
-  const res = await fetch(`${origin}/api/templates`, {
-    next: { revalidate: 3600 },
-  });
-  if (!res.ok) return [];
-  return (await res.json()) as TemplateGroup[];
+  const cards: TemplateCard[] = rows.map((r) => ({
+    id: r.id, short_id: r.short_id, slug: r.slug, title: r.title,
+    description: r.description, category: r.category, img: r.img,
+    item_count: r._count.items, preview: r.items,
+  }));
+
+  const byCategory = new Map<string, TemplateCard[]>();
+  for (const c of cards) {
+    if (!byCategory.has(c.category)) byCategory.set(c.category, []);
+    byCategory.get(c.category)!.push(c);
+  }
+  return [...byCategory.entries()].map(([category, templates]) => ({ category, templates }));
 }
 
 export default async function TemplatesPage() {
-  const groups = await fetchTemplateGroups().catch(() => []);
+  const groups = await getTemplateGroups();
 
   return (
     <div className="min-h-screen bg-rk-page flex flex-col">
-      <LandingNav />
+      <TemplatesNav />
 
       <main className="flex-1 px-6 py-12 sm:px-10 max-w-6xl mx-auto w-full flex flex-col gap-10">
         <div className="flex flex-col gap-2">
