@@ -26,6 +26,7 @@ const makeList = (overrides: Partial<TierList> = {}): TierList => ({
   createdBy: { id: 1, username: "alice" },
   category: "other",
   is_shareable: false,
+  is_template: false,
   share_token: null,
   anonymous_rankings_enabled: true,
   allow_contributions: false,
@@ -41,8 +42,22 @@ const makeList = (overrides: Partial<TierList> = {}): TierList => ({
       updatedAt: "2024-01-01",
       createdBy: "alice",
       rankings: [
-        { itemId: 10, userId: 1, user: { id: 1, username: "alice" }, value: 8, createdAt: "2024-01-01", updatedAt: "2024-01-01" },
-        { itemId: 10, userId: 2, user: { id: 2, username: "bob" }, value: 6, createdAt: "2024-01-01", updatedAt: "2024-01-01" },
+        {
+          itemId: 10,
+          userId: 1,
+          user: { id: 1, username: "alice" },
+          value: 8,
+          createdAt: "2024-01-01",
+          updatedAt: "2024-01-01",
+        },
+        {
+          itemId: 10,
+          userId: 2,
+          user: { id: 2, username: "bob" },
+          value: 6,
+          createdAt: "2024-01-01",
+          updatedAt: "2024-01-01",
+        },
       ],
     },
     {
@@ -63,7 +78,10 @@ const initialState = reducer(undefined, { type: "@@INIT" });
 
 describe("updateListMeta", () => {
   it("merges partial data into editList", () => {
-    const state = reducer(initialState, uiActions.updateListMeta({ title: "New Title" }));
+    const state = reducer(
+      initialState,
+      uiActions.updateListMeta({ title: "New Title" }),
+    );
     expect(state.editList.title).toBe("New Title");
     expect(state.editList.visibility).toBe("draft"); // other fields unchanged
   });
@@ -73,7 +91,10 @@ describe("updateListMeta", () => {
 
 describe("updateItemMeta", () => {
   it("merges partial data into editItem", () => {
-    const state = reducer(initialState, uiActions.updateItemMeta({ name: "Sword" }));
+    const state = reducer(
+      initialState,
+      uiActions.updateItemMeta({ name: "Sword" }),
+    );
     expect(state.editItem.name).toBe("Sword");
   });
 });
@@ -82,13 +103,19 @@ describe("updateItemMeta", () => {
 
 describe("openImageModal / closeImageModal", () => {
   it("opens the modal and stores the url", () => {
-    const state = reducer(initialState, uiActions.openImageModal("https://example.com/img.png"));
+    const state = reducer(
+      initialState,
+      uiActions.openImageModal("https://example.com/img.png"),
+    );
     expect(state.modals.imageModal).toBe(true);
     expect(state.imageModalUrl).toBe("https://example.com/img.png");
   });
 
   it("closes the modal and clears the url", () => {
-    const opened = reducer(initialState, uiActions.openImageModal("https://example.com/img.png"));
+    const opened = reducer(
+      initialState,
+      uiActions.openImageModal("https://example.com/img.png"),
+    );
     const closed = reducer(opened, uiActions.closeImageModal());
     expect(closed.modals.imageModal).toBe(false);
     expect(closed.imageModalUrl).toBe("");
@@ -107,11 +134,17 @@ describe("handleDropItem", () => {
       ],
     });
     // Manually set rankings since startRanking needs a cookie
-    const state = { ...withRankings, rankings: [
-      makeTier({ id: 1, value: 8, items: [10] }),
-      makeTier({ id: 2, value: 6, items: [] }),
-    ]};
-    const next = reducer(state, uiActions.handleDropItem({ over: 2, active: 10 }));
+    const state = {
+      ...withRankings,
+      rankings: [
+        makeTier({ id: 1, value: 8, items: [10] }),
+        makeTier({ id: 2, value: 6, items: [] }),
+      ],
+    };
+    const next = reducer(
+      state,
+      uiActions.handleDropItem({ over: 2, active: 10 }),
+    );
     expect(next.rankings.find((t) => t.id === 1)?.items).not.toContain(10);
     expect(next.rankings.find((t) => t.id === 2)?.items).toContain(10);
   });
@@ -177,7 +210,10 @@ describe("toggleSelectItem", () => {
   });
 
   it("removes an item id that is already selected", () => {
-    const withItem = reducer(initialState, uiActions.toggleSelectItem({ id: 5 }));
+    const withItem = reducer(
+      initialState,
+      uiActions.toggleSelectItem({ id: 5 }),
+    );
     const removed = reducer(withItem, uiActions.toggleSelectItem({ id: 5 }));
     expect(removed.selectedItems).not.toContain(5);
   });
@@ -212,14 +248,20 @@ describe("openCreateListModal / closeCreateListModal", () => {
 describe("filterRankingsByUser", () => {
   it("uses list.tiers directly when user is null", () => {
     const list = makeList();
-    const state = reducer(initialState, uiActions.filterRankingsByUser({ user: null, list }));
+    const state = reducer(
+      initialState,
+      uiActions.filterRankingsByUser({ user: null, list }),
+    );
     expect(state.filteredListRankings).toEqual(list.tiers);
     expect(state.userfilter).toBeNull();
   });
 
   it("filters to the given user's rankings", () => {
     const list = makeList();
-    const state = reducer(initialState, uiActions.filterRankingsByUser({ user: 1, list }));
+    const state = reducer(
+      initialState,
+      uiActions.filterRankingsByUser({ user: 1, list }),
+    );
     expect(state.userfilter).toBe(1);
     // item 10 has a ranking from user 1 (value 8), so it should appear in tier with value 8
     const tier = state.filteredListRankings.find((t) => t.value === 8);
@@ -227,7 +269,10 @@ describe("filterRankingsByUser", () => {
   });
 
   it("is a no-op when list is undefined", () => {
-    const state = reducer(initialState, uiActions.filterRankingsByUser({ user: 1, list: undefined }));
+    const state = reducer(
+      initialState,
+      uiActions.filterRankingsByUser({ user: 1, list: undefined }),
+    );
     expect(state.filteredListRankings).toEqual([]);
   });
 });

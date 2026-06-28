@@ -47,6 +47,7 @@ export interface TierList {
   };
   category: CategorySlug;
   is_shareable: boolean;
+  is_template: boolean;
   share_token: string | null;
   anonymous_rankings_enabled: boolean;
   allow_contributions: boolean;

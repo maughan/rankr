@@ -245,7 +245,10 @@ export default function ListDetail({
         setUsingTemplate(false);
         return;
       }
-      const { slug, short_id } = (await res.json()) as { slug: string; short_id: string };
+      const { slug, short_id } = (await res.json()) as {
+        slug: string;
+        short_id: string;
+      };
       router.push(`/s/${slug}-${short_id}/s`);
     } catch {
       toast.error("Something went wrong");
@@ -1101,11 +1104,18 @@ export default function ListDetail({
           {list.is_template && (
             <div
               className="flex items-center justify-between gap-3 px-4 py-3 rounded-[10px]"
-              style={{ backgroundColor: "rgba(74,138,232,0.08)", border: "1px solid rgba(74,138,232,0.4)" }}
+              style={{
+                backgroundColor: "rgba(74,138,232,0.08)",
+                border: "1px solid rgba(74,138,232,0.4)",
+              }}
             >
               <div className="flex flex-col">
-                <p className="text-[13px] font-[500] text-rk-primary">This is a template</p>
-                <p className="text-[12px] text-rk-muted">Make your own copy to rank and share it.</p>
+                <p className="text-[13px] font-[500] text-rk-primary">
+                  This is a template
+                </p>
+                <p className="text-[12px] text-rk-muted">
+                  Make your own copy to rank and share it.
+                </p>
               </div>
               <button
                 onClick={handleUseTemplate}
@@ -1588,9 +1598,10 @@ export default function ListDetail({
                     Rank this list to compare
                   </p>
                   <p className="text-rk-muted text-[13px] max-w-xs">
-                    You haven&apos;t stacked {list.title} yet — rank it to see how
-                    you line up with @
-                    {users.find((u) => u.id === userfilter)?.username ?? "them"}.
+                    You haven&apos;t stacked {list.title} yet — rank it to see
+                    how you line up with @
+                    {users.find((u) => u.id === userfilter)?.username ?? "them"}
+                    .
                   </p>
                   <Link
                     href={`${listHref}/s`}

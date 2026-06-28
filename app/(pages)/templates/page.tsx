@@ -51,21 +51,36 @@ async function getTemplateGroups(): Promise<TemplateGroup[]> {
       description: true,
       category: true,
       img: true,
-      items: { select: { name: true, color: true }, take: 5, orderBy: { createdAt: "asc" } },
+      items: {
+        select: { name: true, color: true },
+        take: 5,
+        orderBy: { createdAt: "asc" },
+      },
       _count: { select: { items: true } },
     },
     orderBy: [{ category: "asc" }, { title: "asc" }],
   })) as {
-    id: number; short_id: string; slug: string; title: string;
-    description: string | null; category: string; img: string | null;
+    id: number;
+    short_id: string;
+    slug: string;
+    title: string;
+    description: string | null;
+    category: string;
+    img: string | null;
     items: { name: string | null; color: string | null }[];
     _count: { items: number };
   }[];
 
   const cards: TemplateCard[] = rows.map((r) => ({
-    id: r.id, short_id: r.short_id, slug: r.slug, title: r.title,
-    description: r.description, category: r.category, img: r.img,
-    item_count: r._count.items, preview: r.items,
+    id: r.id,
+    short_id: r.short_id,
+    slug: r.slug,
+    title: r.title,
+    description: r.description,
+    category: r.category,
+    img: r.img,
+    item_count: r._count.items,
+    preview: r.items,
   }));
 
   const byCategory = new Map<string, TemplateCard[]>();
@@ -73,7 +88,10 @@ async function getTemplateGroups(): Promise<TemplateGroup[]> {
     if (!byCategory.has(c.category)) byCategory.set(c.category, []);
     byCategory.get(c.category)!.push(c);
   }
-  return [...byCategory.entries()].map(([category, templates]) => ({ category, templates }));
+  return [...byCategory.entries()].map(([category, templates]) => ({
+    category,
+    templates,
+  }));
 }
 
 export default async function TemplatesPage() {

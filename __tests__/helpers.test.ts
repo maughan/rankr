@@ -55,6 +55,7 @@ const makeList = (overrides: Partial<TierList> = {}): TierList => ({
   createdBy: { id: 1, username: "alice" },
   category: "other",
   is_shareable: false,
+  is_template: false,
   share_token: null,
   anonymous_rankings_enabled: true,
   allow_contributions: false,
@@ -89,7 +90,13 @@ describe("createNewList", () => {
 describe("createNewTier", () => {
   it("creates a tier with id 0 and empty items", () => {
     const result = createNewTier({ title: "A", color: "#0000ff", value: 6 });
-    expect(result).toEqual({ id: 0, title: "A", color: "#0000ff", value: 6, items: [] });
+    expect(result).toEqual({
+      id: 0,
+      title: "A",
+      color: "#0000ff",
+      value: 6,
+      items: [],
+    });
   });
 });
 
@@ -195,7 +202,12 @@ describe("processResponseData", () => {
         // one real vote (8) and one abstain (0) → avg should be 8
         rankings: [
           makeRanking({ itemId: 10, value: 8 }),
-          makeRanking({ itemId: 10, userId: 2, user: { id: 2, username: "bob" }, value: 0 }),
+          makeRanking({
+            itemId: 10,
+            userId: 2,
+            user: { id: 2, username: "bob" },
+            value: 0,
+          }),
         ],
       }),
     ];
@@ -226,8 +238,18 @@ describe("filterListResponseData", () => {
       makeItem({
         id: 10,
         rankings: [
-          makeRanking({ itemId: 10, userId: 1, user: { id: 1, username: "alice" }, value: 8 }),
-          makeRanking({ itemId: 10, userId: 2, user: { id: 2, username: "bob" }, value: 4 }),
+          makeRanking({
+            itemId: 10,
+            userId: 1,
+            user: { id: 1, username: "alice" },
+            value: 8,
+          }),
+          makeRanking({
+            itemId: 10,
+            userId: 2,
+            user: { id: 2, username: "bob" },
+            value: 4,
+          }),
         ],
       }),
     ];
@@ -239,7 +261,12 @@ describe("filterListResponseData", () => {
   it("returns empty tier items when the user has no rankings", () => {
     const tiers: Tier[] = [makeTier({ id: 1, value: 8, items: [] })];
     const items: TierItem[] = [
-      makeItem({ id: 10, rankings: [makeRanking({ userId: 2, user: { id: 2, username: "bob" } })] }),
+      makeItem({
+        id: 10,
+        rankings: [
+          makeRanking({ userId: 2, user: { id: 2, username: "bob" } }),
+        ],
+      }),
     ];
     const result = filterListResponseData(makeList({ tiers, items }), 99);
     expect(result[0].items).toHaveLength(0);
@@ -255,13 +282,27 @@ describe("fetchUserRankings", () => {
         makeItem({
           id: 1,
           rankings: [
-            makeRanking({ itemId: 1, userId: 1, user: { id: 1, username: "alice" } }),
-            makeRanking({ itemId: 1, userId: 2, user: { id: 2, username: "bob" } }),
+            makeRanking({
+              itemId: 1,
+              userId: 1,
+              user: { id: 1, username: "alice" },
+            }),
+            makeRanking({
+              itemId: 1,
+              userId: 2,
+              user: { id: 2, username: "bob" },
+            }),
           ],
         }),
         makeItem({
           id: 2,
-          rankings: [makeRanking({ itemId: 2, userId: 2, user: { id: 2, username: "bob" } })],
+          rankings: [
+            makeRanking({
+              itemId: 2,
+              userId: 2,
+              user: { id: 2, username: "bob" },
+            }),
+          ],
         }),
       ],
     });
@@ -286,7 +327,9 @@ describe("fetchUserRankings", () => {
 
 describe("getUserFromToken", () => {
   const buildFakeJwt = (payload: object) => {
-    const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+    const header = Buffer.from(
+      JSON.stringify({ alg: "HS256", typ: "JWT" }),
+    ).toString("base64url");
     const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
     return `${header}.${body}.fakesig`;
   };
@@ -296,7 +339,11 @@ describe("getUserFromToken", () => {
   });
 
   it("returns decoded user fields from a valid cookie token", () => {
-    const token = buildFakeJwt({ sub: 42, username: "alice", email: "alice@example.com" });
+    const token = buildFakeJwt({
+      sub: 42,
+      username: "alice",
+      email: "alice@example.com",
+    });
     document.cookie = `auth_token=${token}`;
     const result = getUserFromToken();
     expect(result.id).toBe(42);
