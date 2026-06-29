@@ -77,7 +77,7 @@ export default function ListCard({
   return (
     <div className="relative" onMouseEnter={handleMouseEnter}>
       <Link href={listUrl(list)}>
-        <div className="relative bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors min-h-[170px]">
+        <div className="relative bg-rk-surface border border-rk-stroke rounded-[10px] overflow-hidden hover:border-rk-muted transition-colors min-h-[190px]">
           {list.is_template && (
             <span
               className="absolute top-2 left-2 z-10 px-2 py-0.5 rounded-full text-[10px] font-[600] uppercase tracking-wide text-rk-accent"
