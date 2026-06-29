@@ -205,6 +205,20 @@ export default function Library() {
             {isLoggedIn ? (
               <>
                 <div className="hidden sm:flex items-center gap-2">
+                  <Link
+                    href="/browse"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Categories
+                  </Link>
+
+                  <Link
+                    href="/feed"
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    Feed
+                  </Link>
+
                   <Button
                     onClick={() => dispatch(uiActions.openCreateListModal())}
                     type="primary"
