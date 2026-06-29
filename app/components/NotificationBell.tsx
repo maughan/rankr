@@ -70,9 +70,11 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-80 bg-rk-surface border border-rk-stroke rounded-[10px] shadow-xl overflow-hidden z-50">
+        <div className="absolute right-[-34px] sm:right-0 top-full mt-1.5 w-80 bg-rk-surface border border-rk-stroke rounded-[10px] shadow-xl overflow-hidden z-50">
           <div className="flex items-center justify-between px-3 py-2.5 border-b border-rk-stroke">
-            <p className="text-[12px] font-[500] text-rk-primary">Notifications</p>
+            <p className="text-[12px] font-[500] text-rk-primary">
+              Notifications
+            </p>
             {items.length > 0 && (
               <button
                 onClick={() => markSeen({})}
@@ -108,9 +110,13 @@ export default function NotificationBell() {
                         {text}
                       </span>
                       <span className="block text-[11px] text-rk-tertiary mt-0.5">
-                        {formatDistanceStrict(new Date(item.createdAt), new Date(), {
-                          addSuffix: true,
-                        })}
+                        {formatDistanceStrict(
+                          new Date(item.createdAt),
+                          new Date(),
+                          {
+                            addSuffix: true,
+                          },
+                        )}
                       </span>
                     </span>
                   </button>

@@ -150,8 +150,8 @@ function NetworkFeedCard({ event }: { event: NetworkFeedItem }) {
     event.type === "published"
       ? `ranked ${event.list.title}`
       : event.type === "ranked"
-      ? `ranked ${event.list.title}`
-      : "had a hot take";
+        ? `ranked ${event.list.title}`
+        : "had a hot take";
 
   return (
     <div className="py-3 border-b border-rk-stroke last:border-0">
@@ -578,7 +578,7 @@ export default function FeedPage() {
 
   const allItems = useMemo(
     () => data?.pages.flatMap((p) => p.items) ?? [],
-    [data]
+    [data],
   );
 
   // Discover lists (Made for you / Trending) — fetched once (page 1)
@@ -606,7 +606,7 @@ export default function FeedPage() {
   // Track the id of the top-most network event to detect new arrivals
   const topNetworkItem = useMemo(
     () => allItems.find((i): i is NetworkFeedItem => isNetworkItem(i)),
-    [allItems]
+    [allItems],
   );
   const [seenTopId, setSeenTopId] = useState<number | null>(null);
   useEffect(() => {
@@ -625,7 +625,7 @@ export default function FeedPage() {
   const newCount = useMemo(() => {
     if (!freshCheck || seenTopId === null) return 0;
     return freshCheck.items.filter(
-      (i): i is NetworkFeedItem => isNetworkItem(i) && i.id > seenTopId!
+      (i): i is NetworkFeedItem => isNetworkItem(i) && i.id > seenTopId!,
     ).length;
   }, [freshCheck, seenTopId]);
 
@@ -646,7 +646,7 @@ export default function FeedPage() {
           fetchNextPage();
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px" },
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
@@ -663,8 +663,44 @@ export default function FeedPage() {
         <div className="flex justify-between items-center h-12">
           <Logo />
 
-          <div className="flex items-center gap-3">
-            <NavAvatar username={username} />
+          <div className="flex items-center gap-2">
+            <>
+              <div className="hidden sm:flex items-center gap-2">
+                <Link
+                  href="/browse"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Categories
+                </Link>
+
+                <Link
+                  href="/library"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Library
+                </Link>
+
+                <Button
+                  onClick={() => dispatch(uiActions.openCreateListModal())}
+                  type="primary"
+                >
+                  + New list
+                </Button>
+              </div>
+
+              <NavAvatar username={getUserFromToken().username} />
+            </>
+          </div>
+        </div>
+
+        <div className="flex sm:hidden items-center gap-2 pb-3 justify-between">
+          <div className="flex items-center gap-2 justify-start">
+            <Link
+              href="/browse"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+            >
+              Categories
+            </Link>
 
             <Link
               href="/library"
@@ -672,16 +708,14 @@ export default function FeedPage() {
             >
               Library
             </Link>
-            <div className="hidden sm:flex items-center gap-2">
-              <Button
-                type="primary"
-                onClick={() => dispatch(uiActions.openCreateListModal())}
-              >
-                + New list
-              </Button>
-            </div>
-            {/* <SurpriseButton className="flex items-center gap-1.5 text-[13px] font-[500] text-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50" /> */}
           </div>
+
+          <Button
+            onClick={() => dispatch(uiActions.openCreateListModal())}
+            type="primary"
+          >
+            + New list
+          </Button>
         </div>
       </div>
 
@@ -785,7 +819,7 @@ export default function FeedPage() {
             value={editList.description}
             onChange={(e) =>
               dispatch(
-                uiActions.updateListMeta({ description: e.target.value })
+                uiActions.updateListMeta({ description: e.target.value }),
               )
             }
           />
@@ -841,7 +875,7 @@ export default function FeedPage() {
                 dispatch(
                   uiActions.updateListMeta({
                     visibility: e.target.value as "public" | "hidden" | "draft",
-                  })
+                  }),
                 )
               }
               className="text-[13px] text-rk-primary bg-rk-bg border border-rk-stroke rounded-[6px] px-2 py-1"
@@ -868,16 +902,16 @@ export default function FeedPage() {
               >
                 Cancel
               </Button>
-            <Button
-              onClick={handleAddList}
-              disabled={isCreating}
-              type="primary"
-            >
-              {isCreating && (
-                <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
-              )}
-              Create
-            </Button>
+              <Button
+                onClick={handleAddList}
+                disabled={isCreating}
+                type="primary"
+              >
+                {isCreating && (
+                  <div className="w-3 h-3 rounded-full border-[1.5px] border-white/30 border-t-white animate-spin flex-shrink-0" />
+                )}
+                Create
+              </Button>
             </div>
           </div>
         </div>

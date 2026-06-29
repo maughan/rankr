@@ -192,6 +192,14 @@ export default async function CategoryBrowsePage({
       <div className="sticky top-0 z-20 bg-rk-page border-b border-rk-stroke px-4 sm:px-8">
         <div className="flex justify-between items-center h-12">
           <Logo />
+
+          <Link
+            href="/browse"
+            className="px-3 py-1.5 text-[13px] font-[500] gap-1 items-center text-rk-secondary border border-rk-stroke rounded-[8px] w-fit flex sm:hidden"
+          >
+            <Undo2 size={13} />
+            Back
+          </Link>
         </div>
       </div>
 
@@ -199,13 +207,11 @@ export default async function CategoryBrowsePage({
         <div className="flex flex-col gap-3">
           <Link
             href="/browse"
-            className="flex px-3 py-1.5 text-[13px] font-[500] items-center text-rk-secondary border border-rk-stroke rounded-[8px] w-fit"
+            className="px-3 py-1.5 text-[13px] font-[500] gap-1 items-center text-rk-secondary border border-rk-stroke rounded-[8px] w-fit hidden sm:flex"
           >
             <Undo2 size={13} />
             Back
           </Link>
-
-          <br />
 
           <div className="flex items-center gap-3">
             <div

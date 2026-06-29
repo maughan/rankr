@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { toast } from "sonner";
 import { LayoutGrid } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -203,7 +204,6 @@ export default function Library() {
           <div className="flex items-center gap-2">
             {isLoggedIn ? (
               <>
-                <NavAvatar username={getUserFromToken().username} />
                 <div className="hidden sm:flex items-center gap-2">
                   <Button
                     onClick={() => dispatch(uiActions.openCreateListModal())}
@@ -212,6 +212,7 @@ export default function Library() {
                     + New list
                   </Button>
                 </div>
+                <NavAvatar username={getUserFromToken().username} />
               </>
             ) : (
               <Button
@@ -224,7 +225,23 @@ export default function Library() {
           </div>
         </div>
         {isLoggedIn && (
-          <div className="flex sm:hidden items-center gap-2 pb-3 justify-end">
+          <div className="flex sm:hidden items-center gap-2 pb-3 justify-between">
+            <div className="flex items-center gap-2 justify-start">
+              <Link
+                href="/browse"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Categories
+              </Link>
+
+              <Link
+                href="/feed"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-[500] text-rk-secondary border border-rk-stroke rounded-[8px] hover:border-rk-secondary hover:text-rk-primary transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Feed
+              </Link>
+            </div>
+
             <Button
               onClick={() => dispatch(uiActions.openCreateListModal())}
               type="primary"
